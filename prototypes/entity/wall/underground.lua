@@ -4,7 +4,7 @@ data:extend({{
 	icon = "__Surfaces__/graphics/terrain/underground/wall2.png",
 	flags = {"placeable-neutral"},
 	minable = {mining_time = 0.1, mining_particle = "stone-particle", result="stone", count=2},
-	corpse = "wall-remnants",
+	corpse = "invisible-corpse",
     max_health = 100,
     collision_box = {{-0.499, -0.499}, {0.499, 0.499}},
     selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
@@ -28,12 +28,18 @@ data:extend({{
 		type = "explosion",
 		percent = 5
 	}},
-}--[[,{
-	type = "item",
-	name = "fake-wall",
-	icon = "__Surfaces__/graphics/terrain/underground/wall2.png",
-	flags = {},
-	place_result = "underground-wall",
-	order = "z",
-	stack_size=100
-}]]})
+},{
+	type = "corpse",
+	name = "invisible-corpse",
+	flags = {"placeable-neutral", "placeable-off-grid", "not-on-map"},
+	icon = "__Surfaces__/graphics/icons/blank.png",
+	collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
+    selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
+    selectable_in_game = false,
+    dying_speed = 0.04,
+    time_before_removed = 60,
+    subgroup="corpses",
+    order = "c[corpse]-b[invisible-corpse]",
+    final_render_layer = "corpse",
+  },
+}})
