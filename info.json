@@ -1,0 +1,8 @@
+{
+  "name": "Surfaces",
+  "version": "0.0.1",
+  "title": "Surfaces",
+  "author": "Simcra",
+  "dependencies": ["base >= 0.12.33"],
+  "description": "Reach up to the skies or dig deep below, expand your base vertically... If you're into that kind of thing."
+}
