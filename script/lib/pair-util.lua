@@ -8,17 +8,20 @@
 require("script.config")
 
 local paired_entity_data = {}
-paired_entity_data["sky-entrance"]={name="sky-exit", location=surface_location_above, class=surface_pairclass_access_shaft, realm=surface_type_sky, nauvis=true}
-paired_entity_data["sky-exit"]={name="sky-entrance", location=surface_location_below, class=surface_pairclass_access_shaft, realm=surface_type_sky, nauvis=false}
-paired_entity_data["underground-entrance"]={name="underground-exit", location=surface_location_below, class=surface_pairclass_access_shaft, realm=surface_type_underground, nauvis=true}
-paired_entity_data["underground-exit"]={name="underground-entrance", location=surface_location_above, class=surface_pairclass_access_shaft, realm=surface_type_underground, nauvis=false}
-paired_entity_data["transport-chest-up"]={name="receiver-chest-upper", location=surface_location_above, class=surface_pairclass_transport_chest, realm=surface_type_all, nauvis=true}
-paired_entity_data["transport-chest-down"]={name="receiver-chest-lower", location=surface_location_below, class=surface_pairclass_transport_chest, realm=surface_type_all, nauvis=true}
-paired_entity_data["receiver-chest-upper"]={name="transport-chest-up", location=surface_location_below, class=surface_pairclass_transport_chest, realm=surface_type_all, nauvis=true}
-paired_entity_data["receiver-chest-lower"]={name="transport-chest-down", location=surface_location_above, class=surface_pairclass_transport_chest, realm=surface_type_all, nauvis=true}
-	
+
 function get_paired_entity_data(entity)
 	return paired_entity_data[entity.name]
+end
+
+function insert_pair_entity_data(entity_name, pair_name, relative_destination, entity_pairclass, valid_domain, allowed_on_nauvis)
+	local pairdata = {name=pair_name, destination=relative_destination, class=entity_pairclass, domain=valid_domain, nauvis=allowed_on_nauvis}
+	paired_entity_data[entity_name] = pairdata
+end
+
+function update_entity_data(array_of_pairdata)
+	for k,v in pairs(array_of_pairdata) do
+		insert_pair_entity_data(v[1],v[2],v[3],v[4],v[5],v[6])
+	end
 end
 
 function is_paired_entity(entity)

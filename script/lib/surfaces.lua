@@ -13,10 +13,10 @@ function create_surface(surface_type, surface_layer)
 	local result = false
 	if is_valid_surface(surface_type, surface_layer) then
 		local surface_name = surface_mapname(surface_type, surface_layer)
-		if game.get_surface(surface_name)==nil then
+		if get_surface(surface_name)==nil then
 			game.create_surface(surface_name, get_map_gen_settings(surface_type))
 		end
-		result = game.get_surface(surface_name)
+		result = get_surface(surface_name)
 	end
 	return result
 end
@@ -70,11 +70,11 @@ function get_surface_above(surface)
 		if is_surface_from_this_mod(surface) or surface.name=="nauvis" then
 			local surface_layer = get_surface_layer(surface)
 			if is_surface_underground(surface) then
-				if surface_layer > 1 then return game.get_surface(surface_mapname(surface_type_underground, surface_layer-1))
-				elseif surface.name=="nauvis" then return game.get_surface(surface_mapname(surface_type_sky, 1))
-				else return game.get_surface("nauvis") end
+				if surface_layer > 1 then return get_surface(surface_mapname(surface_type_underground, surface_layer-1))
+				elseif surface.name=="nauvis" then return get_surface(surface_mapname(surface_type_sky, 1))
+				else return get_surface("nauvis") end
 			else
-				return game.get_surface(surface_mapname(surface_type_sky, surface_layer+1))
+				return get_surface(surface_mapname(surface_type_sky, surface_layer+1))
 			end
 		end
 	end
@@ -97,18 +97,17 @@ function get_surface_below(surface)
 	if is_surface_from_this_mod(surface) or surface.name=="nauvis" then
 		local surface_layer = get_surface_layer(surface)
 		if is_surface_underground(surface) then
-			return game.get_surface(surface_mapname(surface_type_underground, surface_layer+1))
+			return get_surface(surface_mapname(surface_type_underground, surface_layer+1))
 		else
-			if surface_layer > 1 then return game.get_surface(surface_mapname(surface_type_sky, surface_layer-1))
-			elseif surface.name=="nauvis" then return game.get_surface(surface_mapname(surface_type_underground, 1))
-			else return game.get_surface("nauvis") end
+			if surface_layer > 1 then return get_surface(surface_mapname(surface_type_sky, surface_layer-1))
+			elseif surface.name=="nauvis" then return get_surface(surface_mapname(surface_type_underground, 1))
+			else return get_surface("nauvis") end
 		end
 	end
 end
 
 function create_surface_below(surface)
 	local surface_name = get_surface_name(surface)
-	--game.player.print(surface_name)
 	if is_surface_from_this_mod(surface) then
 		local surface_layer = get_surface_layer(surface)
 		if is_surface_underground(surface) then
@@ -135,11 +134,11 @@ function surfaces_chunk_generated(surface, area)
 	if not(global.surface_chunk_generated[surface.name][chunkstring]==true) then
 		global.surface_chunk_generated[surface.name][chunkstring] = true
 		local replacementTiles = {}
-		local tile_name = surface_tile_sky_floor
+		local tile_name = tile_sky_floor
 		local entity_name = nil
 		if is_surface_underground(surface) then
-			tile_name=surface_tile_underground_floor
-			entity_name=surface_entity_underground_wall
+			tile_name=tile_underground_floor
+			entity_name=entity_underground_wall
 		end
 		local tilesToReplace=get_tiles_in_area(area)
 		for k, v in pairs(tilesToReplace) do
@@ -148,13 +147,13 @@ function surfaces_chunk_generated(surface, area)
 					if not(is_paired_entity(value)) then
 						value.destroy()
 					end
-				elseif value.type=="tree" or value.type=="decorative" or value.type=="fish" or value.type=="noise-layer" or value.type=="simple-entity" then
+				elseif value.type=="tree" or value.type=="decorative" or value.type=="fish" or value.type=="noise-layer" or (value.type=="simple-entity" and not(value.name=="sky-exit" or value.name=="sky-entrance" or value.name=="underground-exit" or value.name=="underground-entrance")) then
 					value.destroy()
 				end
 			end
-			if not(surface.count_entities_filtered({area={{v.x-1,v.y-1},{v.x+2,v.y+2}}, type="electric-pole"}) == 0) or not(surface.count_entities_filtered({area={{v.x-2,v.y-2},{v.x+3,v.y+3}}, type="unit-spawner"})==0) or not(surface.count_entities_filtered({area={{v.x-2,v.y-2},{v.x+3,v.y+3}}, type="turret"})==0) or not(surface.count_entities_filtered({area={{v.x-1,v.y-1},{v.x+2,v.y+2}}, type="container"})==0) then
+			if not(surface.count_entities_filtered({area={{v.x-1,v.y-1},{v.x+2,v.y+2}}, type="electric-pole"}) == 0) or not(surface.count_entities_filtered({area={{v.x-2,v.y-2},{v.x+3,v.y+3}}, type="unit-spawner"})==0) or not(surface.count_entities_filtered({area={{v.x-2,v.y-2},{v.x+3,v.y+3}}, type="turret"})==0) or not(surface.count_entities_filtered({area={{v.x-1,v.y-1},{v.x+2,v.y+2}}, type="simple-entity"})==0) or not(surface.count_entities_filtered({area={{v.x-1,v.y-1},{v.x+2,v.y+2}}, type="container"})==0) then
 				if entity_name then table.insert(replacementTiles, {name = tile_name, position = {math.floor(v.x),math.floor(v.y)}})
-				else table.insert(replacementTiles, {name = surface_tile_sky_concrete, position = {math.floor(v.x),math.floor(v.y)}})
+				else table.insert(replacementTiles, {name = tile_sky_concrete, position = {math.floor(v.x),math.floor(v.y)}})
 				end
 			else
 				if entity_name then
@@ -173,14 +172,14 @@ end
 
 function underground_floor_fix(entity, surface)
 	if is_surface_from_this_mod(surface) and is_surface_underground(surface) then
-		if surface.get_tile(math.floor(entity.position.x),math.floor(entity.position.y)).name~=surface_tile_underground_floor then
+		if surface.get_tile(math.floor(entity.position.x),math.floor(entity.position.y)).name~=tile_underground_floor then
 			local replacementTiles = {}
 			local area={}
 			area.left_top={x=math.floor(entity.position.x-1),y=math.floor(entity.position.y-1)}
 			area.right_bottom={x=math.floor(entity.position.x+2),y=math.floor(entity.position.y+2)}
 			local tilesToReplace=get_tiles_in_area(area)
 			for k, v in pairs(tilesToReplace) do
-				table.insert(replacementTiles, {name = surface_tile_underground_floor, position = {math.floor(v.x),math.floor(v.y)}})
+				table.insert(replacementTiles, {name = tile_underground_floor, position = {math.floor(v.x),math.floor(v.y)}})
 			end			
 			surface.set_tiles(replacementTiles)
 		end
@@ -203,11 +202,11 @@ function clear_floor_around_location(position, surface, radius)
 				for key,value in pairs(surface.find_entities_filtered({area={v,{x=v.x+1, y=v.y+1}}, name=="underground-wall"})) do
 					value.destroy()
 				end
-				table.insert(replacementTiles, {name = surface_tile_underground_floor, position = {math.floor(v.x),math.floor(v.y)}})
+				table.insert(replacementTiles, {name = tile_underground_floor, position = {math.floor(v.x),math.floor(v.y)}})
 			end			
 		else
 			for k, v in pairs(tilesToReplace) do
-				table.insert(replacementTiles, {name = surface_tile_sky_concrete, position = {math.floor(v.x),math.floor(v.y)}})
+				table.insert(replacementTiles, {name = tile_sky_concrete, position = {math.floor(v.x),math.floor(v.y)}})
 			end
 		end
 		surface.set_tiles(replacementTiles)
@@ -216,14 +215,14 @@ end
 
 function sky_floor_fix(position, surface)
 	if is_surface_from_this_mod(surface) and not(is_surface_underground(surface)) then
-		if surface.get_tile(position.x,position.y).name~=surface_tile_sky_floor then
+		if surface.get_tile(position.x,position.y).name~=tile_sky_floor then
 			local replacementTiles = {}
 			local area={}
 			area.left_top={x=math.floor(position.x-1),y=math.floor(position.y-1)}
 			area.right_bottom={x=math.floor(position.x+2),y=math.floor(position.y+2)}
 			local tilesToReplace=get_tiles_in_area(area)
 			for k, v in pairs(tilesToReplace) do
-				table.insert(replacementTiles, {name = surface_tile_sky_floor, position = {math.floor(v.x),math.floor(v.y)}})
+				table.insert(replacementTiles, {name = tile_sky_floor, position = {math.floor(v.x),math.floor(v.y)}})
 			end
 			surface.set_tiles(replacementTiles)
 		end
@@ -233,13 +232,13 @@ end
 function get_map_gen_settings(surface_type)
 	math.randomseed(game.tick)
 	local map_gen_settings = {
-		terrain_segmentation=game.get_surface("nauvis").map_gen_settings.terrain_segmentation,
+		terrain_segmentation=get_surface("nauvis").map_gen_settings.terrain_segmentation,
 		water="none",
-		autoplace_controls = game.get_surface("nauvis").map_gen_settings.autoplace_controls,
-		width = game.get_surface("nauvis").map_gen_settings.width,
-		height = game.get_surface("nauvis").map_gen_settings.height,
+		autoplace_controls = get_surface("nauvis").map_gen_settings.autoplace_controls,
+		width = get_surface("nauvis").map_gen_settings.width,
+		height = get_surface("nauvis").map_gen_settings.height,
 		seed = math.floor(math.random()*4294967295),
-		peaceful_mode = game.get_surface("nauvis").map_gen_settings.peaceful_mode}
+		peaceful_mode = get_surface("nauvis").map_gen_settings.peaceful_mode}
 	if surface_type==surface_type_sky then
 		for k, v in pairs(map_gen_settings.autoplace_controls) do v.size="none" end
 	end
@@ -255,7 +254,7 @@ function transport_player_to_access_shaft(player, destination_access_shaft)
 end
 
 function find_nearby_access_shaft(entity, radius, surface)
-	for k, v in pairs(surface.find_entities_filtered({area={{entity.position.x-radius,entity.position.y-radius},{entity.position.x+radius,entity.position.y+radius}},type="electric-pole"})) do
+	for k, v in pairs(surface.find_entities_filtered({area={{entity.position.x-radius,entity.position.y-radius},{entity.position.x+radius,entity.position.y+radius}},type="simple-entity"})) do
 		if v.name == "sky-exit" or v.name == "sky-entrance" or v.name == "underground-exit" or v.name == "underground-entrance" then
 			return v
 		end
@@ -266,18 +265,17 @@ end
 function find_paired_entity(entity)
 	local pair_data = get_paired_entity_data(entity)
 	if pair_data then
-		if pair_data.location==surface_location_above then return find_nearby_entity_by_name(entity, 0.5, get_surface_above(entity.surface), pair_data.name)
+		if pair_data.destination==surface_location_above then return find_nearby_entity_by_name(entity, 0.5, get_surface_above(entity.surface), pair_data.name)
 		else return find_nearby_entity_by_name(entity, 0.5, get_surface_below(entity.surface), pair_data.name) end
 	end
 	return nil
 end
 
 function trigger_create_paired_entity(entity)
-	--game.player.print("trigger create entity")
 	local pair_data = get_paired_entity_data(entity)
 	local paired_entity, paired_surface = nil
 	if is_surface_underground(entity.surface) then
-		if pair_data.realm==surface_type_sky then 
+		if pair_data.domain==surface_type_sky then 
 			entity.destroy()
 		end
 	elseif entity.surface.name=="nauvis" then
@@ -285,15 +283,14 @@ function trigger_create_paired_entity(entity)
 			entity.destroy()
 		end
 	elseif is_surface_from_this_mod(entity.surface) then
-		if pair_data.realm==surface_type_underground then
+		if pair_data.domain==surface_type_underground then
 			entity.destroy()
 		end
 	end
-	table.insert(global.task_queue, {task=surface_task_triggercreatesurface, data={entity=entity, pair_location=pair_data.location}})
+	table.insert(global.task_queue, {task=task_triggercreatesurface, data={entity=entity, pair_location=pair_data.destination}})
 end
 
 function trigger_create_paired_surface(entity, pair_location)
-	--game.player.print("trigger create surface")
 	local paired_surface = nil
 	if entity and entity.valid then
 		if pair_location==surface_location_above then
@@ -314,7 +311,6 @@ function trigger_create_paired_surface(entity, pair_location)
 end
 
 function create_paired_entity(entity, paired_surface)
-	--game.player.print("create entity")
 	local pair_data = get_paired_entity_data(entity)
 	local paired_entity = nil
 	clear_floor_for_paired_entity(entity, paired_surface)
@@ -326,13 +322,12 @@ function create_paired_entity(entity, paired_surface)
 end
 
 function finalize_paired_entity(entity, paired_entity)
-	--game.player.print("finalize entity")
 	local pair_data = get_paired_entity_data(entity)
-	if pair_data.class==surface_pairclass_access_shaft then
+	if pair_data.class==pairclass_electric_pole then
 		entity.connect_neighbour(paired_entity)
 		entity.connect_neighbour{wire = defines.circuitconnector.red, target_entity = paired_entity}
 		entity.connect_neighbour{wire = defines.circuitconnector.green, target_entity = paired_entity}
-	elseif pair_data.class==surface_pairclass_transport_chest then
+	elseif pair_data.class==pairclass_transport_chest then
 		global.transport_chests = global.transport_chests or {}
 		table.insert(global.transport_chests, {input=entity,output=paired_entity})
 	end

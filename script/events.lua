@@ -26,14 +26,14 @@ end
 function on_built_entity(event)
 	if is_paired_entity(event.created_entity) then
 		global.task_queue = global.task_queue or {}
-		table.insert(global.task_queue, {task=surface_task_triggercreatepair, data={entity=event.created_entity}})
+		table.insert(global.task_queue, {task=task_triggercreatepair, data={entity=event.created_entity}})
 	end
 end
 
 function on_robot_built_entity(event)
 	if is_paired_entity(event.created_entity) then
 		global.task_queue = global.task_queue or {}
-		table.insert(global.task_queue, {task=surface_task_triggercreatepair, data={entity=event.created_entity}})
+		table.insert(global.task_queue, {task=task_triggercreatepair, data={entity=event.created_entity}})
 	end
 end
 
@@ -76,7 +76,7 @@ function on_canceled_deconstruction(event)
 end
 
 function on_player_driving_changed_state(event)
-
+	
 end
 
 function on_put_item(event)
@@ -114,7 +114,7 @@ function update_players_using_access_shafts(event)
 		if player.walking_state.walking or not(data.destination_access_shaft) then
 			global.players_using_access_shafts[name]=nil
 		else
-			if data.time_waiting >= time_required_for_teleportation then
+			if data.time_waiting >= teleportation_time_waiting then
 				transport_player_to_access_shaft(player, data.destination_access_shaft)
 				global.players_using_access_shafts[name]=nil
 			end
@@ -126,7 +126,7 @@ end
 function check_player_collision_with_access_shafts(event)
 	for index, player in ipairs(game.players) do
 		if not(player.walking_state.walking) and (global.players_using_access_shafts==nil or global.players_using_access_shafts[player.name]==nil) then
-			local access_shaft = find_nearby_access_shaft(player, 0.3, player.surface)
+			local access_shaft = find_nearby_access_shaft(player, teleportation_check_range, player.surface)
 			if access_shaft then
 				local paired_access_shaft = find_paired_entity(access_shaft)
 				if paired_access_shaft then
@@ -162,24 +162,24 @@ end
 function execute_first_task_in_waiting_queue(event)
 	global.task_queue = global.task_queue or {}
 	for k, v in pairs(global.task_queue) do
-		if v.task==surface_task_triggercreatepair then
+		if v.task==task_triggercreatepair then
 			trigger_create_paired_entity(v.data.entity)
-		elseif v.task==surface_task_triggercreatesurface then
+		elseif v.task==task_triggercreatesurface then
 			local surface = trigger_create_paired_surface(v.data.entity, v.data.pair_location)
 			if surface==nil then
 				table.insert(global.task_queue, v)
 			elseif surface~=false then
 				surface.request_to_generate_chunks(v.data.entity.position, 1)
-				table.insert(global.task_queue, {task=surface_task_createpair, data={entity=v.data.entity, paired_surface=surface}})
+				table.insert(global.task_queue, {task=task_createpair, data={entity=v.data.entity, paired_surface=surface}})
 			end
-		elseif v.task==surface_task_createpair then
+		elseif v.task==task_createpair then
 			local paired_entity = create_paired_entity(v.data.entity, v.data.paired_surface)
 			if paired_entity==nil or paired_entity==false then
 				table.insert(global.task_queue, v)
 			else
-				table.insert(global.task_queue, {task=surface_task_finishpair,data={entity=v.data.entity, paired_entity=paired_entity}})
+				table.insert(global.task_queue, {task=task_finishpair,data={entity=v.data.entity, paired_entity=paired_entity}})
 			end
-		elseif v.task==surface_task_finishpair then
+		elseif v.task==task_finishpair then
 			finalize_paired_entity(v.data.entity, v.data.paired_entity)
 		end
 		table.remove(global.task_queue, k)

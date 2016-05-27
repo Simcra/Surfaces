@@ -18,7 +18,7 @@ data:extend({{
 	order = "surfaces-b",
 },{
 	type = "item-subgroup",
-	name = "transport-chest",
+	name = "surfaces-transport",
 	group = "surfaces",
 	inventory_order = "surfaces-c",
 	order = "surfaces-c",

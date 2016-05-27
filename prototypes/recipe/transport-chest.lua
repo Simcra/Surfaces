@@ -2,7 +2,7 @@ data:extend({{
 	type = "recipe",
 	name = "transport-chest-up",
 	group = "surfaces",
-	subgroup = "transport-chest",
+	subgroup = "surfaces-transport",
 	enabled = true,
 	ingredients = {
 		{"logistic-chest-requester", 1},
@@ -12,7 +12,7 @@ data:extend({{
 	type = "recipe",
 	name = "transport-chest-up-2",
 	group = "surfaces",
-	subgroup = "transport-chest",
+	subgroup = "surfaces-transport",
 	enabled = true,
 	ingredients = {
 		{"transport-chest-down", 1},
@@ -22,7 +22,7 @@ data:extend({{
 	type = "recipe",
 	name = "transport-chest-down",
 	group = "surfaces",
-	subgroup = "transport-chest",
+	subgroup = "surfaces-transport",
 	enabled = true,
 	ingredients = {
 		{"logistic-chest-requester", 1},
@@ -32,7 +32,7 @@ data:extend({{
 	type = "recipe",
 	name = "transport-chest-down-2",
 	group = "surfaces",
-	subgroup = "transport-chest",
+	subgroup = "surfaces-transport",
 	enabled = true,
 	ingredients = {
 		{"transport-chest-up", 1},
