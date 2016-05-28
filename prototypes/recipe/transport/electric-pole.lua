@@ -8,27 +8,11 @@ data:extend({{
 	result = "electric-pole-lower",
 },{
 	type = "recipe",
-	name = "electric-pole-lower-2",
-	group = "surfaces",
-	subgroup = "surfaces-transport",
-	enabled = true,
-	ingredients = {{"electric-pole-upper", 1}},
-	result = "electric-pole-lower",
-},{
-	type = "recipe",
 	name = "electric-pole-upper",
 	group = "surfaces",
 	subgroup = "surfaces-transport",
 	enabled = true,
 	ingredients = {{"medium-electric-pole", 2}},
-	result = "electric-pole-upper",
-},{
-	type = "recipe",
-	name = "electric-pole-upper-2",
-	group = "surfaces",
-	subgroup = "surfaces-transport",
-	enabled = true,
-	ingredients = {{"electric-pole-lower", 1}},
 	result = "electric-pole-upper",
 },{
 	type = "recipe",

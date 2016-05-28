@@ -18,20 +18,23 @@ function on_tick(event)
 	if game.tick%ticks_between_event["update_transport_chest_contents"]==0 then
 		update_transport_chest_contents(event)
 	end
+	if game.tick%ticks_between_event["update_fluid_transport_contents"]==0 then
+		update_fluid_transport_contents(event)
+	end
 	if game.tick%ticks_between_event["execute_first_task_in_waiting_queue"]==0 then
 		execute_first_task_in_waiting_queue(event)
 	end
 end
 
 function on_built_entity(event)
-	if is_paired_entity(event.created_entity) then
+	if pairdata_get(event.created_entity)~=nil then
 		global.task_queue = global.task_queue or {}
 		table.insert(global.task_queue, {task=task_triggercreatepair, data={entity=event.created_entity}})
 	end
 end
 
 function on_robot_built_entity(event)
-	if is_paired_entity(event.created_entity) then
+	if pairdata_get(event.created_entity)~=nil then
 		global.task_queue = global.task_queue or {}
 		table.insert(global.task_queue, {task=task_triggercreatepair, data={entity=event.created_entity}})
 	end
@@ -46,7 +49,7 @@ end
 function on_preplayer_mined_item(event)
 	if event.entity.name==surface_underground_wall_entity then
 		underground_floor_fix(event.entity, event.entity.surface)
-	elseif is_paired_entity(event.entity) then
+	elseif pairdata_get(event.created_entity)~=nil then
 		destroy_paired_entity(event.entity)
 	end
 end
@@ -54,7 +57,7 @@ end
 function on_robot_pre_mined(event)
 	if event.entity.name==surface_underground_wall_entity then
 		underground_floor_fix(event.entity, event.entity.surface)
-	elseif is_paired_entity(event.entity) then
+	elseif pairdata_get(event.created_entity)~=nil then
 		destroy_paired_entity(event.entity)
 	end
 end
@@ -153,6 +156,35 @@ function update_transport_chest_contents(event)
 				if output.can_insert(itemstack) then
 					local remove_itemstack={name=key, count=output.insert(itemstack)}
 					input.remove(remove_itemstack)
+				end
+			end
+		end
+	end
+end
+
+function update_fluid_transport_contents(event)
+	global.fluid_transport = global.fluid_transport or {}
+	for k, v in pairs(global.fluid_transport) do
+		if not(v.a and v.a.valid) or not(v.b and v.b.valid) then
+			if v.a and v.a.valid then v.a.destroy() end
+			if v.b and v.b.valid then v.b.destroy() end
+			table.remove(global.fluid_transport, k)
+		else
+			local fluidbox_a, fluidbox_b = v.a.fluidbox[1], v.b.fluidbox[1]
+			if not(fluidbox_a==nil and fluidbox_b==nil) then
+				if fluidbox_a==nil then
+					fluidbox_b.amount = fluidbox_b.amount/2
+					v.a.fluidbox[1]=fluidbox_b
+					v.b.fluidbox[1]=fluidbox_b
+				elseif fluidbox_b==nil then
+					fluidbox_a.amount = fluidbox_a.amount/2
+					v.a.fluidbox[1]=fluidbox_a
+					v.b.fluidbox[1]=fluidbox_a
+				elseif fluidbox_a.type==fluidbox_b.type then
+					local fluidbox_new = fluidbox_a
+					fluidbox_new.amount = (fluidbox_new.amount + fluidbox_b.amount)/2
+					v.a.fluidbox[1] = fluidbox_new
+					v.b.fluidbox[1] = fluidbox_new
 				end
 			end
 		end

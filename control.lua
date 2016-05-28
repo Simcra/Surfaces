@@ -9,7 +9,25 @@ require "defines" --pre 0.13
 require "script.config"
 require "script.events"
 
+-- Entity pairing data
+local entity_pair_data = {
+	{"sky-entrance", "sky-exit", surface_location_above, pairclass_access_shaft, surface_type_sky, true},
+	{"sky-exit", "sky-entrance", surface_location_below, pairclass_access_shaft, surface_type_sky, false},
+	{"underground-entrance", "underground-exit", surface_location_below, pairclass_access_shaft, surface_type_underground, true},
+	{"underground-exit", "underground-entrance", surface_location_above, pairclass_access_shaft, surface_type_underground, false},
+	{"transport-chest-up", "receiver-chest-upper", surface_location_above, pairclass_transport_chest, surface_type_all, true},
+	{"transport-chest-down", "receiver-chest-lower", surface_location_below, pairclass_transport_chest, surface_type_all, true},
+	{"electric-pole-upper", "electric-pole-lower", surface_location_below, pairclass_electric_pole, surface_type_all, true},
+	{"electric-pole-lower", "electric-pole-upper", surface_location_above, pairclass_electric_pole, surface_type_all, true},
+	{"fluid-transport-upper", "fluid-transport-lower", surface_location_below, pairclass_fluid_transport, surface_type_all, true},
+	{"fluid-transport-lower", "fluid-transport-upper", surface_location_above, pairclass_fluid_transport, surface_type_all, true}
+}
+pairdata_insert_array(entity_pair_data)
+
 -- Register event handlers
+script.on_init(on_init)
+script.on_load(on_load)
+script.on_configuration_changed(on_configuration_changed)
 script.on_event(defines.events.on_built_entity, function(event) on_built_entity(event) end) -- when the player builds an entity
 script.on_event(defines.events.on_robot_built_entity, function(event) on_robot_built_entity(event) end) -- when a robot builds an entity
 script.on_event(defines.events.on_chunk_generated, function(event) on_chunk_generated(event) end) -- when a chunk is generated
@@ -29,16 +47,16 @@ script.on_event(defines.events.on_entity_died, function(event) on_entity_died(ev
 script.on_event(defines.events.on_train_changed_state, function(event) on_train_changed_state(event) end) -- when a train starts or stops moving
 script.on_event(defines.events.on_tick, function(event) on_tick(event) end) -- every tick
 
+-- Called when this module is initialised (when game is started and mod is loaded)
+local function on_init(event)
+	
+end
 
--- Initialise pairdata
-local pairdata = {
-	{"sky-entrance", "sky-exit", surface_location_above, pairclass_access_shaft, surface_type_sky, true},
-	{"sky-exit", "sky-entrance", surface_location_below, pairclass_access_shaft, surface_type_sky, false},
-	{"underground-entrance", "underground-exit", surface_location_below, pairclass_access_shaft, surface_type_underground, true},
-	{"underground-exit", "underground-entrance", surface_location_above, pairclass_access_shaft, surface_type_underground, false},
-	{"transport-chest-up", "receiver-chest-upper", surface_location_above, pairclass_transport_chest, surface_type_all, true},
-	{"transport-chest-down", "receiver-chest-lower", surface_location_below, pairclass_transport_chest, surface_type_all, true},
-	{"electric-pole-upper", "electric-pole-lower", surface_location_below, pairclass_electric_pole, surface_type_all, true},
-	{"electric-pole-lower", "electric-pole-upper", surface_location_above, pairclass_electric_pole, surface_type_all, true}
-}
-update_entity_data(pairdata)
+-- Called when the map is loaded
+local function on_load(event)
+	
+end
+	
+local function on_configuration_changed(event)
+	
+end

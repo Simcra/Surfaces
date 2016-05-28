@@ -6,9 +6,11 @@
 ]]
 
 -- Items
-require("prototypes.item.access-shaft")
-require("prototypes.item.transport-chest")
-require("prototypes.item.electric-pole")
+require("prototypes.item.access-shaft.sky")
+require("prototypes.item.access-shaft.underground")
+require("prototypes.item.transport.transport-chest")
+require("prototypes.item.transport.electric-pole")
+require("prototypes.item.transport.fluid-transport")
 require("prototypes.item.item-groups")
 
 -- Entities
@@ -17,21 +19,23 @@ require("prototypes.entity.access-shaft.underground")
 require("prototypes.entity.transport.receiver-chest")
 require("prototypes.entity.transport.transport-chest")
 require("prototypes.entity.transport.electric-pole")
-require("prototypes.entity.wall.underground")
+require("prototypes.entity.transport.fluid-transport")
+require("prototypes.entity.underground-wall")
 
 -- Recipes
 require("prototypes.recipe.access-shaft.sky")
 require("prototypes.recipe.access-shaft.underground")
-require("prototypes.recipe.transport-chest")
-require("prototypes.recipe.electric-pole")
+require("prototypes.recipe.transport.transport-chest")
+require("prototypes.recipe.transport.electric-pole")
+require("prototypes.recipe.transport.fluid-transport")
 
 -- Technology
 --require("prototypes.tech.*")
 
 -- Tiles
-require("prototypes.tile.underground.floor")
-require("prototypes.tile.sky.floor")
-require("prototypes.tile.sky.concrete")
+require("prototypes.tile.underground-floor")
+require("prototypes.tile.sky-floor")
+require("prototypes.tile.sky-concrete")
 
 -- Categories
 --require("prototypes.category.recipe-categories")]]
