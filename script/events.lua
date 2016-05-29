@@ -47,17 +47,13 @@ function on_chunk_generated(event)
 end
 
 function on_preplayer_mined_item(event)
-	if event.entity.name==surface_underground_wall_entity then
-		underground_floor_fix(event.entity, event.entity.surface)
-	elseif pairdata_get(event.created_entity)~=nil then
+	if pairdata_get(event.created_entity)~=nil then
 		destroy_paired_entity(event.entity)
 	end
 end
 
 function on_robot_pre_mined(event)
-	if event.entity.name==surface_underground_wall_entity then
-		underground_floor_fix(event.entity, event.entity.surface)
-	elseif pairdata_get(event.created_entity)~=nil then
+	if pairdata_get(event.created_entity)~=nil then
 		destroy_paired_entity(event.entity)
 	end
 end
@@ -201,7 +197,7 @@ function execute_first_task_in_waiting_queue(event)
 			if surface==nil then
 				table.insert(global.task_queue, v)
 			elseif surface~=false then
-				surface.request_to_generate_chunks(v.data.entity.position, 1)
+				surface.request_to_generate_chunks(v.data.entity.position, 0)
 				table.insert(global.task_queue, {task=task_createpair, data={entity=v.data.entity, paired_surface=surface}})
 			end
 		elseif v.task==task_createpair then

@@ -1,8 +1,8 @@
 --[[
 	Surfaces (Factorio Mod)
-    Copyright (C) 2016  Simon Crawley
+	Copyright (C) 2016	Simon Crawley
 
-    This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+	This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 ]]
 
 require("script.config")
@@ -133,57 +133,60 @@ function surfaces_chunk_generated(surface, area)
 		tile_name = tile_sky_floor
 	end
 	local oldTiles = get_tiles_in_area(area)
-	for k, v in pairs(oldTiles) do
-		for key, value in pairs(surface.find_entities({{v.x,v.y},{v.x,v.y}})) do
-			if not(is_underground) and not(pairdata_get(value)) then
-				value.destroy()
-			elseif is_underground and not(value.type=="resource") and not(pairdata_get(value)) and not(value.name==entity_underground_wall) then
-				value.destroy()
+	
+	-- create underground walls
+	if is_underground then
+		for k, v in pairs(oldTiles) do
+			if surface.count_entities_filtered({area={{math.floor(v.x)+0.5,math.floor(v.y)+0.5},{math.floor(v.x)+0.5,math.floor(v.y)+0.5}}, name=entity_name})==0 then
+				surface.create_entity({name=entity_name, position={math.floor(v.x)+0.5,math.floor(v.y)+0.5}, force=game.forces.player})
 			end
 		end
-		if not(surface.count_entities_filtered({area={{v.x-1,v.y-1},{v.x+2,v.y+2}}, type="electric-pole"})==0) or not(surface.count_entities_filtered({area={{v.x-5,v.y-5},{v.x+6,v.y+6}}, type="unit-spawner"})==0) or not(surface.count_entities_filtered({area={{v.x-4,v.y-4},{v.x+5,v.y+5}}, type="turret"})==0) or not(surface.count_entities_filtered({area={{v.x-1,v.y-1},{v.x+2,v.y+2}}, type="simple-entity"})==0) or not(surface.count_entities_filtered({area={{v.x-1,v.y-1},{v.x+2,v.y+2}}, type="container"})==0) or not(surface.count_entities_filtered({area={{v.x-1,v.y-1},{v.x+2,v.y+2}}, type="storage-tank"})==0) then
-			if is_underground then
-				table.insert(newTiles, {name = tile_name, position = {math.floor(v.x),math.floor(v.y)}})
+	end
+	
+	-- destroy any entities which should not be present in this surface
+	for k, v in pairs(surface.find_entities(area)) do
+		if v and v.valid then
+			if pairdata_get(v)~=nil then
+				clear_floor_for_paired_entity(v, v.surface, 1)
 			else
-				table.insert(newTiles, {name = tile_sky_concrete, position = {math.floor(v.x),math.floor(v.y)}})
-			end
-		else
-			table.insert(newTiles, {name = tile_name, position = {math.floor(v.x),math.floor(v.y)}})
-			if is_underground then
-				if surface.count_entities_filtered({area={{math.floor(v.x)+0.5,math.floor(v.y)+0.5},{math.floor(v.x)+0.5,math.floor(v.y)+0.5}}, name=entity_name})==0 then
-					surface.create_entity({name=entity_name, position={math.floor(v.x)+0.5,math.floor(v.y)+0.5}, force=game.forces.player})
+				if not(v.type=="player") then
+					if not(is_underground) then
+						v.destroy()
+					elseif not(v.type=="resource") then
+						if v.type=="unit-spawner" then
+							clear_floor_around_entity(v, 5)
+						else
+							if v.type=="turret" then
+								clear_floor_around_entity(v, 4)
+							else					
+								v.destroy()
+							end
+						end
+					end
 				end
 			end
 		end
 	end
+	
+	-- place the tiles on the ground
+	for k, v in pairs(oldTiles) do
+		table.insert(newTiles, {name = tile_name, position = {math.floor(v.x), math.floor(v.y)}})
+	end
 	surface.set_tiles(newTiles)
 end
 
-function underground_floor_fix(entity, surface)
-	if is_surface_from_this_mod(surface) and is_surface_underground(surface) then
-		if surface.get_tile(math.floor(entity.position.x), math.floor(entity.position.y)).name ~= tile_underground_floor then
-			local newTiles, area = {}, {}
-			area.left_top = {x = math.floor(entity.position.x-1), y = math.floor(entity.position.y-1)}
-			area.right_bottom = {x = math.floor(entity.position.x+2), y = math.floor(entity.position.y+2)}
-			local oldTiles=get_tiles_in_area(area)
-			for k, v in pairs(oldTiles) do
-				table.insert(newTiles, {name = tile_underground_floor, position = {math.floor(v.x),math.floor(v.y)}})
-			end			
-			surface.set_tiles(newTiles)
-		end
-	end
+function clear_floor_around_entity(entity, radius)
+	return clear_floor_around_location(entity.position, entity.surface, radius)
 end
 
-function clear_floor_for_paired_entity(entity, surface)
-	return clear_floor_around_location({x = math.floor(entity.position.x), y = math.floor(entity.position.y)}, surface, 1)
+function clear_floor_for_paired_entity(entity, surface, radius)
+	return clear_floor_around_location({x = math.floor(entity.position.x), y = math.floor(entity.position.y)}, surface, radius)
 end
 
 function clear_floor_around_location(position, surface, radius)
-	if is_surface_from_this_mod(surface) and radius>=0 then
-		local newTiles, area = {}, {}
-		area.left_top = {x = math.floor(position.x-radius), y = math.floor(position.y-radius)}
-		area.right_bottom = {x = math.floor(position.x+radius), y = math.floor(position.y+radius)}
-		local oldTiles = get_tiles_in_area(area)
+	if is_surface_from_this_mod(surface) and radius and radius>=0 then
+		local area = {left_top = {x = math.floor(position.x - radius), y = math.floor(position.y - radius)}, right_bottom = {x = math.floor(position.x + radius), y = math.floor(position.y + radius)}}
+		local newTiles, oldTiles = {}, get_tiles_in_area(area)
 		if is_surface_underground(surface) then
 			for k, v in pairs(oldTiles) do
 				for key,value in pairs(surface.find_entities_filtered({area = {v, {x = v.x+1, y = v.y+1}}, name == entity_underground_wall})) do
@@ -197,21 +200,6 @@ function clear_floor_around_location(position, surface, radius)
 			end
 		end
 		surface.set_tiles(newTiles)
-	end
-end
-
-function sky_floor_fix(position, surface)
-	if is_surface_from_this_mod(surface) and not(is_surface_underground(surface)) then
-		if surface.get_tile(position.x, position.y).name ~= tile_sky_floor then
-			local newTiles, area = {}, {}
-			area.left_top = {x = math.floor(position.x-1), y = math.floor(position.y-1)}
-			area.right_bottom = {x = math.floor(position.x+2), y = math.floor(position.y+2)}
-			local oldTiles = get_tiles_in_area(area)
-			for k, v in pairs(oldTiles) do
-				table.insert(newTiles, {name = tile_sky_floor, position = {math.floor(v.x), math.floor(v.y)}})
-			end
-			surface.set_tiles(newTiles)
-		end
 	end
 end
 
@@ -242,7 +230,7 @@ end
 function find_nearby_access_shaft(entity, radius, surface)
 	for k, v in pairs(surface.find_entities_filtered({area={{entity.position.x-radius,entity.position.y-radius},{entity.position.x+radius,entity.position.y+radius}},type="simple-entity"})) do
 		local pair_data = pairdata_get(v)
-		if pair_data ~= nil and pairdata.class==pairclass_access_shaft then
+		if pair_data ~= nil and pair_data.class==pairclass_access_shaft then
 			return v
 		end
 	end

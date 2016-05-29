@@ -23,8 +23,10 @@ function get_tiles_in_bounding_box(x1,y1,x2,y2)
 end
 
 function find_nearby_entity_by_name(entity, radius, surface, entity_name)
-	for k, v in pairs(surface.find_entities_filtered({area={{entity.position.x-radius,entity.position.y-radius},{entity.position.x+radius,entity.position.y+radius}},name=entity_name})) do
-		return v
+	if surface then
+		for k, v in pairs(surface.find_entities_filtered({area={{entity.position.x-radius,entity.position.y-radius},{entity.position.x+radius,entity.position.y+radius}},name=entity_name})) do
+			return v
+		end
 	end
 	return nil
 end
@@ -37,38 +39,4 @@ end
 function get_surface(identifier)
 	return game.get_surface(identifier) --pre 0.13
 	--return game.surfaces[identifier] --post 0.13
-end
-
-function table.val_to_str(v)
-	if type(v) == "string" then
-		v = string.gsub(v, "\n", "\\n")
-		if string.match(string.gsub(v,"[^'\"]",""), '^"+$') then
-			return "'"..v.."'"
-		end
-		return '"'..string.gsub(v,'"', '\\"' )..'"'
-	else
-		return type(v) == "table" and table.tostring(v) or tostring(v)
-	end
-end
-
-function table.key_to_str (k)
-	if "string" == type (k) and string.match(k, "^[_%a][_%a%d]*$") then
-		return k
-	else
-		return "["..table.val_to_str(k).."]"
-	end
-end
-
-function table.tostring(tbl)
-	local result, done = {}, {}
-	for k, v in ipairs( tbl ) do
-		table.insert( result, table.val_to_str( v ) )
-		done[ k ] = true
-	end
-	for k, v in pairs(tbl) do
-		if not done[k] then
-			table.insert(result, table.key_to_str(k).."="..table.val_to_str(v))
-		end
-	end
-	return "{"..table.concat(result, ",").."}"
 end
