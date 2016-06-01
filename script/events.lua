@@ -24,9 +24,9 @@ function on_tick(event)
 	if game.tick%ticks_between_event["execute_first_task_in_waiting_queue"]==0 then
 		execute_first_task_in_waiting_queue(event)
 	end
-	--[[if game.tick%ticks_between_event["create_entities_in_waiting_queue"]==0 then
-		create_entities_in_waiting_queue(event)
-	end]]
+	if game.tick%ticks_between_event["clear_ground_for_paired_entities"]==0 then
+		clear_ground_for_paired_entities(event)
+	end
 end
 
 function on_built_entity(event)
@@ -225,22 +225,17 @@ function execute_first_task_in_waiting_queue(event)
 	end
 end
 
---[[function create_entities_in_waiting_queue(event)
-	global.create_entity_queue = global.create_entity_queue or {}
-	local counter=0
-	for k, v in ipairs(global.create_entity_queue) do
-		if counter < 4 then
-			if not(v.checkOverlapping) or ((v.checkOverlapping and v.checkOverlapping==true) and v.surfaceRef.count_entities_filtered({area={{v.position.x, v.position.y},{v.position.x, v.position.y}}, name=v.name})==0) then
-				if v.surfaceRef.create_entity({name=v.name, position=v.position, force=v.force, direction=v.direction})~=nil then
-					table.remove(global.create_entity_queue, k)
-				end
-			else
-				v.surfaceRef.create_entity({name=v.name, position=v.position, force=v.force, direction=v.direction})
-				table.remove(global.create_entity_queue, k)
-			end
-			counter=counter+1
-		else
-			break
+function clear_ground_for_paired_entities(event)
+	global.paired_entities = global.paired_entities or {}
+	global.paired_entities_position = global.paired_entities_position or 1
+	local entities = global.paired_entities[global.paired_entities_position]
+	if entities ~= nil then
+		if entities.a and entities.b and entities.a.valid and entities.b.valid then
+			clear_floor_around_entity(entities.a, pairdata_get(entities.a).radius or 1)
+			clear_floor_around_entity(entities.b, pairdata_get(entities.b).radius or 1)
 		end
+		global.paired_entities_position = global.paired_entities_position+1
+	else
+		global.paired_entities_position=1
 	end
-end]]
+end

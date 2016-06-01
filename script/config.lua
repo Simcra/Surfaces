@@ -33,4 +33,4 @@ ticks_between_event["check_player_collision_with_access_shafts"]=2
 ticks_between_event["update_transport_chest_contents"]=5
 ticks_between_event["update_fluid_transport_contents"]=5
 ticks_between_event["execute_first_task_in_waiting_queue"]=2
-ticks_between_event["create_entities_in_waiting_queue"]=1
+ticks_between_event["clear_ground_for_paired_entities"]=1

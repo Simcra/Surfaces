@@ -125,7 +125,6 @@ end
 
 function surfaces_chunk_generated(surface, area)
 	local newTiles, entitiesToCorrect = {}, {}
-	--local pairEntities={"sky-entrance", "sky-exit", "underground-entrance", "underground-exit", "electric-pole-upper", "electric-pole-lower", "fluid-transport-upper", "fluid-transport-lower", "receiver-chest-lower", "receiver-chest-upper", "transport-chest-up", "transport-chest-down"}
 	local tile_name, entity_name
 	local is_underground = is_surface_underground(surface)
 	if is_underground then
@@ -169,13 +168,10 @@ function surfaces_chunk_generated(surface, area)
 	
 	-- insert appropriate tiles into array, create walls and set tiles
 	for k, v in ipairs(get_tiles_in_area(validArea)) do
-		table.insert(newTiles, {name = tile_name, position = {v.x, v.y}})
-		-- section below needs to be replaced since it causes much lag.
-		-- Without this script update is: ~0.1 -> 0.25ms
-		-- With this, script update is: ~1 -> 2.03ms
-		--[[if is_underground == true and surface.count_entities_filtered({area = {{v.x, v.y},{v.x, v.y}}, name = entity_name}) == 0 then
-			surface.create_entity({name = entity_name, position = {v.x, v.y}, force = game.forces.player})
-		end]]
+		table.insert(newTiles, {name = tile_name, position = v})
+		if is_underground == true then
+			surface.create_entity({name = entity_name, position = v, force = game.forces.player})
+		end
 	end
 	surface.set_tiles(newTiles)
 	
@@ -319,12 +315,17 @@ function finalize_paired_entity(entity, paired_entity)
 		entity.connect_neighbour(paired_entity)
 		entity.connect_neighbour{wire = defines.circuitconnector.red, target_entity = paired_entity}
 		entity.connect_neighbour{wire = defines.circuitconnector.green, target_entity = paired_entity}
+		table.insert(global.paired_entities, {a=entity, b=paired_entity})
 	elseif pair_data.class==pairclass_fluid_transport then
 		global.fluid_transport = global.fluid_transport or {}
 		table.insert(global.fluid_transport, {a=entity, b=paired_entity})
+		table.insert(global.paired_entities, {a=entity, b=paired_entity})
 	elseif pair_data.class==pairclass_transport_chest then
 		global.transport_chests = global.transport_chests or {}
 		table.insert(global.transport_chests, {input=entity,output=paired_entity})
+		table.insert(global.paired_entities, {a=entity, b=paired_entity})
+	else
+		table.insert(global.paired_entities, {a=entity, b=paired_entity})
 	end
 end
 
