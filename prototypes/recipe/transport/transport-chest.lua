@@ -1,29 +1,11 @@
-data:extend({{
-	type = "recipe",
-	name = "transport-chest-up",
-	group = "surfaces",
-	subgroup = "surfaces-transport",
-	enabled = true,
-	ingredients = {{"logistic-chest-requester", 1}},
-	result = "transport-chest-up",
-},{
-	type = "recipe",
-	name = "transport-chest-down",
-	group = "surfaces",
-	subgroup = "surfaces-transport",
-	enabled = true,
-	ingredients = {{"logistic-chest-requester", 1}},
-	result = "transport-chest-down",
-},{
-	type = "recipe",
-	name = "logistic-chest-requester-2",
-	enabled = true,
-	ingredients = {{"transport-chest-up", 1}},
-	result = "logistic-chest-requester",
-},{
-	type = "recipe",
-	name = "logistic-chest-requester-3",
-	enabled = true,
-	ingredients = {{"transport-chest-down", 1}},
-	result = "logistic-chest-requester",
-}})
+local transport_chest = {type = "recipe", group = "surfaces", subgroup = "surfaces-transport", enabled = true, ingredients = {{"logistic-chest-requester", 1}}}
+
+local transport_chest_up = table.deepcopy(transport_chest)
+transport_chest_up.name = "transport-chest-up"
+transport_chest_up.result = "transport-chest-up"
+data:extend({transport_chest_up})
+
+local transport_chest_down = table.deepcopy(transport_chest)
+transport_chest_down.name = "transport-chest-down"
+transport_chest_down.result = "transport-chest-down"
+data:extend({transport_chest_down})

@@ -1,31 +1,11 @@
-data:extend({{
-	type = "recipe",
-	name = "fluid-transport-upper",
-	group = "surfaces",
-	subgroup = "surfaces-transport",
-	enabled = true,
-	ingredients = {{"storage-tank", 2}},
-	result = "fluid-transport-upper",
-},{
-	type = "recipe",
-	name = "fluid-transport-lower",
-	group = "surfaces",
-	subgroup = "surfaces-transport",
-	enabled = true,
-	ingredients = {{"storage-tank", 2}},
-	result = "fluid-transport-lower",
-},{
-	type = "recipe",
-	name = "storage-tank-2",
-	enabled = true,
-	ingredients = {{"fluid-transport-lower", 1}},
-	result = "storage-tank",
-	result_count = 2
-},{
-	type = "recipe",
-	name = "storage-tank-3",
-	enabled = true,
-	ingredients = {{"fluid-transport-upper", 1}},
-	result = "storage-tank",
-	result_count = 2
-}})
+local fluid_transport = {type = "recipe", group = "surfaces", subgroup = "surfaces-transport", enabled = true, ingredients = {{"storage-tank", 2}}}
+
+local fluid_transport_upper = table.deepcopy(fluid_transport)
+fluid_transport_upper.name = "fluid-transport-upper"
+fluid_transport_upper.result = "fluid-transport-upper"
+data:extend({fluid_transport_upper})
+
+local fluid_transport_lower = table.deepcopy(fluid_transport)
+fluid_transport_lower.name = "fluid-transport-lower"
+fluid_transport_lower.result = "fluid-transport-lower"
+data:extend({fluid_transport_lower})

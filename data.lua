@@ -6,10 +6,12 @@
 ]]
 
 -- Items
+require("prototypes.item.access-shaft.components")
 require("prototypes.item.access-shaft.sky")
 require("prototypes.item.access-shaft.underground")
 require("prototypes.item.transport.transport-chest")
 require("prototypes.item.transport.electric-pole")
+require("prototypes.item.transport.rail-transport")
 require("prototypes.item.transport.fluid-transport")
 require("prototypes.item.item-groups")
 
@@ -19,10 +21,12 @@ require("prototypes.entity.access-shaft.underground")
 require("prototypes.entity.transport.receiver-chest")
 require("prototypes.entity.transport.transport-chest")
 require("prototypes.entity.transport.electric-pole")
+require("prototypes.entity.transport.rail-transport")
 require("prototypes.entity.transport.fluid-transport")
 require("prototypes.entity.underground-wall")
 
 -- Recipes
+require("prototypes.recipe.access-shaft.components")
 require("prototypes.recipe.access-shaft.sky")
 require("prototypes.recipe.access-shaft.underground")
 require("prototypes.recipe.transport.transport-chest")

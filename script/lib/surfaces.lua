@@ -8,6 +8,7 @@
 require("script.config")
 require("script.lib.util")
 require("script.lib.pair-util")
+require("defines")
 
 function create_surface(surface_type, surface_layer)
 	local result = false
@@ -123,7 +124,8 @@ function is_valid_surface(surface_type, surface_layer)
 end
 
 function surfaces_chunk_generated(surface, area)
-	local newTiles = {}
+	local newTiles, entitiesToCorrect = {}, {}
+	--local pairEntities={"sky-entrance", "sky-exit", "underground-entrance", "underground-exit", "electric-pole-upper", "electric-pole-lower", "fluid-transport-upper", "fluid-transport-lower", "receiver-chest-lower", "receiver-chest-upper", "transport-chest-up", "transport-chest-down"}
 	local tile_name, entity_name
 	local is_underground = is_surface_underground(surface)
 	if is_underground then
@@ -132,74 +134,83 @@ function surfaces_chunk_generated(surface, area)
 	else
 		tile_name = tile_sky_floor
 	end
-	local oldTiles = get_tiles_in_area(area)
+	local validArea = table.deepcopy(area)
+	validArea.right_bottom.x = area.right_bottom.x-1
+	validArea.right_bottom.y = area.right_bottom.y-1
 	
-	-- create underground walls
-	if is_underground then
-		for k, v in pairs(oldTiles) do
-			if surface.count_entities_filtered({area={{math.floor(v.x)+0.5,math.floor(v.y)+0.5},{math.floor(v.x)+0.5,math.floor(v.y)+0.5}}, name=entity_name})==0 then
-				surface.create_entity({name=entity_name, position={math.floor(v.x)+0.5,math.floor(v.y)+0.5}, force=game.forces.player})
+	-- destroy entities which should not spawn on this surface and gather information for fixing entity location
+	for k, v in pairs(surface.find_entities(validArea)) do
+		local pair_data = pairdata_get(v)
+		if is_underground == true then
+			if pair_data ~= nil then
+				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = pair_data.radius})
+			elseif v.type == "unit-spawner" then
+				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = 5})
+			elseif v.type == "turret" then
+				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = 4})
+			elseif v.type ~= "resource" and v.name ~= entity_name and v.type ~= "player" then
+				v.destroy()
 			end
-		end
-	end
-	
-	-- destroy any entities which should not be present in this surface
-	for k, v in pairs(surface.find_entities(area)) do
-		if v and v.valid then
-			if pairdata_get(v)~=nil then
-				clear_floor_for_paired_entity(v, v.surface, 1)
+		else
+			if pair_data ~= nil then
+				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = pair_data.radius})
 			else
-				if not(v.type=="player") then
-					if not(is_underground) then
-						v.destroy()
-					elseif not(v.type=="resource") then
-						if v.type=="unit-spawner" then
-							clear_floor_around_entity(v, 5)
-						else
-							if v.type=="turret" then
-								clear_floor_around_entity(v, 4)
-							else					
-								v.destroy()
-							end
-						end
-					end
-				end
+				if v.type ~= "player" then v.destroy() end
 			end
 		end
 	end
 	
-	-- place the tiles on the ground
-	for k, v in pairs(oldTiles) do
-		table.insert(newTiles, {name = tile_name, position = {math.floor(v.x), math.floor(v.y)}})
+	--fix floor for sky surfaces
+	if is_underground == false then
+		for k, v in pairs(entitiesToCorrect) do
+			clear_floor_around_location(v.position, surface, v.radius)
+		end
+	end
+	
+	-- insert appropriate tiles into array, create walls and set tiles
+	for k, v in ipairs(get_tiles_in_area(validArea)) do
+		table.insert(newTiles, {name = tile_name, position = {v.x, v.y}})
+		-- section below needs to be replaced since it causes much lag.
+		-- Without this script update is: ~0.1 -> 0.25ms
+		-- With this, script update is: ~1 -> 2.03ms
+		--[[if is_underground == true and surface.count_entities_filtered({area = {{v.x, v.y},{v.x, v.y}}, name = entity_name}) == 0 then
+			surface.create_entity({name = entity_name, position = {v.x, v.y}, force = game.forces.player})
+		end]]
 	end
 	surface.set_tiles(newTiles)
+	
+	--fix floor for underground surfaces
+	if is_underground == true then
+		for k, v in pairs(entitiesToCorrect) do
+			clear_floor_around_location(v.position, surface, v.radius)
+		end
+	end
 end
 
 function clear_floor_around_entity(entity, radius)
-	return clear_floor_around_location(entity.position, entity.surface, radius)
+	if entity and entity.valid then return clear_floor_around_location(entity.position, entity.surface, radius) end
 end
 
 function clear_floor_for_paired_entity(entity, surface, radius)
-	return clear_floor_around_location({x = math.floor(entity.position.x), y = math.floor(entity.position.y)}, surface, radius)
+	return clear_floor_around_location({x = entity.position.x, y = entity.position.y}, surface, radius)
 end
 
 function clear_floor_around_location(position, surface, radius)
 	if is_surface_from_this_mod(surface) and radius and radius>=0 then
-		local area = {left_top = {x = math.floor(position.x - radius), y = math.floor(position.y - radius)}, right_bottom = {x = math.floor(position.x + radius), y = math.floor(position.y + radius)}}
+		local area = {left_top = {x = position.x - radius, y = position.y - radius}, right_bottom = {x = position.x + radius, y = position.y + radius}}
 		local newTiles, oldTiles = {}, get_tiles_in_area(area)
 		if is_surface_underground(surface) then
 			for k, v in pairs(oldTiles) do
-				for key,value in pairs(surface.find_entities_filtered({area = {v, {x = v.x+1, y = v.y+1}}, name == entity_underground_wall})) do
+				for key, value in pairs(surface.find_entities_filtered({area = {v, v}, type="tree", name == entity_underground_wall})) do
 					value.destroy()
 				end
-				table.insert(newTiles, {name = tile_underground_floor, position = {math.floor(v.x), math.floor(v.y)}})
 			end			
 		else
 			for k, v in pairs(oldTiles) do
-				table.insert(newTiles, {name = tile_sky_concrete, position = {math.floor(v.x), math.floor(v.y)}})
+				table.insert(newTiles, {name = tile_sky_concrete, position = {v.x, v.y}})
 			end
+			surface.set_tiles(newTiles)
 		end
-		surface.set_tiles(newTiles)
 	end
 end
 
@@ -249,7 +260,7 @@ function find_paired_entity(entity)
 	return nil
 end
 
-function trigger_create_paired_entity(entity)
+function validate_paired_entity(entity)
 	local pair_data = pairdata_get(entity)
 	local paired_entity, paired_surface = nil
 	if is_surface_underground(entity.surface) then
@@ -265,10 +276,10 @@ function trigger_create_paired_entity(entity)
 			entity.destroy()
 		end
 	end
-	table.insert(global.task_queue, {task=task_triggercreatesurface, data={entity=entity, pair_location=pair_data.destination}})
+	return pair_data.destination
 end
 
-function trigger_create_paired_surface(entity, pair_location)
+function create_paired_surface(entity, pair_location)
 	local paired_surface = nil
 	if entity and entity.valid then
 		if pair_location==surface_location_above then
@@ -291,12 +302,15 @@ end
 function create_paired_entity(entity, paired_surface)
 	local pair_data = pairdata_get(entity)
 	local paired_entity = nil
-	clear_floor_for_paired_entity(entity, paired_surface)
-	paired_entity = paired_surface.create_entity({name=pair_data.name, position=entity.position, force=entity.force})
-	if not(paired_entity and paired_entity.valid) then
-		return false
+	if paired_surface and paired_surface.valid then
+		clear_floor_for_paired_entity(entity, paired_surface, pair_data.radius)
+		paired_entity = paired_surface.create_entity({name=pair_data.name, position=entity.position, force=entity.force})
+		if not(paired_entity and paired_entity.valid) then
+			return false
+		end
+		return paired_entity
+	else return false
 	end
-	return paired_entity
 end
 
 function finalize_paired_entity(entity, paired_entity)

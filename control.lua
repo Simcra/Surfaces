@@ -11,17 +11,18 @@ require "script.events"
 
 -- Entity pairing data
 local entity_pair_data = {
-	{"sky-entrance", "sky-exit", surface_location_above, pairclass_access_shaft, surface_type_sky, true},
-	{"sky-exit", "sky-entrance", surface_location_below, pairclass_access_shaft, surface_type_sky, false},
-	{"underground-entrance", "underground-exit", surface_location_below, pairclass_access_shaft, surface_type_underground, true},
-	{"underground-exit", "underground-entrance", surface_location_above, pairclass_access_shaft, surface_type_underground, false},
-	{"transport-chest-up", "receiver-chest-upper", surface_location_above, pairclass_transport_chest, surface_type_all, true},
-	{"transport-chest-down", "receiver-chest-lower", surface_location_below, pairclass_transport_chest, surface_type_all, true},
-	{"electric-pole-upper", "electric-pole-lower", surface_location_below, pairclass_electric_pole, surface_type_all, true},
-	{"electric-pole-lower", "electric-pole-upper", surface_location_above, pairclass_electric_pole, surface_type_all, true},
-	{"fluid-transport-upper", "fluid-transport-lower", surface_location_below, pairclass_fluid_transport, surface_type_all, true},
-	{"fluid-transport-lower", "fluid-transport-upper", surface_location_above, pairclass_fluid_transport, surface_type_all, true}
-}
+	{"sky-entrance", "sky-exit", surface_location_above, pairclass_access_shaft, surface_type_sky--[[, true, 1]]},
+	{"sky-exit", "sky-entrance", surface_location_below, pairclass_access_shaft, surface_type_sky--[[, false, 1]]},
+	{"underground-entrance", "underground-exit", surface_location_below, pairclass_access_shaft, surface_type_underground--[[, true, 1]]},
+	{"underground-exit", "underground-entrance", surface_location_above, pairclass_access_shaft, surface_type_underground, false--[[, 1]]},
+	{"transport-chest-up", "receiver-chest-upper", surface_location_above, pairclass_transport_chest--[[, surface_type_all, true]]},
+	{"transport-chest-down", "receiver-chest-lower", surface_location_below, pairclass_transport_chest},
+	{"electric-pole-upper", "electric-pole-lower", surface_location_below, pairclass_electric_pole},
+	{"electric-pole-lower", "electric-pole-upper", surface_location_above, pairclass_electric_pole},
+	{"fluid-transport-upper", "fluid-transport-lower", surface_location_below, pairclass_fluid_transport},
+	{"fluid-transport-lower", "fluid-transport-upper", surface_location_above, pairclass_fluid_transport},
+	{"rail-transport-upper", "rail-transport-lower", surface_location_below, pairclass_rail_transport, surface_type_all, true, 2},
+	{"rail-transport-lower", "rail-transport-upper", surface_location_above, pairclass_rail_transport, surface_type_all, true, 2}}
 pairdata_insert_array(entity_pair_data)
 
 -- Register event handlers

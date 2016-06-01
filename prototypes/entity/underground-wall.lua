@@ -13,8 +13,11 @@ data:extend({{
 	mined_sound = {filename = "__base__/sound/deconstruct-bricks.ogg"},
 	vehicle_impact_sound =	{filename = "__base__/sound/car-stone-impact.ogg", volume = 1.0},
 	resistances = {{
-		type = "physical",
+		type = "impact",
 		percent = 80,
+	}, {
+		type = "physical",
+		percent = 5,
 	}, {
 		type = "poison",
 		percent = 100,

@@ -24,6 +24,9 @@ function on_tick(event)
 	if game.tick%ticks_between_event["execute_first_task_in_waiting_queue"]==0 then
 		execute_first_task_in_waiting_queue(event)
 	end
+	--[[if game.tick%ticks_between_event["create_entities_in_waiting_queue"]==0 then
+		create_entities_in_waiting_queue(event)
+	end]]
 end
 
 function on_built_entity(event)
@@ -47,13 +50,13 @@ function on_chunk_generated(event)
 end
 
 function on_preplayer_mined_item(event)
-	if pairdata_get(event.created_entity)~=nil then
+	if pairdata_get(event.entity)~=nil then
 		destroy_paired_entity(event.entity)
 	end
 end
 
 function on_robot_pre_mined(event)
-	if pairdata_get(event.created_entity)~=nil then
+	if pairdata_get(event.entity)~=nil then
 		destroy_paired_entity(event.entity)
 	end
 end
@@ -95,7 +98,7 @@ function on_picked_up_item(event)
 end
 
 function on_sector_scanned(event)
-
+	
 end
 
 function on_entity_died(event)
@@ -114,7 +117,9 @@ function update_players_using_access_shafts(event)
 			global.players_using_access_shafts[name]=nil
 		else
 			if data.time_waiting >= teleportation_time_waiting then
-				transport_player_to_access_shaft(player, data.destination_access_shaft)
+				if data.destination_access_shaft and data.destination_access_shaft.valid then
+					transport_player_to_access_shaft(player, data.destination_access_shaft)
+				end
 				global.players_using_access_shafts[name]=nil
 			end
 			data.time_waiting = data.time_waiting + ticks_between_event["update_players_using_access_shafts"]
@@ -131,6 +136,8 @@ function check_player_collision_with_access_shafts(event)
 				if paired_access_shaft then
 					global.players_using_access_shafts = global.players_using_access_shafts or {}
 					global.players_using_access_shafts[player.name] = {time_waiting = 0, player_entity = player, destination_access_shaft=paired_access_shaft}
+				else
+					--create access shaft
 				end
 			end
 		end
@@ -189,15 +196,18 @@ end
 
 function execute_first_task_in_waiting_queue(event)
 	global.task_queue = global.task_queue or {}
-	for k, v in pairs(global.task_queue) do
+	for k, v in ipairs(global.task_queue) do
 		if v.task==task_triggercreatepair then
-			trigger_create_paired_entity(v.data.entity)
+			local destination_surface = validate_paired_entity(v.data.entity)
+			if destination_surface then
+				table.insert(global.task_queue, {task=task_triggercreatesurface, data={entity=v.data.entity, pair_location=destination_surface}})
+			end
 		elseif v.task==task_triggercreatesurface then
-			local surface = trigger_create_paired_surface(v.data.entity, v.data.pair_location)
+			local surface = create_paired_surface(v.data.entity, v.data.pair_location)
 			if surface==nil then
 				table.insert(global.task_queue, v)
 			elseif surface~=false then
-				surface.request_to_generate_chunks(v.data.entity.position, 0)
+				surface.request_to_generate_chunks(v.data.entity.position, 1)
 				table.insert(global.task_queue, {task=task_createpair, data={entity=v.data.entity, paired_surface=surface}})
 			end
 		elseif v.task==task_createpair then
@@ -205,7 +215,7 @@ function execute_first_task_in_waiting_queue(event)
 			if paired_entity==nil or paired_entity==false then
 				table.insert(global.task_queue, v)
 			else
-				table.insert(global.task_queue, {task=task_finishpair,data={entity=v.data.entity, paired_entity=paired_entity}})
+				table.insert(global.task_queue, {task=task_finishpair,data=v.data})
 			end
 		elseif v.task==task_finishpair then
 			finalize_paired_entity(v.data.entity, v.data.paired_entity)
@@ -214,3 +224,23 @@ function execute_first_task_in_waiting_queue(event)
 		break
 	end
 end
+
+--[[function create_entities_in_waiting_queue(event)
+	global.create_entity_queue = global.create_entity_queue or {}
+	local counter=0
+	for k, v in ipairs(global.create_entity_queue) do
+		if counter < 4 then
+			if not(v.checkOverlapping) or ((v.checkOverlapping and v.checkOverlapping==true) and v.surfaceRef.count_entities_filtered({area={{v.position.x, v.position.y},{v.position.x, v.position.y}}, name=v.name})==0) then
+				if v.surfaceRef.create_entity({name=v.name, position=v.position, force=v.force, direction=v.direction})~=nil then
+					table.remove(global.create_entity_queue, k)
+				end
+			else
+				v.surfaceRef.create_entity({name=v.name, position=v.position, force=v.force, direction=v.direction})
+				table.remove(global.create_entity_queue, k)
+			end
+			counter=counter+1
+		else
+			break
+		end
+	end
+end]]
