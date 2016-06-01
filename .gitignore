@@ -58,3 +58,6 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+
+# Releases folder
+releases/
