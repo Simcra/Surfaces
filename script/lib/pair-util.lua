@@ -82,26 +82,22 @@ end
 
 function pairutil.finalize_paired_entity(entity, paired_entity)
 	local pair_data = pairdata.get(entity)
+	local paired_entity = pairutil.find_paired_entity(entity)
 	if pair_data.class == config.pairclass_electric_pole then
 		entity.connect_neighbour(paired_entity)
 		entity.connect_neighbour{wire = defines.circuitconnector.red, target_entity = paired_entity}
 		entity.connect_neighbour{wire = defines.circuitconnector.green, target_entity = paired_entity}
-		table.insert(global.paired_entities, {a = entity, b = paired_entity})
 	elseif pair_data.class == config.pairclass_fluid_transport then
 		global.fluid_transport = global.fluid_transport or {}
 		table.insert(global.fluid_transport, {a = entity, b = paired_entity})
-		table.insert(global.paired_entities, {a = entity, b = paired_entity})
 	elseif pair_data.class == config.pairclass_transport_chest then
 		global.transport_chests = global.transport_chests or {}
 		table.insert(global.transport_chests, {input = entity, output = paired_entity})
-		table.insert(global.paired_entities, {a = entity, b = paired_entity})
-	else
-		table.insert(global.paired_entities, {a = entity, b = paired_entity})
 	end
 end
 
 function pairutil.destroy_paired_entity(entity)
-	local paired_entity = find_paired_entity(entity)
+	local paired_entity = pairutil.find_paired_entity(entity)
 	if paired_entity then
 		paired_entity.destroy()
 	end

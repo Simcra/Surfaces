@@ -28,9 +28,6 @@ function events.on_tick(event)
 	if util.game_tick()%config.ticks_between_event["execute_first_task_in_waiting_queue"]==0 then
 		events.execute_first_task_in_waiting_queue(event)
 	end
-	if util.game_tick()%config.ticks_between_event["clear_ground_for_paired_entities"]==0 then
-		events.clear_ground_for_paired_entities(event)
-	end
 end
 
 function events.on_built_entity(event)
@@ -212,7 +209,7 @@ function events.execute_first_task_in_waiting_queue(event)
 			if surface == nil then
 				table.insert(global.task_queue, v)
 			elseif surface ~= false then
-				util.request_generate_chunks(surface, v.data.entity.position, 1)
+				util.request_generate_chunks(surface, v.data.entity.position, 0)
 				table.insert(global.task_queue, {task = config.task_createpair, data = {entity = v.data.entity, paired_surface = surface}})
 			end
 		elseif v.task == config.task_createpair then
@@ -227,20 +224,5 @@ function events.execute_first_task_in_waiting_queue(event)
 		end
 		table.remove(global.task_queue, k)
 		break
-	end
-end
-
-function events.clear_ground_for_paired_entities(event)
-	global.paired_entities = global.paired_entities or {}
-	global.paired_entities_iterator = global.paired_entities_iterator or 1
-	local entities = global.paired_entities[global.paired_entities_iterator]
-	if entities ~= nil then
-		if entities.a and entities.b and entities.a.valid and entities.b.valid then
-			surfaces.clear_floor_around_entity(entities.a, pairdata.get(entities.a).radius or 1)
-			surfaces.clear_floor_around_entity(entities.b, pairdata.get(entities.b).radius or 1)
-		end
-		global.paired_entities_iterator = global.paired_entities_iterator + 1
-	else
-		global.paired_entities_iterator = 1
 	end
 end

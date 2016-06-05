@@ -28,7 +28,7 @@ function surfaces.get_mapname(surface_type, surface_layer)
 	end
 	return "nauvis"
 end
-	
+
 function surfaces.is_valid_type(surface_type)
 	return (surface_type == config.surface_type_underground or surface_type == config.surface_type_sky)
 end
@@ -44,7 +44,7 @@ end
 function surfaces.get_layer(surface)
 	local surface_name = surfaces.get_name(surface)
 	if surfaces.is_from_this_mod(surface_name) then
-		local surface_string = surface_prefix .."_" .. surfaces.get_type(surface) .. "_"
+		local surface_string = config.surface_prefix .."_" .. surfaces.get_type(surface) .. "_"
 		return tonumber(string.sub(surface_name, string.find(surface_name, surface_string) + string.len(surface_string)))
 	elseif surface_name == "nauvis" then
 		return 0
@@ -203,9 +203,13 @@ function surfaces.chunk_generator_corrections(surface, area)
 	
 	-- insert appropriate tiles into array, create walls and set tiles
 	for k, v in ipairs(util.get_tiles_in_area(validArea)) do
-		table.insert(newTiles, {name = tile_name, position = v})
 		if is_underground then
 			util.create_entity(surface, {name = entity_name, position = v, force = game.forces.player})
+			table.insert(newTiles, {name = tile_name, position = v})
+		else
+			if not(surface.get_tile(v.x, v.y).name == config.tile_sky_concrete) then
+				table.insert(newTiles, {name = tile_name, position = v})
+			end
 		end
 	end
 	surface.set_tiles(newTiles)
@@ -230,13 +234,13 @@ function surfaces.clear_floor_around_location(position, surface, radius)
 		local newTiles, oldTiles = {}, util.get_tiles_in_area(area)
 		if surfaces.is_underground(surface) then
 			for k, v in pairs(oldTiles) do
-				for key, value in pairs(surface.find_entities_filtered({area = {v, v}, type = "tree", name = entity_underground_wall})) do
+				for key, value in pairs(surface.find_entities_filtered({area = {v, v}, type = "tree", name = config.entity_underground_wall})) do
 					value.destroy()
 				end
 			end			
 		else
 			for k, v in pairs(oldTiles) do
-				table.insert(newTiles, {name = tile_sky_concrete, position = {v.x, v.y}})
+				table.insert(newTiles, {name = config.tile_sky_concrete, position = {v.x, v.y}})
 			end
 			surface.set_tiles(newTiles)
 		end
@@ -270,7 +274,7 @@ function surfaces.transport_player_to_access_shaft(player, destination_access_sh
 end
 
 function surfaces.find_nearby_access_shaft(entity, radius, surface)
-	for k, v in pairs(surface.find_entities_filtered({area = {{entity.position.x - radius, entity.position.y - radius},{entity.position.x + radius, entity.position.y + radius}}, type = "simple-entity"})) do
+	for k, v in pairs(surface.find_entities_filtered({area = {{entity.position.x - radius, entity.position.y - radius}, {entity.position.x + radius, entity.position.y + radius}}, type = "simple-entity"})) do
 		local pair_data = pairdata.get(v)
 		if pair_data ~= nil and pair_data.class == config.pairclass_access_shaft then
 			return v
@@ -281,7 +285,7 @@ end
 
 function surfaces.find_nearby_entity(anchor, radius, surface, entity_name, entity_type)
 	if surface then
-		for k, v in pairs(surface.find_entities_filtered({area = {{anchor.position.x - radius,anchor.position.y - radius}, {anchor.position.x + radius, anchor.position.y + radius}}, name = entity_name, type = entity_type})) do
+		for k, v in pairs(surface.find_entities_filtered({area = {{anchor.position.x - radius, anchor.position.y - radius}, {anchor.position.x + radius, anchor.position.y + radius}}, name = entity_name, type = entity_type})) do
 			return v
 		end
 	end
