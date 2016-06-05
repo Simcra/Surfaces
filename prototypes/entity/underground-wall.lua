@@ -3,7 +3,7 @@ data:extend({{
 	name = "underground-wall",
 	icon = "__Surfaces__/graphics/terrain/underground/wall2.png",
 	flags = {"placeable-neutral"},
-	minable = {mining_time = 0.1, mining_particle = "stone-particle", result="stone", count=2},
+	minable = {hardness = 2, mining_time = 0.5, mining_particle = "stone-particle", results = {{type = "item", name = "stone", probability = 1, amount_min = 1, amount_max = 5}}},
 	corpse = "invisible-corpse",
 	max_health = 100,
 	collision_box = {{-0.499, -0.499}, {0.499, 0.499}},
