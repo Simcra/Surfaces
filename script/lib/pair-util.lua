@@ -82,7 +82,7 @@ end
 
 function pairutil.finalize_paired_entity(entity, paired_entity)
 	local pair_data = pairdata.get(entity)
-	local paired_entity = pairutil.find_paired_entity(entity)
+	paired_entity = paired_entity or pairutil.find_paired_entity(entity)
 	if pair_data.class == config.pairclass_electric_pole then
 		entity.connect_neighbour(paired_entity)
 		entity.connect_neighbour{wire = defines.circuitconnector.red, target_entity = paired_entity}
