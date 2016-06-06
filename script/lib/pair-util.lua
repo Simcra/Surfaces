@@ -46,15 +46,14 @@ function pairutil.validate_paired_entity(entity)
 end
 
 function pairutil.create_paired_surface(entity, pair_location)
-	local paired_surface
 	if entity and entity.valid then
 		if pair_location == config.surface_location_above then
-			paired_surface = surfaces.get_surface_above(entity)
+			local paired_surface = surfaces.get_surface_above(entity)
 			if not(paired_surface and paired_surface.valid) then
 				return surfaces.create_surface_above(entity.surface)
 			end
 		elseif pair_location == config.surface_location_below then
-			paired_surface = surfaces.get_surface_below(entity)
+			local paired_surface = surfaces.get_surface_below(entity)
 			if not(paired_surface and paired_surface.valid) then
 				return surfaces.create_surface_below(entity.surface)
 			end
@@ -62,22 +61,23 @@ function pairutil.create_paired_surface(entity, pair_location)
 	else
 		return false
 	end
-	return paired_surface
+	return nil
 end
 
 function pairutil.create_paired_entity(entity, paired_surface)
 	local pair_data = pairdata.get(entity)
-	local paired_entity = nil
 	if paired_surface and paired_surface.valid then
 		surfaces.clear_floor_around_location(entity.position, paired_surface, pair_data.radius)
-		paired_entity = util.create_entity(paired_surface,{name = pair_data.name, position = entity.position, force = entity.force})
-		if not(paired_entity) or not(paired_entity.valid) then
+		local paired_entity = util.create_entity(paired_surface, {name = pair_data.name, position = entity.position, force = entity.force})
+		if paired_entity and paired_entity.valid then
+			return paired_entity
+		else
 			return false
 		end
-		return paired_entity
 	else
 		return false
 	end
+	return nil
 end
 
 function pairutil.finalize_paired_entity(entity, paired_entity)
