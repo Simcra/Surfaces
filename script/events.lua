@@ -213,11 +213,11 @@ function events.execute_first_task_in_waiting_queue(event)
 				table.insert(global.task_queue, {task = config.task_createpair, data = {entity = v.data.entity, paired_surface = surface}})
 			end
 		elseif v.task == config.task_createpair then
-			local paired_entity = pairutil.create_paired_entity(v.data.entity, v.data.paired_surface)
-			if paired_entity == nil or paired_entity == false then
+			local pair = pairutil.create_paired_entity(v.data.entity, v.data.paired_surface)
+			if pair == nil or pair == false then
 				table.insert(global.task_queue, v)
 			else
-				table.insert(global.task_queue, {task = config.task_finishpair, data = v.data})
+				table.insert(global.task_queue, {task = config.task_finishpair, data = {entity = v.data.entity, paired_entity = pair})
 			end
 		elseif v.task == config.task_finishpair then
 			pairutil.finalize_paired_entity(v.data.entity, v.data.paired_entity)
