@@ -162,7 +162,7 @@ function surfaces.chunk_generator_corrections(surface, area)
 	local newTiles, entitiesToCorrect = {}, {}
 	local tile_name, entity_name
 	local is_underground = surfaces.is_underground(surface)
-	if is_underground then
+	if is_underground == true then
 		tile_name = config.tile_underground_floor
 		entity_name = config.entity_underground_wall
 	else
@@ -175,7 +175,7 @@ function surfaces.chunk_generator_corrections(surface, area)
 	-- destroy entities which should not spawn on this surface and gather information for fixing entity location
 	for k, v in pairs(surface.find_entities(validArea)) do
 		local pair_data = pairdata.get(v)
-		if is_underground then
+		if is_underground == true then
 			if pair_data ~= nil then
 				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = pair_data.radius})
 			elseif v.type == "unit-spawner" then
@@ -188,14 +188,14 @@ function surfaces.chunk_generator_corrections(surface, area)
 		else
 			if pair_data ~= nil then
 				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = pair_data.radius})
-			else
-				if v.type ~= "player" then v.destroy() end
+			elseif v.type ~= "player" then
+				v.destroy()
 			end
 		end
 	end
 	
 	--fix floor for sky surfaces
-	if not(is_underground) then
+	if is_underground == false then
 		for k, v in pairs(entitiesToCorrect) do
 			surfaces.clear_floor_around_location(v.position, surface, v.radius)
 		end
@@ -203,11 +203,11 @@ function surfaces.chunk_generator_corrections(surface, area)
 	
 	-- insert appropriate tiles into array, create walls and set tiles
 	for k, v in ipairs(util.get_tiles_in_area(validArea)) do
-		if is_underground then
+		if is_underground == true then
 			util.create_entity(surface, {name = entity_name, position = v, force = game.forces.player})
 			table.insert(newTiles, {name = tile_name, position = v})
 		else
-			if not(surface.get_tile(v.x, v.y).name == config.tile_sky_concrete) then
+			if surface.get_tile(v.x, v.y).name ~= config.tile_sky_concrete then
 				table.insert(newTiles, {name = tile_name, position = v})
 			end
 		end
@@ -215,7 +215,7 @@ function surfaces.chunk_generator_corrections(surface, area)
 	surface.set_tiles(newTiles)
 	
 	--fix floor for underground surfaces
-	if is_underground then
+	if is_underground == true then
 		for k, v in pairs(entitiesToCorrect) do
 			surfaces.clear_floor_around_location(v.position, surface, v.radius)
 		end
@@ -229,20 +229,21 @@ function surfaces.clear_floor_around_entity(entity, radius)
 end
 
 function surfaces.clear_floor_around_location(position, surface, radius)
-	if surfaces.is_from_this_mod(surface) and radius and radius >= 0 then
-		local area = {left_top = {x = position.x - radius, y = position.y - radius}, right_bottom = {x = position.x + radius, y = position.y + radius}}
-		local newTiles, oldTiles = {}, util.get_tiles_in_area(area)
-		if surfaces.is_underground(surface) then
-			for k, v in pairs(oldTiles) do
-				for key, value in pairs(surface.find_entities_filtered({area = {v, v}, type = "tree", name = config.entity_underground_wall})) do
-					value.destroy()
+	radius = radius or 0
+	if position ~= nil and position.x ~= nil and position.y ~= nil then
+		if surfaces.is_from_this_mod(surface) then
+			local area = {left_top = {x = position.x - radius, y = position.y - radius}, right_bottom = {x = position.x + radius, y = position.y + radius}}
+			if surfaces.is_underground(surface) then
+				for k, v in pairs(surface.find_entities_filtered({area = area, type = "tree", name = config.entity_underground_wall})) do
+					v.destroy()
 				end
-			end			
-		else
-			for k, v in pairs(oldTiles) do
-				table.insert(newTiles, {name = config.tile_sky_concrete, position = {v.x, v.y}})
+			else
+				local newTiles = {}
+				for k, v in pairs(util.get_tiles_in_area(area)) do
+					table.insert(newTiles, {name = config.tile_sky_concrete, position = {x = v.x, y = v.y}})
+				end
+				surface.set_tiles(newTiles)
 			end
-			surface.set_tiles(newTiles)
 		end
 	end
 end
@@ -267,10 +268,9 @@ end
 
 function surfaces.transport_player_to_access_shaft(player, destination_access_shaft)
 	local new_position = util.find_non_colliding_position(destination_access_shaft.surface, player.character.prototype.name, destination_access_shaft.position, 2, 1)
-	if not(new_position) then
-		new_position = player.position
+	if new_position ~= nil then
+		player.teleport(new_position, destination_access_shaft.surface)
 	end
-	player.teleport(new_position, destination_access_shaft.surface)
 end
 
 function surfaces.find_nearby_access_shaft(entity, radius, surface)
@@ -284,7 +284,7 @@ function surfaces.find_nearby_access_shaft(entity, radius, surface)
 end
 
 function surfaces.find_nearby_entity(anchor, radius, surface, entity_name, entity_type)
-	if surface then
+	if anchor ~= nil and radius ~= nil and surface ~= nil then
 		for k, v in pairs(surface.find_entities_filtered({area = {{anchor.position.x - radius, anchor.position.y - radius}, {anchor.position.x + radius, anchor.position.y + radius}}, name = entity_name, type = entity_type})) do
 			return v
 		end
