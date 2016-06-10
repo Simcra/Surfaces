@@ -6,30 +6,61 @@
 ]]
 require("util")
 require("defines") --pre 0.13
-require("script.config")
+require("script.enum")
 require("script.lib.pair-data")
 require("script.events")
 
--- Entity pairing data
+-- Declare local functions
+local insert_mod_data, on_init, on_load, on_configuration_changed
+
+-- Create shorthand references to information from enum
+local loc_above = enum.surface.rel_loc.above
+local loc_below = enum.surface.rel_loc.below
+local st_und = enum.surface.type.underground.id
+local st_sky = enum.surface.type.sky.id
+
+-- insert all entity pair classes defined by this mod.
+local entity_pair_class = {
+"sm-access-shaft",
+"sm-electric-pole",
+"sm-transport-chest",
+"sm-fluid-transport",
+"sm-rail-transport"}
+pairclass.insert_array(entity_pair_class)
+
+-- create shorthand references to IDs of entity pair classes defined by function above
+local pc_acc_shaft = pairclass.get("sm-access-shaft")
+local pc_elec_pole = pairclass.get("sm-electric-pole")
+local pc_trans_chest = pairclass.get("sm-transport-chest")
+local pc_fluid_trans = pairclass.get("sm-fluid-transport")
+local pc_rail_trans = pairclass.get("sm-rail-transport")
+
+-- insert entity pair data defined by this mod
 local entity_pair_data = {
-	{"sky-entrance", "sky-exit", config.surface_location_above, config.pairclass_access_shaft, config.surface_type_sky},
-	{"sky-exit", "sky-entrance", config.surface_location_below, config.pairclass_access_shaft, config.surface_type_sky},
-	{"underground-entrance", "underground-exit", config.surface_location_below, config.pairclass_access_shaft, config.surface_type_underground},
-	{"underground-exit", "underground-entrance", config.surface_location_above, config.pairclass_access_shaft, config.surface_type_underground, false},
-	{"transport-chest-up", "receiver-chest-upper", config.surface_location_above, config.pairclass_transport_chest},
-	{"transport-chest-down", "receiver-chest-lower", config.surface_location_below, config.pairclass_transport_chest},
-	{"electric-pole-upper", "electric-pole-lower", config.surface_location_below, config.pairclass_electric_pole},
-	{"electric-pole-lower", "electric-pole-upper", config.surface_location_above, config.pairclass_electric_pole},
-	{"fluid-transport-upper", "fluid-transport-lower", config.surface_location_below, config.pairclass_fluid_transport},
-	{"fluid-transport-lower", "fluid-transport-upper", config.surface_location_above, config.pairclass_fluid_transport},
-	{"rail-transport-upper", "rail-transport-lower", config.surface_location_below, config.pairclass_rail_transport, nil, true, 2},
-	{"rail-transport-lower", "rail-transport-upper", config.surface_location_above, config.pairclass_rail_transport, nil, true, 2}}
+	{"sky-entrance", "sky-exit", loc_above, pc_acc_shaft, st_sky},
+	{"sky-exit", "sky-entrance", loc_below, pc_acc_shaft, st_sky},
+	{"underground-entrance", "underground-exit", loc_below, pc_acc_shaft, st_und},
+	{"underground-exit", "underground-entrance", loc_above, pc_acc_shaft, st_und, false},
+	{"transport-chest-up", "receiver-chest-upper", loc_above, pc_trans_chest},
+	{"transport-chest-down", "receiver-chest-lower", loc_below, pc_trans_chest},
+	{"electric-pole-upper", "electric-pole-lower", loc_below, pc_elec_pole},
+	{"electric-pole-lower", "electric-pole-upper", loc_above, pc_elec_pole},
+	{"fluid-transport-upper", "fluid-transport-lower", loc_below, pc_fluid_trans},
+	{"fluid-transport-lower", "fluid-transport-upper", loc_above, pc_fluid_trans},
+	{"rail-transport-upper", "rail-transport-lower", loc_below, pc_rail_trans, nil, true, 2},
+	{"rail-transport-lower", "rail-transport-upper", loc_above, pc_rail_trans, nil, true, 2}}
 pairdata.insert_array(entity_pair_data)
 
+-- insert tiles for sky surfaces to ignore during chunk generation
+local whitelist_sky_tiles = {
+	enum.prototype.tile.sky_concrete.name}	-- "sky-concrete", the prototype name
+skytiles.insert_array(whitelist_sky_tiles)
+
 -- Register event handlers
-script.on_init(on_init)
-script.on_load(on_load)
-script.on_configuration_changed(on_configuration_changed)
+script.on_init(function() on_init() end)
+script.on_load(function() on_load() end)
+script.on_configuration_changed(function() on_configuration_changed() end)
+
 -- When an entity is built by a player
 script.on_event(defines.events.on_built_entity, function(event) events.on_built_entity(event) end)
 -- When a construction robot builds an entity
@@ -67,16 +98,14 @@ script.on_event(defines.events.on_train_changed_state, function(event) events.on
 -- Every tick
 script.on_event(defines.events.on_tick, function(event) events.on_tick(event) end)
 
--- Called when this module is initialised (when game is started and mod is loaded)
-local function on_init(event)
-	
+on_init = function()
+
 end
 
--- Called when the map is loaded
-local function on_load(event)
-	
+on_load = function()
+
 end
-	
-local function on_configuration_changed(event)
-	
+
+on_configuration_changed = function()
+
 end

@@ -5,57 +5,61 @@
     This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 ]]
 
-require("script.config")
+require("config")
+require("script.enum")
+require("script.lib.struct")
 require("script.lib.pair-data")
 require("script.lib.surfaces")
 require("script.lib.pair-util")
+require("script.lib.api-util")
 require("script.lib.util")
 
 events = {}
+
+-- Declaring local functions
+local eventmgr_call, update_players_using_access_shafts, check_player_collision_with_access_shafts, update_transport_chest_contents, update_fluid_transport_contents, execute_first_task_in_waiting_queue
+
+-- This function is called every game tick, it's primary purpose is to act as a timer for each of the handles in the event manager
+-- It uses data from enum to determine whether a function is due to be called and iterates sequentually
 function events.on_tick(event)
-	if util.game_tick()%config.ticks_between_event["update_players_using_access_shafts"]==0 then
-		events.update_players_using_access_shafts(event)
-	end
-	if util.game_tick()%config.ticks_between_event["check_player_collision_with_access_shafts"]==0 then
-		events.check_player_collision_with_access_shafts(event)
-	end
-	if util.game_tick()%config.ticks_between_event["update_transport_chest_contents"]==0 then
-		events.update_transport_chest_contents(event)
-	end
-	if util.game_tick()%config.ticks_between_event["update_fluid_transport_contents"]==0 then
-		events.update_fluid_transport_contents(event)
-	end
-	if util.game_tick()%config.ticks_between_event["execute_first_task_in_waiting_queue"]==0 then
-		events.execute_first_task_in_waiting_queue(event)
+	for k, v in pairs(enum.eventmgr.handle) do
+		if util.game_tick() % v.tick == 0 then
+			eventmgr_call(v.id, event) -- calls the function associated with this handle
+		end
 	end
 end
 
+-- This function is called whenever an entity is built by the player
 function events.on_built_entity(event)
 	if pairdata.get(event.created_entity) ~= nil then
 		global.task_queue = global.task_queue or {}
-		table.insert(global.task_queue, {task = config.task_triggercreatepair, data = {entity = event.created_entity}})
+		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.trigger_create_paired_entity, event.created_entity))
 	end
 end
 
+-- This function is called whenever an entity is built by a construction robot
 function events.on_robot_built_entity(event)
 	if pairdata.get(event.created_entity) ~= nil then
 		global.task_queue = global.task_queue or {}
-		table.insert(global.task_queue, {task = config.task_triggercreatepair, data = {entity = event.created_entity}})
+		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.trigger_create_paired_entity, event.created_entity))
 	end
 end
 
+-- This function is called whenever a chunk is generated
 function events.on_chunk_generated(event)
 	if surfaces.is_from_this_mod(event.surface) then
 		surfaces.chunk_generator_corrections(event.surface, event.area)
 	end
 end
 
+-- This function is called just before an entity is deconstructed by the player
 function events.on_preplayer_mined_item(event)
 	if pairdata.get(event.entity) ~= nil then
 		pairutil.destroy_paired_entity(event.entity)
 	end
 end
 
+-- This function is called just before an entity is deconstructed by a construction robot
 function events.on_robot_pre_mined(event)
 	if pairdata.get(event.entity) ~= nil then
 		pairutil.destroy_paired_entity(event.entity)
@@ -90,8 +94,15 @@ function events.on_player_rotated_entity(event)
 
 end
 
-function events.on_trigger_created_entity(event)
-
+function events.on_trigger_created_entity(event) -- This should theoretically work
+	local pair_data = pairdata.get(event.entity)
+	if pair_data == nil then
+		pair_data = pairdata.reverse(event.entity)
+		if pair_data ~= nil and type(pair_data.tile) == "string" then
+			-- if util.get_tile_prototypes()[pair_data.tile] then
+			util.set_tiles(event.entity.surface, {{name = pair_data.tile, position = event.entity.position}})
+		end
+	end
 end
 
 function events.on_picked_up_item(event)
@@ -106,73 +117,91 @@ function events.on_entity_died(event)
 
 end
 
+-- This function is called whenever a train changes state from moving to stopping or stopping to stopped, etc.
 function events.on_train_changed_state(event)
 	--if front carriage is nearby a intersurface train stop and train state is stopped
 	--if event.train.state == defines.trainstate.wait_station
 end
 
-function events.update_players_using_access_shafts(event)
+-- Calls the function associated with each handle
+eventmgr_call = function(handle, event)
+	if handle == enum.eventmgr.handle.access_shaft_teleportation.id then
+		update_players_using_access_shafts(event)
+	elseif handle == enum.eventmgr.handle.access_shaft_update.id then
+		check_player_collision_with_access_shafts(event)
+	elseif handle == enum.eventmgr.handle.transport_chest_update.id then
+		update_transport_chest_contents(event)
+	elseif handle == enum.eventmgr.handle.fluid_transport_update.id then
+		update_fluid_transport_contents(event)
+	elseif handle == enum.eventmgr.handle.taskmgr.id then
+		execute_first_task_in_waiting_queue(event)
+	end
+end
+
+-- This function looks at the global table containing players who are using an access shaft and teleports them to the destination access shaft if one exists
+update_players_using_access_shafts = function(event)
 	global.players_using_access_shafts = global.players_using_access_shafts or {}
 	for name, data in pairs(global.players_using_access_shafts) do
 		local player = data.player_entity
-		if player.walking_state.walking or not(data.destination_access_shaft) then
-			global.players_using_access_shafts[name]=nil
+		if player.walking_state.walking == true or data.destination_access_shaft == nil then
+			global.players_using_access_shafts[name] = nil
 		else
 			if data.time_waiting >= config.teleportation_time_waiting then
-				if data.destination_access_shaft and data.destination_access_shaft.valid then
+				if util.is_valid(data.destination_access_shaft) then
 					surfaces.transport_player_to_access_shaft(player, data.destination_access_shaft)
 				end
 				global.players_using_access_shafts[name] = nil
 			end
-			data.time_waiting = data.time_waiting + config.ticks_between_event["update_players_using_access_shafts"]
+			data.time_waiting = data.time_waiting + enum.eventmgr.handle.access_shaft_teleportation.tick
 		end
 	end
 end
 
-function events.check_player_collision_with_access_shafts(event)
+-- This function checks whether any players are near an access shaft and adds them to the global table for players using access shafts if they are within range of one and not moving
+check_player_collision_with_access_shafts = function(event)
+	global.players_using_access_shafts = global.players_using_access_shafts or {}
 	for index, player in ipairs(game.players) do
-		if not(player.walking_state.walking) and (global.players_using_access_shafts == nil or global.players_using_access_shafts[player.name] == nil) then
+		if not(player.walking_state.walking) and global.players_using_access_shafts[player.name] == nil then
 			local access_shaft = surfaces.find_nearby_access_shaft(player, config.teleportation_check_range, player.surface)
-			if access_shaft and access_shaft.valid then
+			if util.is_valid(access_shaft) then
 				local paired_access_shaft = pairutil.find_paired_entity(access_shaft)
-				if paired_access_shaft and paired_access_shaft.valid then
-					global.players_using_access_shafts = global.players_using_access_shafts or {}
+				if util.is_valid(paired_access_shaft) then
 					global.players_using_access_shafts[player.name] = {time_waiting = 0, player_entity = player, destination_access_shaft = paired_access_shaft}
-				else
-					--create access shaft, maybe?
 				end
 			end
 		end
 	end
 end
 
-function events.update_transport_chest_contents(event)
+-- This function updates the contents of each transport and receiver chest in the map, providing that they are both valid and if they are not, they will be destroyed
+update_transport_chest_contents = function(event)
 	global.transport_chests = global.transport_chests or {}
 	for k, v in pairs(global.transport_chests) do
-		if not(v.input and v.input.valid) or not(v.output and v.output.valid) then
-			if v.input and v.input.valid then v.input.destroy() end
-			if v.output and v.output.valid then v.output.destroy() end
+		if not(util.is_valid(v.input) and util.is_valid(v.output)) then
+			util.destroy(v.input)
+			util.destroy(v.output)
 			table.remove(global.transport_chests, k)
 		else
-			local input = v.input.get_inventory(defines.inventory.chest)
-			local output = v.output.get_inventory(defines.inventory.chest)
-			for key, value in pairs(input.get_contents()) do
-				local itemstack = {name = key, count = value}
-				if output.can_insert(itemstack) then
-					local remove_itemstack = {name = key, count = output.insert(itemstack)}
-					input.remove(remove_itemstack)
+			local input = util.get_inventory(v.input, defines.inventory.chest)
+			local output = util.get_inventory(v.output, defines.inventory.chest)
+			for key, value in pairs(util.get_contents(input)) do
+				local itemstack = struct.ItemStack(key, value)
+				if util.can_insert(output, itemstack) then
+					local remove_itemstack = struct.ItemStack(key, util.insert_itemstack(output, itemstack))
+					util.remove_itemstack(input, remove_itemstack)
 				end
 			end
 		end
 	end
 end
 
-function events.update_fluid_transport_contents(event)
+-- This function updates the contents of each intersurface fluid tank in the map, providing that they are both valid and if they are not, they will be destroyed
+update_fluid_transport_contents = function(event)
 	global.fluid_transport = global.fluid_transport or {}
 	for k, v in pairs(global.fluid_transport) do
-		if not(v.a and v.a.valid) or not(v.b and v.b.valid) then
-			if v.a and v.a.valid then v.a.destroy() end
-			if v.b and v.b.valid then v.b.destroy() end
+		if not(util.is_valid(v.a) and util.is_valid(v.b)) then
+			util.destroy(v.a)
+			util.destroy(v.b)
 			table.remove(global.fluid_transport, k)
 		else
 			local fluidbox_a, fluidbox_b = v.a.fluidbox[1], v.b.fluidbox[1]
@@ -196,33 +225,40 @@ function events.update_fluid_transport_contents(event)
 	end
 end
 
-function events.execute_first_task_in_waiting_queue(event)
+-- This function is used to avoid annoying desync errors when playing in multiplayer, it acts as a system to queue tasks such as creating entities and surfaces that need to happen on the same tick on all clients
+execute_first_task_in_waiting_queue = function(event)
 	global.task_queue = global.task_queue or {}
 	for k, v in ipairs(global.task_queue) do
-		if v.task == config.task_triggercreatepair then
+		if v.task == enum.eventmgr.task.trigger_create_paired_entity then							-- Validates the entity prior to creation of it's pair, gathering the relative location for the paired entity
 			local destination_surface = pairutil.validate_paired_entity(v.data.entity)
 			if destination_surface then
-				table.insert(global.task_queue, {task = config.task_triggercreatesurface, data = {entity = v.data.entity, pair_location = destination_surface}})
+				table.insert(global.task_queue, struct.TaskSpecification(
+					enum.eventmgr.task.trigger_create_paired_surface,
+					{v.data.entity, destination_surface}))											-- Insert the next task for this process-chain at the back of the queue
 			end
-		elseif v.task == config.task_triggercreatesurface then
+		elseif v.task == enum.eventmgr.task.trigger_create_paired_surface then						-- Validates the paired surface, creating it if it does not yet exist
 			local surface = pairutil.create_paired_surface(v.data.entity, v.data.pair_location)
-			if surface == nil then
-				table.insert(global.task_queue, v)
-			elseif surface ~= false then
-				util.request_generate_chunks(surface, v.data.entity.position, 0)
-				table.insert(global.task_queue, {task = config.task_createpair, data = {entity = v.data.entity, paired_surface = surface}})
+			if surface == nil then																	-- If the surface has not yet been created
+				table.insert(global.task_queue, v)													-- Insert a duplicate of this task at the back of the queue (avoids being discarded from the queue)
+			elseif surface ~= false then															-- Ensures that data passed is valid and if not, the task is simply removed from the queue
+				util.request_generate_chunks(surface, v.data.entity.position, 0)					-- Fixes a small bug with chunk generation
+				table.insert(global.task_queue, struct.TaskSpecification(
+					enum.eventmgr.task.create_paired_entity,
+					{v.data.entity, surface}))														-- Insert the next task for this process-chain at the back of the queue
 			end
-		elseif v.task == config.task_createpair then
+		elseif v.task == enum.eventmgr.task.create_paired_entity then								-- Creates the paired entity
 			local pair = pairutil.create_paired_entity(v.data.entity, v.data.paired_surface)
-			if pair == nil or pair == false then
-				table.insert(global.task_queue, v)
-			else
-				table.insert(global.task_queue, {task = config.task_finishpair, data = {entity = v.data.entity, paired_entity = pair})
+			if pair == nil or pair == false then													-- If the pair fails to be created for some unknown reason
+				table.insert(global.task_queue, v)													-- Insert a duplicate of this task at the back of the queue (avoids being discarded from the queue)
+			else																					-- Otherwise
+				table.insert(global.task_queue, struct.TaskSpecification(
+					enum.eventmgr.task.finalize_paired_entity,
+					{v.data.entity, pair}))															-- Insert the next task for this process-chain at the back of the queue
 			end
-		elseif v.task == config.task_finishpair then
+		elseif v.task == enum.eventmgr.task.finalize_paired_entity then								-- Performs final processing for the paired entity (example: intersurface electric poles are connected to one another)
 			pairutil.finalize_paired_entity(v.data.entity, v.data.paired_entity)
 		end
-		table.remove(global.task_queue, k)
-		break
+		table.remove(global.task_queue, k)															-- Remove the current task from the queue, it has finished executing
+		break																						-- Exit loop, we have finished processing the first task in the queue
 	end
 end

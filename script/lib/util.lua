@@ -5,99 +5,78 @@
 	This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 ]]
 
-util={}
-function util.get_tiles_in_area(area)
-	return util.get_tiles_in_bounding_box(area.left_top.x, area.left_top.y, area.right_bottom.x, area.right_bottom.y)
-end
+util = {}
 
-function util.get_tiles_in_bounding_box(x1,y1,x2,y2)
-	local result = {}
-	for pos_y=y1, y2, 1 do
-		for pos_x=x1, x2, 1 do
-			table.insert(result, {x=pos_x, y=pos_y})
-		end
-	end
-	return result
+-- Why is this not already in the math library?! Silly Lua....
+function math.round(number, decimal_places)
+	decimal_places = decimal_places or 0
+	local multiplier = 10^decimal_places
+	return math.floor(number * multiplier + 0.5) / multiplier
 end
 
 --[[
-Useful mostly for debugging as it traverses a table gathering all fields in a string format, see below example.
+Useful mostly for debugging tables but may also have other uses.
+Returns a string representation of the table, traversing recursively, see example below:
 
-table = {parameterA = 2, parameterB = {innerParameterA = "A", innerParameterB = "B"}, parameterC = "42"}
-table.tostring(table) will return "{parameterA=2, parameterB={innerParameterA=A, innerParameterB=B}, parameterC=42, }"
+given that t = {parameterA = 2, parameterB = {innerParameterA = "A", innerParameterB = "B"}, parameterC = "42"}
+if add_spacing is specified, the result will be "{parameterA=2, parameterB={innerParameterA=A, innerParameterB=B}, parameterC=42}"
+Otherwise, "{parameterA = 2, parameterB = {innerParameterA = A, innerParameterB = B}, parameterC = 42}"
 ]]
-function table.tostring(t)
-	result = "{"
+function table.tostring(t, add_spacing)
+	local result = "{"
+	local equalstring = "="
+	if type(add_spacing) == "boolean" and add_spacing == true then
+		equalstring = " = "
+	end
 	for k, v in pairs(t) do
-		if type(v)=="table" then
-			result=result..tostring(k).."="..table.tostring(v)..", "
-		elseif type(v)=="string" then
-			result=result..tostring(k).."="..v..", "
+		if type(v) == "table" then
+			result = result .. tostring(k) .. equalstring .. table.tostring(v, add_spacing) .. ", "
+		elseif type(v) == "string" then
+			result = result .. tostring(k) .. equalstring .. v .. ", "
 		else
-			result=result..tostring(k).."="..tostring(v)..", "
+			result = result .. tostring(k) .. equalstring .. tostring(v) .. ", "
 		end
 	end
-	if string.len(result) > 4 then
-		result = string.sub(result, 1, string.len(result)-2)
+	if string.len(result) > 1 then
+		result = string.sub(result, 1, string.len(result) - 2)
 	end
-	return result.."}"
+	return result .. "}"
 end
 
+-- just a boring debug function to print text to every player's screen
+function util.debug(text)
+	for k, v in ipairs(game.players) do
+		game.players[k].print(text)
+	end
+end
 
 --[[
-Useful for attempting to locate whether or not a value is in an array, see the below example
+Intended to be used to verifying the existance of a value in a table.
+Creates a table indexed by the values from the provided table where new values are set to true, see usage example below:
 
-array = {"1","12","34","62"}
-reverseArray(array)["12"] is equal to true
-reverseArray(array)["4"] is equal to nil
+Given that:
+t = {"1", "12", {data = "34"}, "62"}; rt = table.reverse(t); rt_2 = table.reverse(t, true); and rt_3 = table.reverse(t, true, "data")
+The following is true:
+rt["12"] == true; rt["62"] == true; rt["34"] == nil; rt_2["62"] == 4; rt_2["12"] == 2; and rt_3["34"] == 3;
 ]] 
-function util.reverseTable(t)
+function table.reverse(t, store_old_index, subtable_index)
 	local rTable = {}
-	for k, v in ipairs(t) do
-		rTable[v] = true
+	store_old_index = (store_old_index and store_old_index == true)
+	if subtable_index then
+		for k, v in pairs(t) do
+			if v[subtable_index] then
+				rTable[v[subtable_index]] = store_old_index and k or true
+			end
+		end
+	else
+		for k, v in pairs(t) do
+			rTable[v] = store_old_index and k or true
+		end
 	end
 	return rTable
 end
 
---[[
-The below functions are referenced throughout this mod and serve as a single call to LuaAPI functions.
-These functions allow mod-breaking changes in Factorio base to be quickly fixed.
-]]
-
-function util.get_player(identifier)
-	return game.get_player(identifier) --pre 0.13
-	--return game.players[identifier] --post 0.13
-end
-
-function util.get_surface(identifier)
-	return game.get_surface(identifier) --pre 0.13
-	--return game.surfaces[identifier] --post 0.13
-end
-
-function util.entity_prototypes()
-	return game.entity_prototypes
-end
-
-function util.game_tick()
-	return game.tick
-end
-
-function util.request_generate_chunks(surface, position, radius)
-	if surface then
-		surface.request_to_generate_chunks(position, radius)
-	end
-end
-
-function util.create_entity(surface, entity_data)
-	if entity_data and entity_data.name and entity_data.position then
-		return surface.create_entity(entity_data)
-	end
-end
-
-function util.create_surface(name, mapgensettings)
-	return game.create_surface(name, mapgensettings)
-end
-
-function util.find_non_colliding_position(surface, prototype, center, radius, precision)
-	return surface.find_non_colliding_position(prototype, center, radius, precision)
+-- Does this LuaObject exist and is it a valid reference to an object in the game engine?
+function util.is_valid(object)
+	return object and object.valid
 end
