@@ -1,7 +1,7 @@
 local access_shaft_components = {type = "recipe", group = "surfaces", subgroup = "surfaces-components", enabled = true, result = "access-shaft-components", result_count = 16}
 	
 local access_shaft = table.deepcopy(access_shaft_components)
-access_shaft.subgroup = "access-shaft"
+access_shaft.subgroup = "surfaces-transport-player"
 access_shaft.ingredients = {{"access-shaft-components", 16}}
 access_shaft.result_count = 1
 

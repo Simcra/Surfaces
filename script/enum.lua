@@ -45,23 +45,28 @@ enum = {
 		handle = {
 			access_shaft_teleportation = {
 				id = 1,
-				tick = config.ticks_between_event.update_players_using_access_shafts
+				tick = config.ticks_between_event.update_players_using_access_shafts,
+				func = "update_players_using_access_shafts"
 			},
 			access_shaft_update = {
 				id = 2,
-				tick = config.ticks_between_event.check_player_collision_with_access_shafts
+				tick = config.ticks_between_event.check_player_collision_with_access_shafts,
+				func = "check_player_collision_with_access_shafts"
 			},
 			transport_chest_update = {
 				id = 3,
-				tick = config.ticks_between_event.update_transport_chest_contents
+				tick = config.ticks_between_event.update_transport_chest_contents,
+				func = "update_transport_chest_contents"
 			},
 			fluid_transport_update = {
 				id = 4,
-				tick = config.ticks_between_event.update_fluid_transport_contents
+				tick = config.ticks_between_event.update_fluid_transport_contents,
+				func = "update_fluid_transport_contents"
 			},
 			taskmgr = {
 				id = 5,
-				tick = config.ticks_between_event.execute_first_task_in_waiting_queue
+				tick = config.ticks_between_event.execute_first_task_in_waiting_queue,
+				func = "execute_first_task_in_waiting_queue"
 			}
 		}
 	},

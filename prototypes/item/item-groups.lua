@@ -6,7 +6,7 @@ data:extend({{
 	order = "surfaces"
 },{
 	type = "item-subgroup",
-	name = "access-shaft",
+	name = "surfaces-transport-player",
 	group = "surfaces",
 	inventory_order = "surfaces-a",
 	order = "surfaces-a"
@@ -18,7 +18,19 @@ data:extend({{
 	order = "surfaces-z"
 },{
 	type = "item-subgroup",
-	name = "surfaces-transport",
+	name = "surfaces-transport-chests",
+	group = "surfaces",
+	inventory_order = "surfaces-c",
+	order = "surfaces-c"
+},{
+	type = "item-subgroup",
+	name = "surfaces-transport-power",
+	group = "surfaces",
+	inventory_order = "surfaces-b",
+	order = "surfaces-b"
+},{
+	type = "item-subgroup",
+	name = "surfaces-transport-other",
 	group = "surfaces",
 	inventory_order = "surfaces-b",
 	order = "surfaces-b"

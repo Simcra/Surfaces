@@ -18,7 +18,6 @@ require("prototypes.item.item-groups")
 -- Entities
 require("prototypes.entity.access-shaft.sky")
 require("prototypes.entity.access-shaft.underground")
-require("prototypes.entity.transport.receiver-chest")
 require("prototypes.entity.transport.transport-chest")
 require("prototypes.entity.transport.electric-pole")
 require("prototypes.entity.transport.rail-transport")

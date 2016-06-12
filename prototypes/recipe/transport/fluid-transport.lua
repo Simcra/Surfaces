@@ -1,4 +1,4 @@
-local fluid_transport = {type = "recipe", group = "surfaces", subgroup = "surfaces-transport", enabled = true, ingredients = {{"storage-tank", 2}}}
+local fluid_transport = {type = "recipe", group = "surfaces", subgroup = "surfaces-transport-other", enabled = true, ingredients = {{"storage-tank", 2}}}
 
 local fluid_transport_upper = table.deepcopy(fluid_transport)
 fluid_transport_upper.name = "fluid-transport-upper"
