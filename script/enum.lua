@@ -38,7 +38,7 @@ enum = {
 	eventmgr = {
 		task = {
 			trigger_create_paired_entity = 1,
-			trigger_create_paired_surface = 2,
+			trigger_create_paired_surface = 2,				
 			create_paired_entity = 3,
 			finalize_paired_entity = 4
 		},
@@ -95,5 +95,11 @@ enum = {
 				name = "sky-concrete"
 			}
 		}
+	},
+	wire = {
+		copper = 1,
+		red = 2,
+		green = 3,
+		all = 4
 	}
 }

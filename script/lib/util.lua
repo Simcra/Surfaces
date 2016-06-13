@@ -76,7 +76,19 @@ function table.reverse(t, store_old_index, subtable_index)
 	return rTable
 end
 
+api = {}
 -- Does this LuaObject exist and is it a valid reference to an object in the game engine?
-function util.is_valid(object)
-	return object and object.valid
+function api.valid(objects)
+	if type(objects) ~= "nil" then
+		if objects.valid == nil then
+			for k, v in pairs(objects) do
+				if api.valid(v) == false then
+					return false
+				end
+			end
+			return true
+		else
+			return objects.valid == true
+		end
+	end
 end

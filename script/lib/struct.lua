@@ -128,6 +128,17 @@ function struct.is_Tiles(tiles)
 	return (count > 0)
 end
 
+function struct.is_Direction(direction)
+	return (direction == defines.direction.north or 
+		direction == defines.direction.northeast or 
+		direction == defines.direction.east or 
+		direction == defines.direction.southeast or 
+		direction == defines.direction.south or
+		direction == defines.direction.southwest or
+		direction == defines.direction.west or
+		direction == defines.direction.northwest)
+end
+
 function struct.is_AutoplaceControls(controls)
 	for k, v in pairs(controls) do
 		if struct.is_AutoplaceControl(v) == false then
@@ -159,14 +170,15 @@ end
 
 function struct.TaskData(id, fields)
 	if fields and struct.is_TaskID(id) then
-		if id == enum.eventmgr.task.trigger_create_paired_entity then
-			return util.is_valid(fields) and {entity = fields} or nil
-		elseif id == enum.eventmgr.task.trigger_create_paired_surface then
-			return (util.is_valid(fields[1]) and fields[2] and table.reverse(enum.surface.rel_loc)[fields[2]]) and {entity = fields[1], pair_location = fields[2]} or nil
-		elseif id == enum.eventmgr.task.create_paired_entity then
-			return (util.is_valid(fields[1]) and util.is_valid(fields[2])) and {entity = fields[1], paired_surface = fields[2]} or nil
-		elseif id == enum.eventmgr.task.finalize_paired_entity then
-			return (util.is_valid(fields[1]) and util.is_valid(fields[2])) and {entity = fields[1], paired_entity = fields[2]} or nil
+		local tasks = enum.eventmgr.task
+		if id == tasks.trigger_create_paired_entity then
+			return api.valid(fields) and {entity = fields[1]} or nil
+		elseif id == tasks.trigger_create_paired_surface then
+			return (api.valid(fields[1]) and fields[2] and table.reverse(enum.surface.rel_loc)[fields[2]]) and {entity = fields[1], pair_location = fields[2]} or nil
+		elseif id == tasks.create_paired_entity then
+			return (api.valid(fields[1]) and api.valid(fields[2])) and {entity = fields[1], paired_surface = fields[2]} or nil
+		elseif id == tasks.finalize_paired_entity then
+			return (api.valid(fields[1]) and api.valid(fields[2])) and {entity = fields[1], paired_entity = fields[2]} or nil
 		end
 	end
 end	

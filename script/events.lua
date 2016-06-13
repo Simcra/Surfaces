@@ -22,7 +22,7 @@ local eventmgr = {}
 function events.on_tick(event)
 	for k, v in pairs(enum.eventmgr.handle) do
 		if event.tick % v.tick == 0 then
-			eventmgr_call(event, v.func)
+			eventmgr[tostring(v.func)](event)
 		end
 	end
 end
@@ -31,7 +31,7 @@ end
 function events.on_built_entity(event)
 	if pairdata.get(event.created_entity) ~= nil then
 		global.task_queue = global.task_queue or {}
-		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.trigger_create_paired_entity, event.created_entity))
+		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.trigger_create_paired_entity, {event.created_entity}))
 	end
 end
 
@@ -39,7 +39,7 @@ end
 function events.on_robot_built_entity(event)
 	if pairdata.get(event.created_entity) ~= nil then
 		global.task_queue = global.task_queue or {}
-		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.trigger_create_paired_entity, event.created_entity))
+		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.trigger_create_paired_entity, {event.created_entity}))
 	end
 end
 
@@ -62,10 +62,6 @@ function events.on_robot_pre_mined(event)
 	if pairdata.get(event.entity) ~= nil then
 		pairutil.destroy_paired_entity(event.entity)
 	end
-end
-
-function eventmgr_call(event, function_name)
-	return eventmgr[tostring(function_name)](event)
 end
 
 function events.on_player_mined_item(event)
@@ -113,26 +109,27 @@ function events.on_entity_died(event)
 end
 
 -- This function is called whenever a train changes state from moving to stopping or stopping to stopped, etc.
+-- but basically, until surface teleport can be done for trains, there will be no intersurface train functionality
+-- there is nothing I can do to get this to work without having to destroy and create new trains every time a train stops at the stations
 function events.on_train_changed_state(event)
-	--if front carriage is nearby a intersurface train stop and train state is stopped
-	--if event.train.state == defines.trainstate.wait_station
+	--[[if api.train.state(event.train) == defines.trainstate.wait_station then
+		local front_rail = event.train.front_rail
+		if front_rail ~= nil then
+			local locomotive = surfaces.find_nearby_entity(front_rail, 2, front_rail.surface, nil, "locomotive")
+			local cargo_wagon = surfaces.find_nearby_entity(front_rail, 2, front_rail.surface, nil, "cargo-wagon")
+			local valid_carriage = (api.valid(locomotive) and locomotive or (api.valid(cargo_wagon) and cargo_wagon or nil))
+			if valid_carriage ~= nil then
+				local train_stop = surfaces.find_nearby_entity(valid_carriage, 4, front_rail.surface, nil, "train-stop")
+				if pairdata.get(train_stop) ~= nil then
+					local pair = pairutil.find_paired_entity(train_stop)
+					for k, v in pairs(event.train.carriages) do
+						api.entity.teleport(v, v.position, pair.surface)
+					end
+				end
+			end
+		end
+	end]]
 end
-
--- Calls the function associated with each handle
---[[eventmgr_call = function(handle, event)
-	local handles = enum.eventmgr.handle
-	if handle == handles.access_shaft_teleportation.id then
-		update_players_using_access_shafts(event)
-	elseif handle == handles.access_shaft_update.id then
-		check_player_collision_with_access_shafts(event)
-	elseif handle == handles.transport_chest_update.id then
-		update_transport_chest_contents(event)
-	elseif handle == handles.fluid_transport_update.id then
-		update_fluid_transport_contents(event)
-	elseif handle == handles.taskmgr.id then
-		execute_first_task_in_waiting_queue(event)
-	end
-end]]
 
 -- This function looks at the global table containing players who are using an access shaft and teleports them to the destination access shaft if one exists
 function eventmgr.update_players_using_access_shafts(event)
@@ -143,7 +140,7 @@ function eventmgr.update_players_using_access_shafts(event)
 			global.players_using_access_shafts[name] = nil
 		else
 			if data.time_waiting >= config.teleportation_time_waiting then
-				if util.is_valid(data.destination_access_shaft) then
+				if api.valid(data.destination_access_shaft) then
 					surfaces.transport_player_to_access_shaft(player, data.destination_access_shaft)
 				end
 				global.players_using_access_shafts[name] = nil
@@ -159,9 +156,9 @@ function eventmgr.check_player_collision_with_access_shafts(event)
 	for index, player in ipairs(game.players) do
 		if not(player.walking_state.walking) and global.players_using_access_shafts[player.name] == nil then
 			local access_shaft = surfaces.find_nearby_access_shaft(player, config.teleportation_check_range, player.surface)
-			if util.is_valid(access_shaft) then
+			if api.valid(access_shaft) then
 				local paired_access_shaft = pairutil.find_paired_entity(access_shaft)
-				if util.is_valid(paired_access_shaft) then
+				if api.valid(paired_access_shaft) then
 					global.players_using_access_shafts[player.name] = {time_waiting = 0, player_entity = player, destination_access_shaft = paired_access_shaft}
 				end
 			end
@@ -173,18 +170,17 @@ end
 function eventmgr.update_transport_chest_contents(event)
 	global.transport_chests = global.transport_chests or {}
 	for k, v in pairs(global.transport_chests) do
-		if not(util.is_valid(v.input) and util.is_valid(v.output)) then
-			util.destroy(v.input)
-			util.destroy(v.output)
+		if not(api.valid({v.input, v.output})) then
+			api.destroy({v.input, v.output})
 			table.remove(global.transport_chests, k)
 		else
-			local input = util.get_inventory(v.input, defines.inventory.chest)
-			local output = util.get_inventory(v.output, defines.inventory.chest)
-			for key, value in pairs(util.get_contents(input)) do
+			local input = api.entity.get_inventory(v.input, defines.inventory.chest)
+			local output = api.entity.get_inventory(v.output, defines.inventory.chest)
+			for key, value in pairs(api.inventory.get_contents(input)) do
 				local itemstack = struct.ItemStack(key, value)
-				if util.can_insert(output, itemstack) then
-					local remove_itemstack = struct.ItemStack(key, util.insert_itemstack(output, itemstack))
-					util.remove_itemstack(input, remove_itemstack)
+				if api.inventory.can_insert(output, itemstack) then
+					local remove_itemstack = struct.ItemStack(key, api.inventory.insert(output, itemstack))
+					api.inventory.remove(input, remove_itemstack)
 				end
 			end
 		end
@@ -195,26 +191,23 @@ end
 function eventmgr.update_fluid_transport_contents(event)
 	global.fluid_transport = global.fluid_transport or {}
 	for k, v in pairs(global.fluid_transport) do
-		if not(util.is_valid(v.a) and util.is_valid(v.b)) then
-			util.destroy(v.a)
-			util.destroy(v.b)
+		if not(api.valid({v.a, v.b})) then
+			api.destroy({v.a, v.b})
 			table.remove(global.fluid_transport, k)
 		else
-			local fluidbox_a, fluidbox_b = v.a.fluidbox[1], v.b.fluidbox[1]
+			local fluidbox_a = api.entity.fluidbox(v.a)
+			local fluidbox_b = api.entity.fluidbox(v.b)
 			if not(fluidbox_a == nil and fluidbox_b == nil) then
 				if fluidbox_a == nil then
 					fluidbox_b.amount = fluidbox_b.amount/2
-					v.a.fluidbox[1] = fluidbox_b
-					v.b.fluidbox[1] = fluidbox_b
+					api.entity.set_fluidbox({v.a, v.b}, fluidbox_b)
 				elseif fluidbox_b == nil then
 					fluidbox_a.amount = fluidbox_a.amount/2
-					v.a.fluidbox[1] = fluidbox_a
-					v.b.fluidbox[1] = fluidbox_a
+					api.entity.set_fluidbox({v.a, v.b}, fluidbox_a)
 				elseif fluidbox_a.type == fluidbox_b.type then
 					local fluidbox_new = fluidbox_a
-					fluidbox_new.amount = (fluidbox_new.amount + fluidbox_b.amount)/2
-					v.a.fluidbox[1] = fluidbox_new
-					v.b.fluidbox[1] = fluidbox_new
+					fluidbox_new.amount = (fluidbox_a.amount + fluidbox_b.amount)/2
+					api.entity.set_fluidbox({v.a, v.b}, fluidbox_new)
 				end
 			end
 		end
@@ -238,7 +231,7 @@ function eventmgr.execute_first_task_in_waiting_queue(event)
 			if surface == nil then																	-- If the surface has not yet been created
 				table.insert(global.task_queue, v)													-- Insert a duplicate of this task at the back of the queue (avoids being discarded from the queue)
 			elseif surface ~= false then															-- Ensures that data passed is valid and if not, the task is simply removed from the queue
-				util.request_generate_chunks(surface, v.data.entity.position, 0)					-- Fixes a small bug with chunk generation
+				api.surface.request_generate_chunks(surface, v.data.entity.position, 0)					-- Fixes a small bug with chunk generation
 				table.insert(global.task_queue, struct.TaskSpecification(
 					tasks.create_paired_entity,
 					{v.data.entity, surface}))														-- Insert the next task for this process-chain at the back of the queue

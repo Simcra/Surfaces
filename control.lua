@@ -11,13 +11,14 @@ require("script.lib.pair-data")
 require("script.events")
 
 -- Declare local functions
-local insert_mod_data, on_init, on_load, on_configuration_changed
+local on_init, on_load, on_configuration_changed
 
 -- Create shorthand references to information from enum
 local loc_above = enum.surface.rel_loc.above
 local loc_below = enum.surface.rel_loc.below
 local st_und = enum.surface.type.underground.id
 local st_sky = enum.surface.type.sky.id
+local st_all = enum.surface.type.all.id
 
 -- insert all entity pair classes defined by this mod.
 local entity_pair_class = {
@@ -38,7 +39,7 @@ local pc_rail_trans = pairclass.get("sm-rail-transport")
 -- insert entity pair data defined by this mod
 local entity_pair_data = {
 	{"sky-entrance", "sky-exit", loc_above, pc_acc_shaft, st_sky},
-	{"sky-exit", "sky-entrance", loc_below, pc_acc_shaft, st_sky},
+	{"sky-exit", "sky-entrance", loc_below, pc_acc_shaft, st_sky, false},
 	{"underground-entrance", "underground-exit", loc_below, pc_acc_shaft, st_und},
 	{"underground-exit", "underground-entrance", loc_above, pc_acc_shaft, st_und, false},
 	{"wooden-transport-chest-up", "wooden-receiver-chest-upper", loc_above, pc_trans_chest},
@@ -61,14 +62,16 @@ local entity_pair_data = {
 	{"substation-lower", "substation-upper", loc_above, pc_elec_pole},
 	{"fluid-transport-upper", "fluid-transport-lower", loc_below, pc_fluid_trans},
 	{"fluid-transport-lower", "fluid-transport-upper", loc_above, pc_fluid_trans},
-	{"train-stop-upper", "train-stop-lower", loc_below, pc_rail_trans, nil, true, 2},
-	{"train-stop-lower", "train-stop-upper", loc_above, pc_rail_trans, nil, true, 2}}
+	{"train-stop-upper", "train-stop-lower", loc_below, pc_rail_trans, st_all, true, 2},
+	{"train-stop-lower", "train-stop-upper", loc_above, pc_rail_trans, st_all, true, 2}}
 pairdata.insert_array(entity_pair_data)
 
 -- insert tiles for sky surfaces to ignore during chunk generation
 local whitelist_sky_tiles = {
 	enum.prototype.tile.sky_concrete.name}	-- "sky-concrete", the prototype name
-skytiles.insert_array(whitelist_sky_tiles)
+skytiles.insert_array(whitelist_sky_tiles)	-- do note that you do not have to do this as it will be specified by the create-tile as provided with pairdata
+-- for example: pairdata.insert(entity_prototype_a, entity_prototype_b, loc_below, pairclass, nil, true, 0, tile_prototype}
+-- in this example, tile_prototype will automatically be inserted into the skytiles data
 
 -- Register event handlers
 script.on_init(function() on_init() end)
