@@ -110,8 +110,8 @@ end
 function pairutil.destroy_paired_entity(entity)
 	local pair = pairutil.find_paired_entity(entity)
 	local radius = pairdata.get(entity).radius
-	pairutil.remove_tiles(entity.position, entity.surface, radius)
-	pairutil.remove_tiles(pair.position, pair.surface, radius)
+	--pairutil.remove_tiles(entity.position, entity.surface, radius) -- to be fixed
+	--pairutil.remove_tiles(pair.position, pair.surface, radius) -- to be fixed
 	api.destroy(pair)
 end
 
@@ -147,7 +147,8 @@ function pairutil.remove_tiles(position, surface, radius)
 			local oldTiles, newTiles = {}, {}
 			local skyfloor = enum.prototype.tile.sky_floor
 			for k, v in pairs(struct.TilePositions(area)) do
-				table.insert(oldTiles, {name = ((skytiles.get(api.name(api.surface.get_tile(surface, v))) == nil) and api.name(api.surface.get_tile(surface, v)) or skyfloor.name), position = v})
+				local current_tile = api.surface.get_tile(surface, v)
+				table.insert(oldTiles, {name = ((skytiles.get(current_tile) == nil) and api.name(current_tile) or skyfloor.name), position = v})
 				table.insert(newTiles, {name = skyfloor.name, position = v})
 			end
 			api.surface.set_tiles(surface, newTiles)
