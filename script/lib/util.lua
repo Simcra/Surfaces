@@ -79,7 +79,7 @@ end
 api = {}
 -- Does this LuaObject exist and is it a valid reference to an object in the game engine?
 function api.valid(objects)
-	if type(objects) ~= "nil" then
+	if objects ~= nil and type(objects) == "table" then
 		if objects.valid == nil then
 			for k, v in pairs(objects) do
 				if api.valid(v) == false then
