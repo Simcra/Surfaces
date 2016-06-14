@@ -89,7 +89,6 @@ function pairutil.finalize_paired_entity(entity, paired_entity)
 		local pair_data = pairdata.get(entity)
 		paired_entity = paired_entity or pairutil.find_paired_entity(entity)
 		if paired_entity then
-			api.entity.set_direction(paired_entity, api.entity.direction(entity))
 			if pair_data.class == pairclass.get("sm-electric-pole") then
 				api.entity.connect_neighbour(entity, paired_entity, enum.wire.all)
 			elseif pair_data.class == pairclass.get("sm-fluid-transport") then
@@ -98,6 +97,8 @@ function pairutil.finalize_paired_entity(entity, paired_entity)
 			elseif pair_data.class == pairclass.get("sm-transport-chest") then
 				global.transport_chests = global.transport_chests or {}
 				table.insert(global.transport_chests, {input = entity, output = paired_entity})
+			elseif pair_data.class == pairclass.get("sm-rail-transport") then
+				api.entity.set_direction(paired_entity, api.entity.direction(entity))
 			end
 		else
 			api.destroy(entity)
