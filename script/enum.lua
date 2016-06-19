@@ -40,7 +40,8 @@ enum = {
 			trigger_create_paired_entity = 1,
 			trigger_create_paired_surface = 2,				
 			create_paired_entity = 3,
-			finalize_paired_entity = 4
+			finalize_paired_entity = 4,
+			remove_sky_tile = 5
 		},
 		handle = {
 			access_shaft_teleportation = {

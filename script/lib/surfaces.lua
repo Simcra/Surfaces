@@ -124,6 +124,13 @@ function surfaces.transport_player_to_access_shaft(player_entity, destination_ac
 	end
 end
 
+function surfaces.transport_player(player_entity, surface, position)
+	local new_position = api.surface.find_non_colliding_position(surface, player_entity.character.prototype.name, position, 0, 1)
+	if new_position ~= nil then
+		api.entity.teleport(player_entity, new_position, surface)
+	end
+end
+
 function surfaces.find_nearby_access_shaft(entity, radius, surface)
 	if radius and api.valid({entity, surface}) and struct.is_Position(entity.position) then
 		for k, v in pairs(api.surface.find_entities(surface, struct.BoundingBox(entity.position.x - radius, entity.position.y - radius, entity.position.x + radius, entity.position.y + radius), nil, enum.prototype.entity.access_shaft.type)) do

@@ -25,7 +25,7 @@ function pairdata.get(entity)
 	return entity ~= nil and paired_entity_data[api.name(entity)]		-- inputs may be actual entities or their just their name, api.name(entity) is cool like that
 end
 
-function pairdata.insert(entity_name, pair_name, pair_location, entity_pairclass, valid_domain, allowed_on_nauvis, ground_clear_radius, sky_tile)
+function pairdata.insert(entity_name, pair_name, pair_location, entity_pairclass, allowed_on_nauvis, ground_clear_radius, valid_domain, sky_tile)
 	if type(entity_name) == "string" and type(pair_name) == "string" then
 		if type(pair_location) == "number" and table.reverse(enum.surface.rel_loc)[pair_location] then
 			if type(entity_pairclass) == "number" and table.reverse(paired_entity_classes)[entity_pairclass] then
@@ -33,16 +33,13 @@ function pairdata.insert(entity_name, pair_name, pair_location, entity_pairclass
 					if sky_tile ~= nil then
 						skytiles.insert(sky_tile)
 					end
-					if allowed_on_nauvis == nil or allowed_on_nauvis == "true" or (allowed_on_nauvis ~= true and allowed_on_nauvis ~= false) then
-						allowed_on_nauvis = true
-					end
 					paired_entity_data[entity_name] = {
 						name = pair_name,
 						destination = pair_location,
 						class = entity_pairclass,
 						domain = valid_domain and (table.reverse(enum.surface.type, false, "id")[valid_domain] and valid_domain or enum.surface.type.all.id) or enum.surface.type.all.id,
-						nauvis = allowed_on_nauvis,
-						radius = (type(ground_clear_radius) == "number" and ground_clear_radius >= 0) and ground_clear_radius or 1,
+						nauvis = (allowed_on_nauvis ~= nil and (allowed_on_nauvis == "true" or allowed_on_nauvis == true)) and true or false,
+						radius = (type(ground_clear_radius) == "number" and ground_clear_radius >= 0) and ground_clear_radius or 0,
 						tile = (type(sky_tile) == "string") and sky_tile or enum.prototype.tile.sky_concrete.name}
 				end
 			end

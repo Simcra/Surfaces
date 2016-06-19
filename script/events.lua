@@ -16,6 +16,7 @@ require("script.lib.util")
 
 events = {}
 local eventmgr = {}
+local remove_tiles
 
 -- This function is called every game tick, it's primary purpose is to act as a timer for each of the handles in the event manager
 -- It uses data from enum to determine whether a function is due to be called and iterates sequentually
@@ -52,14 +53,20 @@ end
 
 -- This function is called just before an entity is deconstructed by the player
 function events.on_preplayer_mined_item(event)
-	if pairdata.get(event.entity) ~= nil then
+	if pairdata.get(event.entity) ~= nil or pairdata.reverse(event.entity) ~= nil then
+		global.task_queue = global.task_queue or {}
+		local pair_data = pairdata.get(event.entity) or pairdata.reverse(event.entity)
+		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.remove_sky_tile, {event.entity, pairutil.find_paired_entity(event.entity), pair_data.radius}))
 		pairutil.destroy_paired_entity(event.entity)
 	end
 end
 
 -- This function is called just before an entity is deconstructed by a construction robot
 function events.on_robot_pre_mined(event)
-	if pairdata.get(event.entity) ~= nil then
+	if pairdata.get(event.entity) ~= nil or pairdata.reverse(event.entity) ~= nil then
+		global.task_queue = global.task_queue or {}
+		local pair_data = pairdata.get(event.entity) or pairdata.reverse(event.entity)
+		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.remove_sky_tile, {event.entity, pairutil.find_paired_entity(event.entity), pair_data.radius}))
 		pairutil.destroy_paired_entity(event.entity)
 	end
 end
@@ -109,9 +116,8 @@ function events.on_entity_died(event)
 end
 
 -- This function is called whenever a train changes state from moving to stopping or stopping to stopped, etc.
--- but basically, until surface teleport can be done for trains, there will be no intersurface train functionality
--- there is nothing I can do to get this to work without having to destroy and create new trains every time a train stops at the stations
 function events.on_train_changed_state(event)
+	-- temporarily commented out until surface teleport can be used on non-player entities
 	--[[if api.train.state(event.train) == defines.trainstate.wait_station then
 		local front_rail = event.train.front_rail
 		if front_rail ~= nil then
@@ -247,8 +253,50 @@ function eventmgr.execute_first_task_in_waiting_queue(event)
 			end
 		elseif v.task == tasks.finalize_paired_entity then											-- Performs final processing for the paired entity (example: intersurface electric poles are connected to one another)
 			pairutil.finalize_paired_entity(v.data.entity, v.data.paired_entity)
+		elseif v.task == tasks.remove_sky_tile then
+			if api.valid({v.data.entity, v.data.paired_entity}) == false then
+				remove_tiles(v.data.position, v.data.surface, v.data.radius)
+				remove_tiles(v.data.position, v.data.paired_surface, v.data.radius)
+			else
+				table.insert(global.task_queue, v)
+			end
 		end
 		table.remove(global.task_queue, k)															-- Remove the current task from the queue, it has finished executing
 		break																						-- Exit loop, we have finished processing the first task in the queue
+	end
+end
+
+-- Used to remove tiles underneath paired entities when they are placed in the sky. Respects when users place down concrete and stone brick above paired entity tiles, ensuring that players do not lose tiles.
+remove_tiles = function(position, surface, radius)
+	if struct.is_Position(position) and api.valid(surface) then
+		if surfaces.is_from_this_mod(surface) and surfaces.is_above_nauvis(surface) then
+			radius = radius or 0
+			local area = struct.BoundingBox(position.x - radius, position.y - radius, position.x + radius, position.y + radius)
+			local oldTiles, newTiles, entities = {}, {}, {}
+			local sky_tile_prototype = enum.prototype.tile.sky_floor.name
+			for k, v in pairs(struct.TilePositions(area)) do
+				local tile_prototype = api.name(api.surface.get_tile(surface, v))
+				table.insert(oldTiles, {name = ((skytiles.get(tile_prototype) == nil) and tile_prototype or sky_tile_prototype), position = v})
+				table.insert(newTiles, {name = sky_tile_prototype, position = v})
+			end
+			--for k, v in pairs(api.surface.find_entities(surface, area)) do
+			for k, v in pairs(api.surface.find_entities(surface, area, "player", "player")) do
+				--table.insert(entities, v)
+				for key, value in pairs(api.game.players()) do
+					if value.character == v then
+						surfaces.transport_player(value, api.game.surface("nauvis"), v.position)
+						break
+					end
+				end
+			end
+			api.surface.set_tiles(surface, newTiles)
+			api.surface.set_tiles(surface, oldTiles)
+			-- temporarily commented out until surface teleport can be used on non-player entities
+			--for k, v in pairs(entities) do
+			--	if api.type(v) ~= "player" then
+			--		api.entity.teleport(v, v.position, surface)
+			--	end
+			--end
+		end
 	end
 end

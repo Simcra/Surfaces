@@ -154,9 +154,17 @@ function api.game.player(id)
 	--return id and game.players[id] --post 0.13
 end
 
+function api.game.players()
+	return game.players
+end
+
 function api.game.surface(id)
 	return id and game.get_surface(id) or nil --pre 0.13
 	--return id and game.surfaces[id] or nil --post 0.13
+end
+
+function api.game.force(id)
+	return game.forces[id]
 end
 
 function api.game.entity_prototypes()

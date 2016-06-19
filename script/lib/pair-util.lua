@@ -17,12 +17,12 @@ pairutil = {}
 -- Attempts to find the paired entity of the provided entity, returning the result
 function pairutil.find_paired_entity(entity)
 	if api.valid(entity) then
-		local pair_data = pairdata.get(entity)
+		local pair_data = pairdata.get(entity) or pairdata.reverse(entity)
 		if pair_data then
 			if pair_data.destination == enum.surface.rel_loc.above then
-				return surfaces.find_nearby_entity(entity, 0.5, surfaces.get_surface_above(entity.surface), pair_data.name, api.game.entity_prototypes()[pair_data.name].type)
+				return surfaces.find_nearby_entity(entity, 0.5, surfaces.get_surface_above(entity.surface), pair_data.name, api.type(api.game.entity_prototypes()[pair_data.name]))
 			elseif pair_data.destination == enum.surface.rel_loc.below then
-				return surfaces.find_nearby_entity(entity, 0.5, surfaces.get_surface_below(entity.surface), pair_data.name, api.game.entity_prototypes()[pair_data.name].type)
+				return surfaces.find_nearby_entity(entity, 0.5, surfaces.get_surface_below(entity.surface), pair_data.name, api.type(api.game.entity_prototypes()[pair_data.name]))
 			end
 		end
 	end
@@ -110,8 +110,6 @@ end
 function pairutil.destroy_paired_entity(entity)
 	local pair = pairutil.find_paired_entity(entity)
 	local radius = pairdata.get(entity).radius
-	--pairutil.remove_tiles(entity.position, entity.surface, radius) -- to be fixed
-	--pairutil.remove_tiles(pair.position, pair.surface, radius) -- to be fixed
 	api.destroy(pair)
 end
 
@@ -127,32 +125,15 @@ function pairutil.clear_ground(position, surface, radius, tile)
 					api.destroy(v)
 				end
 			else
-				local newTiles = {}
-				tile = tile or enum.prototype.tile.sky_concrete.name
+				local newTiles, oldTiles = {}, {}
+				local sky_tile_prototype = enum.prototype.tile.sky_concrete.name
 				for k, v in pairs(struct.TilePositions(area)) do
+					local tile_prototype = api.name(api.surface.get_tile(surface, v))
+					table.insert(oldTiles, {name = ((skytiles.get(tile_prototype) == nil) and tile_prototype or sky_tile_prototype), position = v})
 					table.insert(newTiles, {name = tile, position = v})
 				end
 				api.surface.set_tiles(surface, newTiles)
 			end
-		end
-	end
-end
-
--- Used to remove tiles underneath paired entities when they are placed in the sky. Respects when users place down concrete and stone brick above paired entity tiles, ensuring that players do not lose materials.
-function pairutil.remove_tiles(position, surface, radius)
-	if struct.is_Position(position) and api.valid(surface) then
-		if surfaces.is_from_this_mod(surface) and surfaces.is_above_nauvis(surface) then
-			radius = radius or 0
-			local area = struct.BoundingBox(position.x - radius, position.y - radius, position.x + radius, position.y + radius)
-			local oldTiles, newTiles = {}, {}
-			local skyfloor = enum.prototype.tile.sky_floor
-			for k, v in pairs(struct.TilePositions(area)) do
-				local current_tile = api.surface.get_tile(surface, v)
-				table.insert(oldTiles, {name = ((skytiles.get(current_tile) == nil) and api.name(current_tile) or skyfloor.name), position = v})
-				table.insert(newTiles, {name = skyfloor.name, position = v})
-			end
-			api.surface.set_tiles(surface, newTiles)
-			api.surface.set_tiles(surface, oldTiles)
 		end
 	end
 end
