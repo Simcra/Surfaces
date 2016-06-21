@@ -10,45 +10,56 @@ require("script.enum")
 require("script.lib.pair-data")
 require("script.events")
 
--- Declare local functions
-local on_init, on_load, on_configuration_changed
-
--- Create shorthand references to information from enum
+-- Create shorthand references to data from enum
 local loc_above = enum.surface.rel_loc.above
 local loc_below = enum.surface.rel_loc.below
 local st_und = enum.surface.type.underground.id
 local st_sky = enum.surface.type.sky.id
 local st_all = enum.surface.type.all.id
 
--- insert all entity pair classes defined by this mod.
+-- register entity pair-classes used by paired entities in this mod.
 local entity_pair_class = {
-	"sm-access-shaft",
-	"sm-electric-pole",
-	"sm-transport-chest",
-	"sm-fluid-transport",
-	"sm-rail-transport"}
+	"access-shaft",
+	"electric-pole",
+	"transport-chest",
+	"fluid-transport",
+	"rail-transport"}
 pairclass.insert_array(entity_pair_class)
 
--- create shorthand references to IDs of entity pair classes defined by function above
-local pc_acc_shaft = pairclass.get("sm-access-shaft")
-local pc_elec_pole = pairclass.get("sm-electric-pole")
-local pc_trans_chest = pairclass.get("sm-transport-chest")
-local pc_fluid_trans = pairclass.get("sm-fluid-transport")
-local pc_rail_trans = pairclass.get("sm-rail-transport")
+-- create a shorthand reference to the ID of each entity pair-class registered by this mod.
+local pc_acc_shaft = pairclass.get("access-shaft")
+local pc_elec_pole = pairclass.get("electric-pole")
+local pc_trans_chest = pairclass.get("transport-chest")
+local pc_fluid_trans = pairclass.get("fluid-transport")
+local pc_rail_trans = pairclass.get("rail-transport")
 
 --[[
-insert entity pair data defined by this mod,
-fields are as follows:
-	- entity (must be a valid entity prototype string)
-	- paired entity (must be a valid entity prototype string)
+insert entity pair data defined by this mod, structure of fields is as follows:
+	- entity (must be a valid entity prototype string)								(required)
+	- paired entity (must be a valid entity prototype string)						(required)
 		- a new entity of this prototype will be placed on the paired surface after the entity has been placed by a player or construction robot
-	- relative location (must be a constant defined by enum) [valid values: enum.surface.rel_loc.above, enum.surface.rel_loc.below]
-		- specifies which surface the paired entity will be placed on
-	- pair class (must be registered prior to call using pairclass.insert or pairclass.insert_array) [valid values: registered pair classes obtained using pairclass.get(prototype)]
-	- is this entity allowed to be constructed on the nauvis(vanilla factorio) surface? [default: false] (optional)
-	- radius to be cleared around the entity (in tiles) upon placement (also applies to the placement and removal of sky tiles in sky surfaces) [default: 0] (optional)
-	- valid domains for this entity (must be a constant defined by enum) [default: enum.surface.type.all.id] (optional)
-	- sky tile (must be a valid tile prototype string) [default: enum.prototype.tile.sky_concrete.name] (optional)
+	- relative location (must be a constant defined by enum) 						(required)
+		[valid values: enum.surface.rel_loc.above, enum.surface.rel_loc.below]
+		- specifies which surface the paired entity will be placed on relative to the current surface (either above or below this surface)
+	- pair class (must be a valid pair-class ID)									(required)
+		- valid pair-class IDs are obtained through pairclass.get(name)
+		- pair-classes must be registered using either pairclass.insert(name) or pairclass.insert_array({name, another_name})
+		- pair-class will effect the behaviour when creating a paired entity, for example:
+			- all "electric-pole" paired entities will connect the circuit and electric network between the two paired entities
+			- all "fluid-transport" paired entities will share their fluidbox contents evenly to allow fluid transportation
+	- allowed this entity to be constructed on the primary surface? 				(optional)		[default: false]
+		- determines whether or not this entity may be placed on the "nauvis" surface
+		- if this is set to false, entities of this type will be dropped on the ground when a robot or player attempts to build them on the "nauvis" surface
+	- radius to be cleared around the entity (in tiles) upon placement				(optional)		[default: 0]
+		- in sky surfaces, this will be the radius (in tiles) that sky tiles will be placed in sky surfaces prior to paired entity placement (also applies when this entity is deconstructed)
+		- in underground surfaces, this will be the radius (in tiles) that underground walls are cleared for this paired entity
+		- a radius of 0 results in a single tile centered on the entity's position, likewise a radius of 5 results in eleven tiles centered on the entity's position
+	- ID of valid domain(s) for this paired entity						 			(optional)		[default: enum.surface.type.all.id]
+		- specifies which surfaces this entity may be placed in, other than the primary surface:
+			- enum.surface.type.underground.id		- allows this entity to only be placed in underground surfaces
+			- enum.surface.type.sky.id				- allows this entity to only be placed in sky surfaces
+			- enum.surface.type.all.id 				- allows this entity to be placed in both sky and underground surfaces
+	- sky tile (must be a valid tile prototype string)								(optional)		[default: enum.prototype.tile.sky_concrete.name]
 ]]
 local entity_pair_data = {
 	{"sky-entrance", "sky-exit", loc_above, pc_acc_shaft, true, 1, st_sky},
@@ -83,6 +94,27 @@ pairdata.insert_array(entity_pair_data)
 local whitelist_sky_tiles = {
 	enum.prototype.tile.sky_concrete.name}	-- "sky-concrete", the prototype name
 skytiles.insert_array(whitelist_sky_tiles)
+
+-- initialise global variables
+local init_globs = function()
+	global.task_queue = global.task_queue or {}
+	global.players_using_access_shafts = global.players_using_access_shafts or {}
+	global.transport_chests = global.transport_chests or {}
+	global.fluid_transport = global.fluid_transport or {}
+end
+
+-- control functions (on_init, on_load, on_config_changed)
+local function on_init()
+	init_globs()
+end
+
+local function on_load()
+	init_globs()
+end
+
+local function on_configuration_changed()
+	init_globs()
+end
 
 -- Register event handlers
 script.on_init(function() on_init() end)
@@ -125,15 +157,3 @@ script.on_event(defines.events.on_entity_died, function(event) events.on_entity_
 script.on_event(defines.events.on_train_changed_state, function(event) events.on_train_changed_state(event) end)
 -- Every tick
 script.on_event(defines.events.on_tick, function(event) events.on_tick(event) end)
-
-on_init = function()
-
-end
-
-on_load = function()
-
-end
-
-on_configuration_changed = function()
-
-end

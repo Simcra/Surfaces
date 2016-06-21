@@ -135,7 +135,7 @@ function surfaces.find_nearby_access_shaft(entity, radius, surface)
 	if radius and api.valid({entity, surface}) and struct.is_Position(entity.position) then
 		for k, v in pairs(api.surface.find_entities(surface, struct.BoundingBox(entity.position.x - radius, entity.position.y - radius, entity.position.x + radius, entity.position.y + radius), nil, enum.prototype.entity.access_shaft.type)) do
 			local pair_data = pairdata.get(v)
-			if pair_data ~= nil and pair_data.class == pairclass.get("sm-access-shaft") then
+			if pair_data ~= nil and pair_data.class == pairclass.get("access-shaft") then
 				return v
 			end
 		end

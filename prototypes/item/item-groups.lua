@@ -32,6 +32,6 @@ data:extend({{
 	type = "item-subgroup",
 	name = "surfaces-transport-other",
 	group = "surfaces",
-	inventory_order = "surfaces-b",
-	order = "surfaces-b"
+	inventory_order = "surfaces-d",
+	order = "surfaces-d"
 }})

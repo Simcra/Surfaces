@@ -14,6 +14,11 @@ function math.round(number, decimal_places)
 	return math.floor(number * multiplier + 0.5) / multiplier
 end
 
+function math.rerandomize(offset)
+	offset = offset or 0
+	math.randomseed(math.round(offset + (math.random() * enum.max_int)))
+end
+
 --[[
 Useful mostly for debugging tables but may also have other uses.
 Returns a string representation of the table, traversing recursively, see example below:
@@ -25,7 +30,7 @@ Otherwise, "{parameterA = 2, parameterB = {innerParameterA = A, innerParameterB 
 function table.tostring(t, add_spacing)
 	local result = "{"
 	local equalstring = "="
-	if type(add_spacing) == "boolean" and add_spacing == true then
+	if add_spacing and (add_spacing == true or add_spacing == "true") then
 		equalstring = " = "
 	end
 	for k, v in pairs(t) do
@@ -45,10 +50,25 @@ end
 
 -- just a boring debug function to print text to every player's screen
 function util.debug(text)
-	for k, v in ipairs(game.players) do
-		game.players[k].print(text)
+	for k, v in pairs(game.players) do
+		util.message(k, text)
 	end
 end
+
+-- prints text to a player's screen
+function util.message(player_id, text)
+	api.game.player(player_id).print(text)
+end
+
+-- transforms colour as RGB into factorio map colour format
+function util.RGB(red, green, blue, alpha)
+	red = red and (red > 255 and 255 or red) or 0
+	green = green and (green > 255 and 255 or green) or 0
+	blue = blue and (blue > 255 and 255 or blue) or 0
+	alpha = alpha and (alpha > 100 and 100 or alpha) or 100
+	return {r = (red / 255), g = (green / 255), b = (blue / 255), a = (alpha / 100)}
+end
+	
 
 --[[
 Intended to be used to verifying the existance of a value in a table.

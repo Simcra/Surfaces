@@ -69,6 +69,7 @@ end
 
 --[[
 LuaEntity (http://lua-api.factorio.com/0.12.35/LuaEntity.html)
+LuaEntityPrototype (http://lua-api.factorio.com/0.12.35/LuaEntityPrototype.html)
 ]]
 function api.entity.teleport(entity, position, surface)
 	if api.valid(entity) and api.valid(surface) and struct.is_Position(position) then
@@ -85,7 +86,7 @@ function api.entity.fluidbox(entity, index)
 end
 
 function api.entity.set_fluidbox(entities, new_fluidbox, index)
-	if type(entities) == "table" and api.valid(new_fluidbox) and (entities.fluidbox ~= nil or (entities[1] ~= nil and entities[1].fluidbox ~= nil)) then
+	if entities ~= nil and api.valid(new_fluidbox) and (entities.fluidbox ~= nil or (entities[1] ~= nil and entities[1].fluidbox ~= nil)) then
 		if entities.fluidbox ~= nil then
 			entities.fluidbox[index or 1] = new_fluidbox
 		else
@@ -95,6 +96,37 @@ function api.entity.set_fluidbox(entities, new_fluidbox, index)
 				end
 			end
 		end
+	end
+end
+
+function api.entity.minable(entity)
+	return api.valid(entity) and (entity.minable ~= nil and entity.minable == true) or false
+end
+
+function api.entity.prototype(entity)
+	return (api.valid(entity) and api.valid(entity.prototype)) and entity.prototype or nil
+end
+
+function api.entity.minable_result(entity)
+	if api.entity.minable(entity) and api.entity.prototype(entity) ~= nil then
+		local results = {}
+		for k, v in pairs(api.entity.prototype(entity).mineable_properties.products) do
+			local prob, rand = 1, 1
+			if v.probability ~= nil and v.probability < 1 then
+				math.rerandomize(api.game.tick()) -- calls math.randomseed to ensure truly random results from randomizer
+				prob = math.round(v.probability, 14) -- round the probability to 14 decimal places, matching math.random()
+				rand = math.round(math.random(), 14) -- round randomized number to 14 decimal places
+			end
+			if prob >= rand then -- if the random result is less than or equal to the probability
+				if v.amount_min ~= nil and v.amount_max ~= nil then -- if product does not have a fixed amount (has a minimum and maximum yield)
+					local amount = math.round(v.amount_min + (math.random() * (v.amount_max - v.amount_min)))
+					table.insert(results, struct.ItemStack(v.name, amount))
+				else
+					table.insert(results, struct.ItemStack(v.name, v.amount))
+				end
+			end
+		end
+		return results
 	end
 end
 
@@ -125,10 +157,6 @@ function api.entity.connect_neighbour(entity_a, entity_b, wire)
 		end
 	end
 end
-
---[[
-LuaEntityPrototype (http://lua-api.factorio.com/0.12.35/LuaEntityPrototype.html)
-]]
 
 --[[
 LuaEquipment (http://lua-api.factorio.com/0.12.35/LuaEquipment.html)
@@ -163,12 +191,29 @@ function api.game.surface(id)
 	--return id and game.surfaces[id] or nil --post 0.13
 end
 
+function api.game.surfaces()
+	return game.surfaces
+	--return id and game.surfaces[id] or nil --post 0.13
+end
+
 function api.game.force(id)
-	return game.forces[id]
+	return id and game.forces[id]
+end
+
+function api.game.forces()
+	return game.forces
+end
+
+function api.game.entity_prototype(id)
+	return id and game.entity_prototypes[id]
 end
 
 function api.game.entity_prototypes()
 	return game.entity_prototypes
+end
+
+function api.game.tile_prototype(id) -- will not work until 0.13
+	--return id and game.tile_prototypes[id] 
 end
 
 function api.game.tile_prototypes() -- will not work until 0.13
@@ -306,12 +351,22 @@ end
 function api.surface.map_gen_settings(surface)
 	return (surface and api.valid(surface)) and surface.map_gen_settings
 end
+
+function api.surface.spill_items(surface, position, itemstack)
+	if api.valid(surface) and struct.is_ItemStack(itemstack) and struct.is_Position(position) then
+		surface.spill_item_stack(position, itemstack)
+	end
+end
 --[[
 LuaTechnology (http://lua-api.factorio.com/0.12.35/LuaTechnology.html)
 ]]
 
 --[[
 LuaTile (http://lua-api.factorio.com/0.12.35/LuaTile.html)
+]]
+
+--[[
+LuaTilePrototype
 ]]
 
 --[[

@@ -1,19 +1,21 @@
-data:extend({{
-	type = "tile",
-	name = "underground-floor",
-	needs_correction = false,
-	mined_sound = {filename = "__base__/sound/deconstruct-bricks.ogg"},
-	collision_mask = {"ground-tile", "doodad-layer"},
-	decorative_removal_probability = 1,
-	layer = 59,
-	variants = {
-		main = {{picture = "__Surfaces__/graphics/terrain/underground/floor.png", count = 4, size = 1}},
-		inner_corner = {picture = "__Surfaces__/graphics/terrain/underground/floor.png", count = 0},
-		outer_corner = {picture = "__Surfaces__/graphics/terrain/underground/floor.png", count = 0},
-		side = {picture = "__Surfaces__/graphics/terrain/underground/floor.png", count = 0},
-		u_transition = {picture = "__Surfaces__/graphics/terrain/underground/floor.png", count = 0},
-		o_transition = {picture = "__Surfaces__/graphics/terrain/underground/floor.png", count = 0}},
-	walking_sound = {{filename = "__base__/sound/walking/dirt-02.ogg", volume = 0.8}, {filename = "__base__/sound/walking/dirt-03.ogg", volume = 0.8}, {filename = "__base__/sound/walking/dirt-04.ogg", volume = 0.8}},
-	map_color={r=0, g=0, b=0},
-	ageing=0
-}})
+require("script.enum")
+local gfxpath, prefix, filetype = "__Surfaces__/graphics/terrain/underground/", "floor-", ".png"
+local enum_data = enum.prototype.tile.underground_floor
+
+local underground_floor = table.deepcopy(data.raw.tile["dirt"])
+underground_floor.name = enum_data.name
+underground_floor.needs_correction = false
+underground_floor.collision_mask = {"ground-tile"--[[, "doodad-layer"]]}
+underground_floor.decorative_removal_probability = 1
+underground_floor.layer = enum_data.layer
+underground_floor.variants = {
+	main = {{picture = gfxpath .. prefix .. "main" .. filetype, count = 4, size = 1}},
+	inner_corner = {picture = gfxpath .. prefix .. "main" .. filetype, count = 0},
+	outer_corner = {picture = gfxpath .. prefix .. "main" .. filetype, count = 0},
+	side = {picture = gfxpath .. prefix .. "main" .. filetype, count = 0},
+	u_transition = {picture = gfxpath .. prefix .. "main" .. filetype, count = 0},
+	o_transition = {picture = gfxpath .. prefix .. "main" .. filetype, count = 0}}
+underground_floor.walking_speed_modifier = enum_data.walking_speed_modifier
+underground_floor.map_color = enum_data.map_colour
+underground_floor.ageing = 0
+data:extend({underground_floor})

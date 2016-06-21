@@ -6,15 +6,16 @@
 ]]
 
 require("config")
+require("script.lib.util")
 
 --[[
 Note: This is NOT a configuration file, nor are any files other than config.lua! 
 
 If you alter anything in this script you will most likely break your save game and/or your version of the mod.
 ]]
-
 enum = {
 	prefix = "surfacesmod",
+	max_int = 4294967295,
 	surface = {
 		type = {
 			underground = {
@@ -41,7 +42,8 @@ enum = {
 			trigger_create_paired_surface = 2,				
 			create_paired_entity = 3,
 			finalize_paired_entity = 4,
-			remove_sky_tile = 5
+			remove_sky_tile = 5,
+			spill_entity_result = 6
 		},
 		handle = {
 			access_shaft_teleportation = {
@@ -74,26 +76,50 @@ enum = {
 	prototype = {
 		entity = {
 			underground_wall = {
-				id = 1,
 				name = "underground-wall",
-				type = "tree"
+				type = "tree",
+				hardness = 2,
+				mining_time = 4,
+				order = "z-a[surfaces]-a[underground-wall]",
+				map_colour = util.RGB(60, 52, 36),
+				resistances = {
+					{type = "impact", percent = 80},
+					{type = "physical", percent = 5},
+					{type = "poison", percent = 100},
+					{type = "fire", percent = 100},
+					{type = "acid", percent = 95},
+					{type = "explosion", percent = 5}
+				}
 			},
 			access_shaft = {
-				type = "simple-entity"
+				type = "simple-entity",
+				mining_time = 8,
+				order = "z-a[surfaces]-a[access-shaft]",
+				map_colour = util.RGB(127, 88, 43, 50),
+				resistances = {
+					{type = "physical", percent = 20},
+					{type = "impact", percent = 20},
+					{type = "poison", percent = 100},
+					{type = "fire", percent = 5},
+					{type = "acid", percent = 15}
+				}
 			}
 		},
 		tile = {
 			underground_floor = {
-				id = 1,
-				name = "underground-floor"
+				name = "underground-floor",
+				walking_speed_modifier = 0.8,
+				layer = 57,
+				map_colour = util.RGB(107, 44, 4)
 			},
 			sky_floor = {
-				id = 2,
-				name = "sky-floor"
+				name = "sky-floor",
+				layer = 58,
+				map_colour = util.RGB(145, 212, 252)
 			},
 			sky_concrete = {
-				id = 3,
-				name = "sky-concrete"
+				name = "sky-concrete",
+				layer = 59
 			}
 		}
 	},

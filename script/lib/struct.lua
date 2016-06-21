@@ -72,7 +72,7 @@ end
 
 function struct.MapGenSettings(terrain, water, autoplace_controls, seed, shift, width, height, peaceful)
 	if seed == nil then
-		math.randomseed(math.random(1, 4294967295))
+		math.rerandomize()
 	end
 	return {
 		terrain_segmentation = (struct.is_MapGenFrequency(terrain) and terrain ~= "none") and terrain or "normal",
@@ -172,13 +172,13 @@ function struct.TaskData(id, fields)
 	if fields and struct.is_TaskID(id) then
 		local tasks = enum.eventmgr.task
 		if id == tasks.trigger_create_paired_entity then
-			return api.valid(fields) and {entity = fields[1]} or nil
+			return api.valid({fields[1]}) and {entity = fields[1], player_index = fields[2]} or nil
 		elseif id == tasks.trigger_create_paired_surface then
-			return (api.valid({fields[1], fields[2]}) and table.reverse(enum.surface.rel_loc)[fields[2]]) and {entity = fields[1], pair_location = fields[2]} or nil
+			return (api.valid({fields[1], fields[2]}) and table.reverse(enum.surface.rel_loc)[fields[2]]) and {entity = fields[1], pair_location = fields[2], player_index = fields[3]} or nil
 		elseif id == tasks.create_paired_entity then
-			return (api.valid({fields[1], fields[2]})) and {entity = fields[1], paired_surface = fields[2]} or nil
+			return (api.valid({fields[1], fields[2]})) and {entity = fields[1], paired_surface = fields[2], player_index = fields[3]} or nil
 		elseif id == tasks.finalize_paired_entity then
-			return (api.valid({fields[1], fields[2]})) and {entity = fields[1], paired_entity = fields[2]} or nil
+			return (api.valid({fields[1], fields[2]})) and {entity = fields[1], paired_entity = fields[2], player_index = fields[3]} or nil
 		elseif id == tasks.remove_sky_tile then
 			if api.valid({fields[1], fields[2]}) and type(fields[3]) == "number" then
 				local entity = table.deepcopy(fields[1])
@@ -191,6 +191,16 @@ function struct.TaskData(id, fields)
 					surface = entity.surface,
 					paired_surface = paired_entity and paired_entity.surface or nil,
 					radius = radius}
+			end
+		elseif id == tasks.spill_entity_result then
+			if api.valid(fields[1]) and type(fields[2]) == "table" then
+				local entity = table.deepcopy(fields[1])
+				local products = table.deepcopy(fields[2])
+				return {
+					entity = entity,
+					surface = entity.surface,
+					position = entity.position,
+					products = products}
 			end
 		end
 	end
