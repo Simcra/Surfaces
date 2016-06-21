@@ -86,8 +86,8 @@ end
 --[[
 Sky tile whitelist
 ]]
-function skytiles.get(prototype)
-	return prototype and sky_tile_whitelist[prototype]											-- returns true if the tile prototype is in the whitelist, or otherwise nil
+function skytiles.get(tile)
+	return tile and sky_tile_whitelist[api.name(tile)]											-- returns true if the tile prototype is in the whitelist, or otherwise nil
 end
 
 function skytiles.insert(prototype)

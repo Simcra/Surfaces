@@ -145,10 +145,9 @@ function pairutil.clear_ground(position, surface, radius, tile)
 				end
 			else
 				local newTiles, oldTiles = {}, {}
-				local sky_tile_prototype = enum.prototype.tile.sky_concrete.name
 				for k, v in pairs(struct.TilePositions(area)) do
-					local tile_prototype = api.name(api.surface.get_tile(surface, v))
-					table.insert(oldTiles, {name = ((skytiles.get(tile_prototype) == nil) and tile_prototype or sky_tile_prototype), position = v})
+					local current_tile = api.surface.get_tile(surface, v)
+					table.insert(oldTiles, {name = ((skytiles.get(current_tile) == nil and current_tile.collides_with("player-layer") == false) and api.name(current_tile) or tile), position = v})
 					table.insert(newTiles, {name = tile, position = v})
 				end
 				api.surface.set_tiles(surface, newTiles)
