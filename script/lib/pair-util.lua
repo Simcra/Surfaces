@@ -152,6 +152,7 @@ function pairutil.clear_ground(position, surface, radius, tile)
 					table.insert(newTiles, {name = tile, position = v})
 				end
 				api.surface.set_tiles(surface, newTiles)
+				api.surface.set_tiles(surface, oldTiles)
 			end
 		end
 	end
