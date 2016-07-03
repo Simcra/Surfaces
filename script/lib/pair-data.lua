@@ -5,29 +5,25 @@
     This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 ]]
 
+require("script.const")
+require("script.proto")
+require("script.lib.api")
 require("script.lib.util")
-require("script.enum")
-require("script.lib.api-util")
 
-pairdata = {}
-pairclass = {}
-skytiles = {}
+pairdata, pairclass, skytiles = {}, {}, {}
 
-local paired_entity_data = {}
-local paired_entity_classes = {}
-local sky_tile_whitelist = {}
-local next_pairclass_id = 0
+local paired_entity_data, paired_entity_classes, sky_tile_whitelist, next_pairclass_id = {}, {}, {}, 0
 
 --[[
 Paired entity data
 ]]
 function pairdata.get(entity)
-	return entity ~= nil and paired_entity_data[api.name(entity)]		-- inputs may be actual entities or their just their name, api.name(entity) is cool like that
+	return entity ~= nil and paired_entity_data[api.name(entity)]			-- inputs may be actual entities or their just their name, api.name(entity) is cool like that
 end
 
 function pairdata.insert(entity_name, pair_name, pair_location, entity_pairclass, allowed_on_nauvis, ground_clear_radius, valid_domain, sky_tile)
 	if type(entity_name) == "string" and type(pair_name) == "string" then
-		if type(pair_location) == "number" and table.reverse(enum.surface.rel_loc)[pair_location] then
+		if type(pair_location) == "number" and table.reverse(const.surface.rel_loc)[pair_location] then
 			if type(entity_pairclass) == "number" and table.reverse(paired_entity_classes)[entity_pairclass] then
 				if paired_entity_data[entity_name] == nil then
 					if sky_tile ~= nil then
@@ -37,10 +33,10 @@ function pairdata.insert(entity_name, pair_name, pair_location, entity_pairclass
 						name = pair_name,
 						destination = pair_location,
 						class = entity_pairclass,
-						domain = valid_domain and (table.reverse(enum.surface.type, false, "id")[valid_domain] and valid_domain or enum.surface.type.all.id) or enum.surface.type.all.id,
-						nauvis = (allowed_on_nauvis ~= nil and (allowed_on_nauvis == "true" or allowed_on_nauvis == true)) and true or false,
+						domain = valid_domain and (table.reverse(const.surface.type, false, "id")[valid_domain] and valid_domain or const.surface.type.all.id) or const.surface.type.all.id,
+						nauvis = (allowed_on_nauvis ~= nil and (allowed_on_nauvis == true or allowed_on_nauvis == "true")) and true or false,
 						radius = (type(ground_clear_radius) == "number" and ground_clear_radius >= 0) and ground_clear_radius or 0,
-						tile = (type(sky_tile) == "string") and sky_tile or enum.prototype.tile.sky_concrete.name}
+						tile = (type(sky_tile) == "string") and sky_tile or proto.tile.platform.name}
 				end
 			end
 		end

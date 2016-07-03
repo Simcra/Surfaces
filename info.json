@@ -1,8 +1,10 @@
 {
   "name": "Surfaces",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "title": "Surfaces",
   "author": "Simcra",
-  "dependencies": ["base >= 0.12.33"],
-  "description": "Reach up to the skies or dig deep below, expand your base vertically... If you're into that kind of thing."
+  "description": "The Surfaces mod offers you the opportunity to exploit the natural resources of the planet through digging caverns of limitless depth. This mod provides the means to successfully transport liquids, items and players between surfaces. This mod also allows players to build construction platforms and expand bases vertically through the use of sky surfaces. This mod provides players with tools that allow the creation of huge multi-layered factories and a means to get those ugly solar panels out of sight.",
+  "homepage": "https://forums.factorio.com/viewtopic.php?f=97&t=25444",
+  "factorio_version": "0.13",
+  "dependencies": ["base >= 0.13.0"]
 }

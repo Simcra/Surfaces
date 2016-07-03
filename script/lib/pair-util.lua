@@ -6,10 +6,12 @@
 ]]
 
 require("config")
+require("script.const")
+require("script.proto")
+require("script.lib.api")
 require("script.lib.pair-data")
-require("script.lib.surfaces")
 require("script.lib.struct")
-require("script.lib.api-util")
+require("script.lib.surfaces")
 require("script.lib.util")
 
 pairutil = {}
@@ -18,10 +20,10 @@ pairutil = {}
 function pairutil.find_paired_entity(entity)
 	if api.valid(entity) then
 		local pair_data = pairdata.get(entity) or pairdata.reverse(entity)
-		if pair_data then
-			if pair_data.destination == enum.surface.rel_loc.above then
+		if pair_data ~= nil then
+			if pair_data.destination == const.surface.rel_loc.above then
 				return surfaces.find_nearby_entity(entity, 0.5, surfaces.get_surface_above(entity.surface), pair_data.name, api.type(api.game.entity_prototype(pair_data.name)))
-			elseif pair_data.destination == enum.surface.rel_loc.below then
+			elseif pair_data.destination == const.surface.rel_loc.below then
 				return surfaces.find_nearby_entity(entity, 0.5, surfaces.get_surface_below(entity.surface), pair_data.name, api.type(api.game.entity_prototype(pair_data.name)))
 			end
 		end
@@ -34,19 +36,19 @@ function pairutil.validate_paired_entity(entity, player_index)
 	if api.valid(entity) and (surfaces.is_from_this_mod(entity.surface) == true or api.name(entity.surface) == "nauvis") then
 		local pair_data = pairdata.get(entity)
 		if surfaces.is_below_nauvis(entity.surface) then
-			if pair_data.domain == enum.surface.type.sky.id then
+			if pair_data.domain == const.surface.type.sky.id then
 				if player_index and api.game.player(player_index) then
 					util.message(player_index, entity.name .. " may not be placed in sky surfaces, it has been dropped on the ground.")
 				end
-				table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
+				table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
 				api.destroy(entity)
 			end
 		elseif surfaces.is_above_nauvis(entity.surface) then
-			if pair_data.domain == enum.surface.type.underground.id then
+			if pair_data.domain == const.surface.type.underground.id then
 				if player_index and api.game.player(player_index) then
 					util.message(player_index, entity.name .. " may not be placed in underground surfaces, it has been dropped on the ground.")
 				end
-				table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
+				table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
 				api.destroy(entity)
 			end
 		else
@@ -54,7 +56,7 @@ function pairutil.validate_paired_entity(entity, player_index)
 				if player_index and api.game.player(player_index) then
 					util.message(player_index, entity.name .. " may not be placed on the nauvis surface, it has been dropped on the ground.")
 				end
-				table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
+				table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
 				api.destroy(entity)
 			end
 		end
@@ -65,15 +67,15 @@ function pairutil.validate_paired_entity(entity, player_index)
 		if player_index and api.game.player(player_index) then
 			util.message(player_index, entity.name .. " may not be placed on this surface, it has been dropped on the ground.")
 		end
-		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
+		table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
 		api.destroy(entity)
 	end
 end
 
 -- Internal function, called from events.execute_first_task_in_waiting_queue(event)
 function pairutil.create_paired_surface(entity, pair_location)
-	if api.valid(entity) and (pair_location and table.reverse(enum.surface.rel_loc)[pair_location]) then
-		if pair_location == enum.surface.rel_loc.above then
+	if api.valid(entity) and (pair_location and table.reverse(const.surface.rel_loc)[pair_location]) then
+		if pair_location == const.surface.rel_loc.above then
 			local paired_surface = surfaces.get_surface_above(entity)
 			return (paired_surface == nil) and surfaces.create_surface_above(entity.surface) or paired_surface
 		else
@@ -106,7 +108,7 @@ function pairutil.finalize_paired_entity(entity, paired_entity, player_index)
 		paired_entity = paired_entity or pairutil.find_paired_entity(entity)
 		if paired_entity then
 			if pair_data.class == pairclass.get("electric-pole") then
-				api.entity.connect_neighbour(entity, paired_entity, enum.wire.all)
+				api.entity.connect_neighbour(entity, paired_entity, const.wire.all)
 			elseif pair_data.class == pairclass.get("fluid-transport") then
 				table.insert(global.fluid_transport, {a = entity, b = paired_entity})
 			elseif pair_data.class == pairclass.get("transport-chest") then
@@ -118,7 +120,7 @@ function pairutil.finalize_paired_entity(entity, paired_entity, player_index)
 			if player_index and api.game.player(player_index) then
 				util.message(player_index, entity.name .. " could not be paired successfully, it has been dropped on the ground.")
 			end
-			table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
+			table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
 			api.destroy(entity)
 		end
 	end
@@ -128,7 +130,7 @@ end
 function pairutil.destroy_paired_entity(entity)
 	local pair_entity = pairutil.find_paired_entity(entity)
 	local pair_data = pairdata.get(entity) or pairdata.reverse(entity)
-	table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.remove_sky_tile, {entity, pair_entity, pair_data.radius}))
+	table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.remove_sky_tile, {entity, pair_entity, pair_data.radius}))
 	api.destroy(pair_entity)
 end
 
@@ -139,7 +141,7 @@ function pairutil.clear_ground(position, surface, radius, tile)
 			radius = radius or 0
 			local area = struct.BoundingBox(position.x - radius, position.y - radius, position.x + radius, position.y + radius)
 			if surfaces.is_below_nauvis(surface) then
-				local und_wall = enum.prototype.entity.underground_wall
+				local und_wall = proto.entity.underground_wall
 				for k, v in pairs(api.surface.find_entities(surface, area, und_wall.name, und_wall.type)) do
 					api.destroy(v)
 				end
@@ -165,30 +167,19 @@ function pairutil.remove_tiles(position, surface, radius)
 			local area = struct.BoundingBox(position.x - radius, position.y - radius, position.x + radius, position.y + radius)
 			local safeArea = struct.BoundingBox(area.left_top.x - 1, area.left_top.y - 1, area.right_bottom.x + 1, area.right_bottom.y + 1)
 			local oldTiles, newTiles, entities = {}, {}, {}
-			local sky_tile_prototype = enum.prototype.tile.sky_floor.name
+			local sky_tile_prototype = proto.tile.sky.name
 			for k, v in pairs(struct.TilePositions(area)) do
 				local tile_prototype = api.name(api.surface.get_tile(surface, v))
 				table.insert(oldTiles, {name = ((skytiles.get(tile_prototype) == nil) and tile_prototype or sky_tile_prototype), position = v})
 				table.insert(newTiles, {name = sky_tile_prototype, position = v})
 			end
-			--for k, v in pairs(api.surface.find_entities(surface, area)) do
 			for k, v in pairs(api.surface.find_entities(surface, safeArea, "player", "player")) do
-				--table.insert(entities, v)
-				for key, value in pairs(api.game.players()) do
-					if value.character == v then
-						surfaces.transport_player(value, api.game.surface("nauvis"), v.position)
-						break
-					end
+				if v.player ~= nil then
+					surfaces.transport_player(v.player, surfaces.get_surface_below(v.surface), v.position)
 				end
 			end
 			api.surface.set_tiles(surface, newTiles)
 			api.surface.set_tiles(surface, oldTiles)
-			-- temporarily commented out until surface teleport can be used on non-player entities
-			--for k, v in pairs(entities) do
-			--	if api.type(v) ~= "player" then
-			--		api.entity.teleport(v, v.position, surface)
-			--	end
-			--end
 		end
 	end
 end

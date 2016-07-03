@@ -6,12 +6,13 @@
 ]]
 
 -- Items
+require("prototypes.item.components")
+require("prototypes.item.item-groups")
 require("prototypes.item.transport.access-shaft")
 require("prototypes.item.transport.transport-chest")
 require("prototypes.item.transport.electric-pole")
 require("prototypes.item.transport.rail-transport")
 require("prototypes.item.transport.fluid-transport")
-require("prototypes.item.item-groups")
 
 -- Entities
 require("prototypes.entity.transport.access-shaft")
@@ -22,6 +23,7 @@ require("prototypes.entity.transport.fluid-transport")
 require("prototypes.entity.underground-wall")
 
 -- Recipes
+require("prototypes.recipe.components")
 require("prototypes.recipe.transport.access-shaft")
 require("prototypes.recipe.transport.transport-chest")
 require("prototypes.recipe.transport.electric-pole")
@@ -32,9 +34,9 @@ require("prototypes.recipe.transport.fluid-transport")
 --require("prototypes.tech.*")
 
 -- Tiles
-require("prototypes.tile.underground-floor")
-require("prototypes.tile.sky-floor")
-require("prototypes.tile.sky-concrete")
+require("prototypes.tile.underground")
+require("prototypes.tile.sky")
+
 
 -- Categories
 --require("prototypes.category.recipe-categories")]]

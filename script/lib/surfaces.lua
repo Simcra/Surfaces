@@ -6,10 +6,10 @@
 ]]
 
 require("config")
-require("script.lib.api-util")
-require("script.lib.util")
-require("script.enum")
+require("script.const")
+require("script.lib.api")
 require("script.lib.pair-data")
+require("script.lib.util")
 
 surfaces = {}
 
@@ -17,41 +17,41 @@ surfaces = {}
 local get_relative_surface, create_relative_surface, get_mapname, is_valid, is_valid_type, get_map_gen_settings, create_surface, get_type
 
 function surfaces.is_from_this_mod(surface)
-	return surface and string.find(api.name(surface), enum.prefix .. "_") ~= nil or nil
+	return surface and string.find(api.name(surface), const.prefix .. "_") ~= nil or nil
 end
 
 function surfaces.get_layer(surface)
 	local surface_name = api.name(surface)
-	if surfaces.is_from_this_mod(surface_name) then
-		local surface_string = enum.prefix .."_" .. enum.surface.type[(table.reverse(enum.surface.type, true, "id")[get_type(surface)])].name .. "_"
-		return tonumber(string.sub(surface_name, string.find(surface_name, surface_string) + string.len(surface_string)))
-	elseif surface_name == "nauvis" then
+	if surface_name == "nauvis" then
 		return 0
+	elseif surfaces.is_from_this_mod(surface_name) then
+		local surface_string = const.prefix .."_" .. const.surface.type[(table.reverse(const.surface.type, true, "id")[get_type(surface)])].name .. "_"
+		return tonumber(string.sub(surface_name, string.find(surface_name, surface_string) + string.len(surface_string)))
 	end
 end
 
 function surfaces.is_below_nauvis(surface)
-	return get_type(surface) == enum.surface.type.underground.id
+	return get_type(surface) == const.surface.type.underground.id
 end
 
 function surfaces.is_above_nauvis(surface)
-	return get_type(surface) == enum.surface.type.sky.id
+	return get_type(surface) == const.surface.type.sky.id
 end
 
 function surfaces.get_surface_below(surface)
-	return get_relative_surface(surface, enum.surface.rel_loc.below)
+	return get_relative_surface(surface, const.surface.rel_loc.below)
 end
 
 function surfaces.get_surface_above(surface)
-	return get_relative_surface(surface, enum.surface.rel_loc.above)
+	return get_relative_surface(surface, const.surface.rel_loc.above)
 end
 
 function surfaces.create_surface_below(surface)
-	return create_relative_surface(surface, enum.surface.rel_loc.below)
+	return create_relative_surface(surface, const.surface.rel_loc.below)
 end
 
 function surfaces.create_surface_above(surface)
-	return create_relative_surface(surface, enum.surface.rel_loc.above)
+	return create_relative_surface(surface, const.surface.rel_loc.above)
 end
 
 function surfaces.chunk_generator_corrections(surface, area)
@@ -59,17 +59,21 @@ function surfaces.chunk_generator_corrections(surface, area)
 	local tile_name, entity_name
 	local is_below_nauvis = surfaces.is_below_nauvis(surface)
 	if is_below_nauvis == true then
-		tile_name = enum.prototype.tile.underground_floor.name
-		entity_name = enum.prototype.entity.underground_wall.name
+		tile_name = proto.tile.underground_dirt.name
+		entity_name = proto.entity.underground_wall.name
+		if global.mod_surfaces[api.name(surface)] == nil then
+			surface.daytime = 0.5
+			surface.freeze_daytime(true)
+			global.mod_surfaces[api.name(surface)] = true
+		end
 	else
-		tile_name = enum.prototype.tile.sky_floor.name
+		tile_name = proto.tile.sky.name
 	end
 	local validArea = struct.BoundingBox(area.left_top.x, area.left_top.y, area.right_bottom.x-1, area.right_bottom.y-1)
 	
 	-- destroy entities which should not spawn on this surface and gather information for fixing entity location
 	for k, v in pairs(api.surface.find_entities(surface, validArea)) do
-		local pair_data = pairdata.get(v)
-		local entity_type = api.type(v)
+		local pair_data, entity_type = pairdata.get(v) or pairdata.reverse(v), api.type(v)
 		if is_below_nauvis == true then
 			if pair_data ~= nil then
 				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = pair_data.radius}) -- Underground surfaces don't need tiles passed through (only works for sky surfaces)
@@ -99,7 +103,7 @@ function surfaces.chunk_generator_corrections(surface, area)
 	-- insert appropriate tiles into array, create walls and set tiles
 	for k, v in pairs(struct.TilePositions(validArea)) do
 		if is_below_nauvis == true then
-			api.surface.create_entity(surface, {name = entity_name, position = v, force = game.forces.player})
+			api.surface.create_entity(surface, {name = entity_name, position = v, force = api.game.force("player")})
 			table.insert(newTiles, {name = tile_name, position = v})
 		else
 			if skytiles.get(api.name(api.surface.get_tile(surface, v))) == nil then
@@ -133,10 +137,13 @@ end
 
 function surfaces.find_nearby_access_shaft(entity, radius, surface)
 	if radius and api.valid({entity, surface}) and struct.is_Position(entity.position) then
-		for k, v in pairs(api.surface.find_entities(surface, struct.BoundingBox(entity.position.x - radius, entity.position.y - radius, entity.position.x + radius, entity.position.y + radius), nil, enum.prototype.entity.access_shaft.type)) do
-			local pair_data = pairdata.get(v)
-			if pair_data ~= nil and pair_data.class == pairclass.get("access-shaft") then
-				return v
+		local entities = api.surface.find_entities(surface, struct.BoundingBox(entity.position.x - radius, entity.position.y - radius, entity.position.x + radius, entity.position.y + radius), nil, proto.entity.access_shaft.type)
+		if entities ~= nil then
+			for k, v in pairs(entities) do
+				local pair_data = pairdata.get(v)
+				if pair_data ~= nil and pair_data.class == pairclass.get("access-shaft") then
+					return v
+				end
 			end
 		end
 	end
@@ -144,8 +151,11 @@ end
 
 function surfaces.find_nearby_entity(anchor, radius, surface, entity_name, entity_type)
 	if radius and api.valid({surface, anchor}) and struct.is_Position(anchor.position) then
-		for k, v in pairs(api.surface.find_entities(surface, struct.BoundingBox(anchor.position.x - radius, anchor.position.y - radius, anchor.position.x + radius, anchor.position.y + radius), entity_name, entity_type)) do
-			return v
+		local entities = api.surface.find_entities(surface, struct.BoundingBox(anchor.position.x - radius, anchor.position.y - radius, anchor.position.x + radius, anchor.position.y + radius), entity_name, entity_type)
+		if entities ~= nil then
+			for k, v in pairs(entities) do
+				return v
+			end
 		end
 	end
 end
@@ -155,11 +165,11 @@ The below functions are all specific to the surfaces module, they therefore shou
 ]]
 
 get_mapname = function(surface_type, surface_layer)
-	return is_valid(surface_type, surface_layer) and (enum.prefix .. "_" .. enum.surface.type[(table.reverse(enum.surface.type, true, "id")[surface_type])].name .. "_" .. surface_layer) or "nauvis"
+	return is_valid(surface_type, surface_layer) and (const.prefix .. "_" .. const.surface.type[(table.reverse(const.surface.type, true, "id")[surface_type])].name .. "_" .. surface_layer) or "nauvis"
 end
 
 is_valid_type = function(surface_type)
-	return (surface_type == enum.surface.type.underground.id or surface_type == enum.surface.type.sky.id) == true
+	return (surface_type == const.surface.type.underground.id or surface_type == const.surface.type.sky.id) == true
 end
 
 is_valid = function(surface_type, surface_layer)
@@ -167,9 +177,11 @@ is_valid = function(surface_type, surface_layer)
 end
 
 get_map_gen_settings = function(surface_type)
-	if surface_type == enum.surface.type.underground.id then
+	if surface_type == const.surface.type.underground.id then
+		local mapgensettings = api.surface.map_gen_settings(api.game.surface("nauvis"))
 		return struct.MapGenSettings_copy(api.surface.map_gen_settings(api.game.surface("nauvis")), false, true, "none")
-	elseif surface_type == enum.surface.type.sky.id then
+	elseif surface_type == const.surface.type.sky.id then
+		local mapgensettings = api.surface.map_gen_settings(api.game.surface("nauvis"))
 		return struct.MapGenSettings_copy(api.surface.map_gen_settings(api.game.surface("nauvis")), true, true, "none")
 	end
 end
@@ -189,17 +201,17 @@ get_relative_surface = function(surface, relative_location)
 			surface = api.game.surface(surface_name) -- if provided input was a string and not the surface, attempt to get the surface from game surfaces table
 		end
 		if api.valid(surface) then		-- if the surface exists and is still valid in the game engine
-			if relative_location == enum.surface.rel_loc.below then
+			if relative_location == const.surface.rel_loc.below then
 				if surfaces.is_above_nauvis(surface_name) then
-					return surfaces.get_layer(surface_name) > 1 and api.game.surface(get_mapname(enum.surface.type.sky.id, surfaces.get_layer(surface_name) - 1)) or api.game.surface("nauvis")
+					return surfaces.get_layer(surface_name) > 1 and api.game.surface(get_mapname(const.surface.type.sky.id, surfaces.get_layer(surface_name) - 1)) or api.game.surface("nauvis")
 				else
-					return api.game.surface(get_mapname(enum.surface.type.underground.id, surfaces.get_layer(surface_name) + 1))			
+					return api.game.surface(get_mapname(const.surface.type.underground.id, surfaces.get_layer(surface_name) + 1))			
 				end
-			elseif relative_location == enum.surface.rel_loc.above then
+			elseif relative_location == const.surface.rel_loc.above then
 				if surfaces.is_below_nauvis(surface_name) then
-					return surfaces.get_layer(surface_name) > 1 and api.game.surface(get_mapname(enum.surface.type.underground.id, surfaces.get_layer(surface_name) - 1)) or api.game.surface("nauvis")
+					return surfaces.get_layer(surface_name) > 1 and api.game.surface(get_mapname(const.surface.type.underground.id, surfaces.get_layer(surface_name) - 1)) or api.game.surface("nauvis")
 				else
-					return api.game.surface(get_mapname(enum.surface.type.sky.id, surfaces.get_layer(surface_name) + 1))			
+					return api.game.surface(get_mapname(const.surface.type.sky.id, surfaces.get_layer(surface_name) + 1))			
 				end
 			end
 		end
@@ -209,13 +221,13 @@ end
 create_relative_surface = function(surface, relative_location)
 	if surface and (surfaces.is_from_this_mod(surface) or api.name(surface) == "nauvis") then
 		local surface_name = api.name(surface)
-		if relative_location == enum.surface.rel_loc.below then
+		if relative_location == const.surface.rel_loc.below then
 			if surfaces.is_below_nauvis(surface_name) or surface_name == "nauvis" then
-				return create_surface(enum.surface.type.underground.id, surfaces.get_layer(surface_name) + 1)
+				return create_surface(const.surface.type.underground.id, surfaces.get_layer(surface_name) + 1)
 			end
-		elseif relative_location == enum.surface.rel_loc.above then
+		elseif relative_location == const.surface.rel_loc.above then
 			if surfaces.is_above_nauvis(surface_name) or surface_name == "nauvis" then
-				return create_surface(enum.surface.type.sky.id, surfaces.get_layer(surface_name) + 1)
+				return create_surface(const.surface.type.sky.id, surfaces.get_layer(surface_name) + 1)
 			end
 		end
 		return get_relative_surface(surface, relative_location)
@@ -225,10 +237,10 @@ end
 get_type = function(surface)
 	local surface_name = api.name(surface)
 	if surfaces.is_from_this_mod(surface_name) then
-		if string.find(surface_name, "_" .. enum.surface.type.underground.name .. "_") then
-			return enum.surface.type.underground.id
-		elseif string.find(surface_name, "_" .. enum.surface.type.sky.name .. "_") then
-			return enum.surface.type.sky.id
+		if string.find(surface_name, "_" .. const.surface.type.underground.name .. "_") then
+			return const.surface.type.underground.id
+		elseif string.find(surface_name, "_" .. const.surface.type.sky.name .. "_") then
+			return const.surface.type.sky.id
 		end
 	end
 end	

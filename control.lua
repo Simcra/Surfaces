@@ -5,19 +5,19 @@
     This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 ]]
 require("util")
-require("defines") --pre 0.13
-require("script.enum")
-require("script.lib.pair-data")
+require("script.const")
+require("script.proto")
 require("script.events")
+require("script.lib.pair-data")
 
--- Create shorthand references to data from enum
-local loc_above = enum.surface.rel_loc.above
-local loc_below = enum.surface.rel_loc.below
-local st_und = enum.surface.type.underground.id
-local st_sky = enum.surface.type.sky.id
-local st_all = enum.surface.type.all.id
+-- Create shorthand references to constants and prototype data
+local rl_above = const.surface.rel_loc.above
+local rl_below = const.surface.rel_loc.below
+local st_und = const.surface.type.underground.id
+local st_sky = const.surface.type.sky.id
+local st_all = const.surface.type.all.id
 
--- register entity pair-classes used by paired entities in this mod.
+-- register entity pair classes used by paired entities in this mod.
 local entity_pair_class = {
 	"access-shaft",
 	"electric-pole",
@@ -39,7 +39,7 @@ insert entity pair data defined by this mod, structure of fields is as follows:
 	- paired entity (must be a valid entity prototype string)						(required)
 		- a new entity of this prototype will be placed on the paired surface after the entity has been placed by a player or construction robot
 	- relative location (must be a constant defined by enum) 						(required)
-		[valid values: enum.surface.rel_loc.above, enum.surface.rel_loc.below]
+		[valid values: const.surface.rel_loc.above, const.surface.rel_loc.below]
 		- specifies which surface the paired entity will be placed on relative to the current surface (either above or below this surface)
 	- pair class (must be a valid pair-class ID)									(required)
 		- valid pair-class IDs are obtained through pairclass.get(name)
@@ -54,50 +54,48 @@ insert entity pair data defined by this mod, structure of fields is as follows:
 		- in sky surfaces, this will be the radius (in tiles) that sky tiles will be placed in sky surfaces prior to paired entity placement (also applies when this entity is deconstructed)
 		- in underground surfaces, this will be the radius (in tiles) that underground walls are cleared for this paired entity
 		- a radius of 0 results in a single tile centered on the entity's position, likewise a radius of 5 results in eleven tiles centered on the entity's position
-	- ID of valid domain(s) for this paired entity						 			(optional)		[default: enum.surface.type.all.id]
+	- ID of valid domain for this paired entity						 				(optional)		[default: const.surface.type.all.id]
 		- specifies which surfaces this entity may be placed in, other than the primary surface:
-			- enum.surface.type.underground.id		- allows this entity to only be placed in underground surfaces
-			- enum.surface.type.sky.id				- allows this entity to only be placed in sky surfaces
-			- enum.surface.type.all.id 				- allows this entity to be placed in both sky and underground surfaces
-	- sky tile (must be a valid tile prototype string)								(optional)		[default: enum.prototype.tile.sky_concrete.name]
+			- const.surface.type.underground.id			- allows this entity to only be placed in underground surfaces
+			- const.surface.type.sky.id					- allows this entity to only be placed in sky surfaces
+			- const.surface.type.all.id 				- allows this entity to be placed in both sky and underground surfaces and any future surface types
+	- sky tile (must be a valid tile prototype string)								(optional)		[default: proto.tile.platform.name]
 ]]
 local entity_pair_data = {
-	{"sky-entrance", "sky-exit", loc_above, pc_acc_shaft, true, 1, st_sky},
-	{"sky-exit", "sky-entrance", loc_below, pc_acc_shaft, false, 1, st_sky},
-	{"underground-entrance", "underground-exit", loc_below, pc_acc_shaft, true, 1, st_und},
-	{"underground-exit", "underground-entrance", loc_above, pc_acc_shaft, false, 1, st_und},
-	{"wooden-transport-chest-up", "wooden-receiver-chest-upper", loc_above, pc_trans_chest, true},
-	{"wooden-transport-chest-down", "wooden-receiver-chest-lower", loc_below, pc_trans_chest, true},
-	{"iron-transport-chest-up", "iron-receiver-chest-upper", loc_above, pc_trans_chest, true},
-	{"iron-transport-chest-down", "iron-receiver-chest-lower", loc_below, pc_trans_chest, true},
-	{"steel-transport-chest-up", "steel-receiver-chest-upper", loc_above, pc_trans_chest, true},
-	{"steel-transport-chest-down", "steel-receiver-chest-lower", loc_below, pc_trans_chest, true},
-	{"smart-transport-chest-up", "smart-receiver-chest-upper", loc_above, pc_trans_chest, true},
-	{"smart-transport-chest-down", "smart-receiver-chest-lower", loc_below, pc_trans_chest, true},
-	{"logistic-transport-chest-up", "logistic-receiver-chest-upper", loc_above, pc_trans_chest, true},
-	{"logistic-transport-chest-down", "logistic-receiver-chest-lower", loc_below, pc_trans_chest, true},
-	{"big-electric-pole-upper", "big-electric-pole-lower", loc_below, pc_elec_pole, true, 1},
-	{"big-electric-pole-lower", "big-electric-pole-upper", loc_above, pc_elec_pole, true, 1},
-	{"medium-electric-pole-upper", "medium-electric-pole-lower", loc_below, pc_elec_pole, true},
-	{"medium-electric-pole-lower", "medium-electric-pole-upper", loc_above, pc_elec_pole, true},
-	{"small-electric-pole-upper", "small-electric-pole-lower", loc_below, pc_elec_pole, true},
-	{"small-electric-pole-lower", "small-electric-pole-upper", loc_above, pc_elec_pole, true},
-	{"substation-upper", "substation-lower", loc_below, pc_elec_pole, true, 1},
-	{"substation-lower", "substation-upper", loc_above, pc_elec_pole, true, 1},
-	{"fluid-transport-upper", "fluid-transport-lower", loc_below, pc_fluid_trans, true},
-	{"fluid-transport-lower", "fluid-transport-upper", loc_above, pc_fluid_trans, true},
-	{"train-stop-upper", "train-stop-lower", loc_below, pc_rail_trans, true, 2},
-	{"train-stop-lower", "train-stop-upper", loc_above, pc_rail_trans, true, 2}}
+	{"sky-entrance", "sky-exit", rl_above, pc_acc_shaft, true, 1, st_sky},
+	{"sky-exit", "sky-entrance", rl_below, pc_acc_shaft, false, 1, st_sky},
+	{"underground-entrance", "underground-exit", rl_below, pc_acc_shaft, true, 1, st_und},
+	{"underground-exit", "underground-entrance", rl_above, pc_acc_shaft, false, 1, st_und},
+	{"wooden-transport-chest-up", "wooden-receiver-chest-upper", rl_above, pc_trans_chest, true},
+	{"wooden-transport-chest-down", "wooden-receiver-chest-lower", rl_below, pc_trans_chest, true},
+	{"iron-transport-chest-up", "iron-receiver-chest-upper", rl_above, pc_trans_chest, true},
+	{"iron-transport-chest-down", "iron-receiver-chest-lower", rl_below, pc_trans_chest, true},
+	{"steel-transport-chest-up", "steel-receiver-chest-upper", rl_above, pc_trans_chest, true},
+	{"steel-transport-chest-down", "steel-receiver-chest-lower", rl_below, pc_trans_chest, true},
+	{"logistic-transport-chest-up", "logistic-receiver-chest-upper", rl_above, pc_trans_chest, true},
+	{"logistic-transport-chest-down", "logistic-receiver-chest-lower", rl_below, pc_trans_chest, true},
+	{"big-electric-pole-upper", "big-electric-pole-lower", rl_below, pc_elec_pole, true, 1},
+	{"big-electric-pole-lower", "big-electric-pole-upper", rl_above, pc_elec_pole, true, 1},
+	{"medium-electric-pole-upper", "medium-electric-pole-lower", rl_below, pc_elec_pole, true},
+	{"medium-electric-pole-lower", "medium-electric-pole-upper", rl_above, pc_elec_pole, true},
+	{"small-electric-pole-upper", "small-electric-pole-lower", rl_below, pc_elec_pole, true},
+	{"small-electric-pole-lower", "small-electric-pole-upper", rl_above, pc_elec_pole, true},
+	{"substation-upper", "substation-lower", rl_below, pc_elec_pole, true, 1},
+	{"substation-lower", "substation-upper", rl_above, pc_elec_pole, true, 1},
+	{"fluid-transport-upper", "fluid-transport-lower", rl_below, pc_fluid_trans, true},
+	{"fluid-transport-lower", "fluid-transport-upper", rl_above, pc_fluid_trans, true},
+	{"train-stop-upper", "train-stop-lower", rl_below, pc_rail_trans, true, 2},
+	{"train-stop-lower", "train-stop-upper", rl_above, pc_rail_trans, true, 2}}
 pairdata.insert_array(entity_pair_data)
 
 -- insert tiles for sky surfaces to ignore during chunk generation (pairdata.insert will insert the sky tile if it does not already exist in the skytiles array, therefore in most cases this is not necessary)
-local whitelist_sky_tiles = {
-	enum.prototype.tile.sky_concrete.name}	-- "sky-concrete", the prototype name
+local whitelist_sky_tiles = {proto.tile.platform.name}	-- "construction-platform", the prototype name
 skytiles.insert_array(whitelist_sky_tiles)
 
 -- initialise global variables
 local init_globs = function()
 	global.task_queue = global.task_queue or {}
+	global.mod_surfaces = global.mod_surfaces or {}
 	global.players_using_access_shafts = global.players_using_access_shafts or {}
 	global.transport_chests = global.transport_chests or {}
 	global.fluid_transport = global.fluid_transport or {}

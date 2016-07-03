@@ -6,21 +6,20 @@
 ]]
 
 require("config")
-require("script.enum")
+require("script.const")
 require("script.lib.struct")
-require("script.lib.pair-data")
 require("script.lib.surfaces")
-require("script.lib.pair-util")
-require("script.lib.api-util")
 require("script.lib.util")
+require("script.lib.api")
+require("script.lib.pair-util")
+require("script.lib.pair-data")
 
 events = {}
 local eventmgr = {}
 
--- This function is called every game tick, it's primary purpose is to act as a timer for each of the handles in the event manager
--- It uses data from enum to determine whether a function is due to be called and iterates sequentually
+-- This function is called every game tick, it's primary purpose is to act as a timer for each of the handles in the event manager according to data defined in enum
 function events.on_tick(event)
-	for k, v in pairs(enum.eventmgr.handle) do
+	for k, v in pairs(const.eventmgr.handle) do
 		if event.tick % v.tick == 0 then
 			eventmgr[tostring(v.func)](event)
 		end
@@ -29,25 +28,22 @@ end
 
 -- This function is called whenever an entity is built by the player
 function events.on_built_entity(event)
-	local entity = event.created_entity
-	local player_index = event.player_index
-	if pairdata.get(entity) ~= nil or pairdata.reverse(entity) ~= nil then
-		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.trigger_create_paired_entity, {entity, player_index}))
-	elseif api.type(entity) == "solar-panel" and surfaces.is_below_nauvis(entity.surface) then
-		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
-		api.destroy(entity)
-		util.message(player_index, "Solar panels may not be placed in underground caverns, your solar panel was dropped on the ground.")
+	if pairdata.get(event.created_entity) ~= nil or pairdata.reverse(event.created_entity) ~= nil then
+		table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.trigger_create_paired_entity, {event.created_entity, event.player_index}))
+	elseif api.type(event.created_entity) == "solar-panel" and surfaces.is_below_nauvis(event.created_entity.surface) then
+		table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {event.created_entity, api.entity.minable_result(event.created_entity)}))
+		api.destroy(event.created_entity)
+		util.message(event.player_index, "Solar panels may not be placed in underground caverns, your solar panel was dropped on the ground.")
 	end
 end
 
 -- This function is called whenever an entity is built by a construction robot
 function events.on_robot_built_entity(event)
-	local entity = event.created_entity
-	if pairdata.get(entity) ~= nil or pairdata.reverse(entity) ~= nil then
-		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.trigger_create_paired_entity, {entity}))
-	elseif api.type(entity) == "solar-panel" and surfaces.is_below_nauvis(entity.surface) then
-		table.insert(global.task_queue, struct.TaskSpecification(enum.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
-		api.destroy(entity)
+	if pairdata.get(event.created_entity) ~= nil or pairdata.reverse(event.created_entity) ~= nil then
+		table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.trigger_create_paired_entity, {event.created_entity}))
+	elseif api.type(event.created_entity) == "solar-panel" and surfaces.is_below_nauvis(event.created_entity.surface) then
+		table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {event.created_entity, api.entity.minable_result(event.created_entity)}))
+		api.destroy(event.created_entity)
 	end
 end
 
@@ -60,17 +56,15 @@ end
 
 -- This function is called just before an entity is deconstructed by the player
 function events.on_preplayer_mined_item(event)
-	local entity = event.entity
-	if pairdata.get(entity) ~= nil or pairdata.reverse(entity) ~= nil then
-		pairutil.destroy_paired_entity(entity)
+	if pairdata.get(event.entity) ~= nil or pairdata.reverse(event.entity) ~= nil then
+		pairutil.destroy_paired_entity(event.entity)
 	end
 end
 
 -- This function is called just before an entity is deconstructed by a construction robot
 function events.on_robot_pre_mined(event)
-	local entity = event.entity
-	if pairdata.get(entity) ~= nil or pairdata.reverse(entity) ~= nil then
-		pairutil.destroy_paired_entity(entity)
+	if pairdata.get(event.entity) ~= nil or pairdata.reverse(event.entity) ~= nil then
+		pairutil.destroy_paired_entity(event.entity)
 	end
 end
 
@@ -144,32 +138,30 @@ end
 
 -- This function looks at the global table containing players who are using an access shaft and teleports them to the destination access shaft if one exists
 function eventmgr.update_players_using_access_shafts(event)
-	for player_name, data in pairs(global.players_using_access_shafts) do
-		local entity = data.player_entity
-		local destination = data.destination_access_shaft
-		if entity.walking_state.walking == true or destination == nil then
-			global.players_using_access_shafts[player_name] = nil
+	for name, data in pairs(global.players_using_access_shafts) do
+		if data.entity.walking_state.walking == true or data.destination == nil then
+			global.players_using_access_shafts[name] = nil
 		else
 			if data.time_waiting >= config.teleportation_time_waiting then
-				if api.valid(destination) then
-					surfaces.transport_player_to_access_shaft(entity, destination)
+				if api.valid(data.destination) then
+					surfaces.transport_player_to_access_shaft(data.entity, data.destination)
 				end
-				global.players_using_access_shafts[player_name] = nil
+				global.players_using_access_shafts[name] = nil
 			end
-			data.time_waiting = data.time_waiting + enum.eventmgr.handle.access_shaft_teleportation.tick
+			data.time_waiting = data.time_waiting + const.eventmgr.handle.access_shaft_teleportation.tick
 		end
 	end
 end
 
 -- This function checks whether any players are near an access shaft and adds them to the global table for players using access shafts if they are within range of one and not moving
 function eventmgr.check_player_collision_with_access_shafts(event)
-	for index, player in ipairs(game.players) do
+	for _, player in pairs(api.game.players()) do
 		if not(player.walking_state.walking) and global.players_using_access_shafts[player.name] == nil then
 			local access_shaft = surfaces.find_nearby_access_shaft(player, config.teleportation_check_range, player.surface)
 			if api.valid(access_shaft) then
 				local paired_access_shaft = pairutil.find_paired_entity(access_shaft)
 				if api.valid(paired_access_shaft) then
-					global.players_using_access_shafts[player.name] = {time_waiting = 0, player_entity = player, destination_access_shaft = paired_access_shaft}
+					global.players_using_access_shafts[player.name] = {time_waiting = 0, entity = player, destination = paired_access_shaft}
 				end
 			end
 		end
@@ -181,7 +173,7 @@ function eventmgr.update_transport_chest_contents(event)
 	for k, v in pairs(global.transport_chests) do
 		if not(api.valid({v.input, v.output})) then
 			api.destroy({v.input, v.output})
-			table.remove(global.transport_chests, k)
+			global.transport_chests[k] = nil
 		else
 			local input = api.entity.get_inventory(v.input, defines.inventory.chest)
 			local output = api.entity.get_inventory(v.output, defines.inventory.chest)
@@ -201,11 +193,10 @@ function eventmgr.update_fluid_transport_contents(event)
 	for k, v in pairs(global.fluid_transport) do
 		if not(api.valid({v.a, v.b})) then
 			api.destroy({v.a, v.b})
-			table.remove(global.fluid_transport, k)
+			global.fluid_transport[k] = nil
 		else
-			local fluidbox_a = api.entity.fluidbox(v.a)
-			local fluidbox_b = api.entity.fluidbox(v.b)
-			if not(fluidbox_a == nil and fluidbox_b == nil) then
+			local fluidbox_a, fluidbox_b = api.entity.fluidbox(v.a), api.entity.fluidbox(v.b)
+			if fluidbox_a ~= nil or fluidbox_b ~= nil then
 				if fluidbox_a == nil then
 					fluidbox_b.amount = fluidbox_b.amount/2
 					api.entity.set_fluidbox({v.a, v.b}, fluidbox_b)
@@ -224,8 +215,8 @@ end
 
 -- This function is used to avoid annoying desync errors when playing in multiplayer, it acts as a system to queue tasks such as creating entities and surfaces that need to happen on the same tick on all clients
 function eventmgr.execute_first_task_in_waiting_queue(event)
-	local tasks = enum.eventmgr.task
-	for k, v in ipairs(global.task_queue) do
+	local tasks = const.eventmgr.task
+	for k, v in pairs(global.task_queue) do
 		if v.task == tasks.trigger_create_paired_entity then										-- Validates the entity prior to creation of it's pair, gathering the relative location for the paired entity
 			local destination_surface = pairutil.validate_paired_entity(v.data.entity, v.data.player_index)
 			if destination_surface then
@@ -256,7 +247,7 @@ function eventmgr.execute_first_task_in_waiting_queue(event)
 			pairutil.finalize_paired_entity(v.data.entity, v.data.paired_entity, v.data.player_index)
 		elseif v.task == tasks.remove_sky_tile then													-- Remove tiles created by paired entities in sky surfaces, called after destruction of paired entities
 			if api.valid({v.data.entity, v.data.paired_entity}) == false then						-- Check if the two entities have been destroyed yet.
-				pairutil.remove_tiles(v.data.position, v.data.surface, v.data.radius)				--  If they have, call remove tiles function with appropriate data for both.
+				pairutil.remove_tiles(v.data.position, v.data.surface, v.data.radius)				-- If they have, call remove tiles function with appropriate data for both.
 				pairutil.remove_tiles(v.data.position, v.data.paired_surface, v.data.radius)
 			else
 				table.insert(global.task_queue, v)

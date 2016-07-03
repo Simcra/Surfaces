@@ -37,18 +37,6 @@ steel_transport_chest_down.icon = iconpath .. steel_transport_chest_down.name ..
 steel_transport_chest_down.minable.result = steel_transport_chest_down.name
 data:extend({steel_transport_chest_down})
 
-local smart_transport_chest_up = table.deepcopy(data.raw["smart-container"]["smart-chest"])
-smart_transport_chest_up.name = "smart-transport-chest-up"
-smart_transport_chest_up.icon = iconpath .. smart_transport_chest_up.name .. filetype
-smart_transport_chest_up.minable.result = smart_transport_chest_up.name
-data:extend({smart_transport_chest_up})
-
-local smart_transport_chest_down = table.deepcopy(data.raw["smart-container"]["smart-chest"])
-smart_transport_chest_down.name = "smart-transport-chest-down"
-smart_transport_chest_down.icon = iconpath .. smart_transport_chest_down.name .. filetype
-smart_transport_chest_down.minable.result = smart_transport_chest_down.name
-data:extend({smart_transport_chest_down})
-
 local logistic_transport_chest_up = table.deepcopy(data.raw["logistic-container"]["logistic-chest-requester"])
 logistic_transport_chest_up.name = "logistic-transport-chest-up"
 logistic_transport_chest_up.icon = iconpath .. logistic_transport_chest_up.name .. filetype
@@ -97,18 +85,6 @@ steel_receiver_chest_upper.name = "steel-receiver-chest-upper"
 steel_receiver_chest_upper.minable.result = steel_transport_chest_up.name
 steel_receiver_chest_upper.flags = {}
 data:extend({steel_receiver_chest_upper})
-
-local smart_receiver_chest_lower = table.deepcopy(data.raw["smart-container"]["smart-chest"])
-smart_receiver_chest_lower.name = "smart-receiver-chest-lower"
-smart_receiver_chest_lower.minable.result = smart_transport_chest_down.name
-smart_receiver_chest_lower.flags = {}
-data:extend({smart_receiver_chest_lower})
-
-local smart_receiver_chest_upper = table.deepcopy(data.raw["smart-container"]["smart-chest"])
-smart_receiver_chest_upper.name = "smart-receiver-chest-upper"
-smart_receiver_chest_upper.minable.result = smart_transport_chest_up.name
-smart_receiver_chest_upper.flags = {}
-data:extend({smart_receiver_chest_upper})
 
 local logistic_receiver_chest_lower = table.deepcopy(data.raw["logistic-container"]["logistic-chest-passive-provider"])
 logistic_receiver_chest_lower.name = "logistic-receiver-chest-lower"

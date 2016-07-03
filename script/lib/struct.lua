@@ -5,22 +5,21 @@
 	This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 ]]
 
-require("script.lib.util")
-require("script.enum")
+require("script.const")
+require("script.lib.util-base")
+
 
 struct = {}
 
--- Declaring local functions
+-- Declaring local functions and variables
 local TilePositions
-
--- Declaring local variables
 local valid_MapGenFrequency = table.reverse({"none", "very-low", "normal", "high", "very-high"})
-local valid_MapGenSize = table.reverse({"none", "very-small", "small", "medium", "big", "very-big"})
-local valid_MapGenRichness = table.reverse({"very-poor", "poor", "regular", "good", "very-good"})
+local valid_MapGenSize = table.reverse({"none", "very-low", "normal", "high", "very-high"})
+local valid_MapGenRichness = table.reverse({"none", "very-low", "normal", "high", "very-high"})
 
 --[[
 Functions in the section below are intended to construct and return predefined structures from provided data, some are defined by Factorio concepts
-For more information on these concepts, see the LuaAPI (http://lua-api.factorio.com/0.12.35/Concepts.html)
+For more information on these concepts, see the LuaAPI (http://lua-api.factorio.com/0.13.3/Concepts.html)
 ]]
 function struct.BoundingBox(x1, y1, x2, y2)
 	return (x1 and y1 and x2 and y2) and {left_top = struct.Position(x1, y1), right_bottom = struct.Position(x2, y2)} or nil
@@ -48,16 +47,15 @@ TilePositions = function(x1, y1, x2, y2) -- Returns a table of positions inside 
 	return result
 end
 
-function struct.MapGenSettings_copy(mapgensettings, disable_autoplace_controls, random_seed, water, peaceful, terrain, autoplace, seed, shift, width, height)
+function struct.MapGenSettings_copy(mapgensettings, disable_autoplace_controls, random_seed, water, peaceful, terrain, autoplace, seed, width, height)
 	return struct.is_MapGenSettings(mapgensettings) and struct.MapGenSettings(
 		terrain or mapgensettings.terrain_segmentation,
 		water or mapgensettings.water,
 		(type(disable_autoplace_controls) == "boolean" and disable_autoplace_controls == true) and struct.AutoplaceControls_copy(mapgensettings.autoplace_controls, nil, "none") or (autoplace or mapgensettings.autoplace_controls),
 		(type(random_seed) == "boolean" and random_seed == true) and nil or (seed or mapgensettings.seed),
-		struct.is_Position(shift) and shift or mapgensettings.shift,
 		width or mapgensettings.width,
 		height or mapgensettings.height,
-		peaceful or (mapgensettings.peaceful_mode == "true")) or nil
+		peaceful or (mapgensettings.peaceful_mode)) or nil
 end
 
 function struct.AutoplaceControls_copy(controls, frequency, size, richness)
@@ -70,30 +68,26 @@ function struct.AutoplaceControls_copy(controls, frequency, size, richness)
 	end
 end
 
-function struct.MapGenSettings(terrain, water, autoplace_controls, seed, shift, width, height, peaceful)
-	if seed == nil then
-		math.rerandomize()
-	end
+function struct.MapGenSettings(terrain, water, autoplace_controls, seed, width, height, peaceful)
 	return {
 		terrain_segmentation = (struct.is_MapGenFrequency(terrain) and terrain ~= "none") and terrain or "normal",
-		water = (struct.is_MapGenSize(water)) and water or "medium",
+		water = (struct.is_MapGenSize(water)) and water or "normal",
 		autoplace_controls = struct.is_AutoplaceControls(autoplace_controls) and autoplace_controls or {},
-		seed = type(seed) == "number" and math.round(seed) or math.round(math.random()*4294967295),
-		shift = struct.is_Position(shift) and shift or struct.Position(0, 0),
+		seed = type(seed) == "number" and math.round(seed) or math.round(math.random() * const.max_int),
 		width = type(width) == "number" and math.round(width) or 0,
 		height = type(height) == "number" and math.round(height) or 0,
-		peaceful_mode = type(peaceful) == "boolean" and tostring(peaceful) or "false"}
+		peaceful_mode = type(peaceful) == "boolean" and peaceful or false}
 end
 
 function struct.is_MapGenSettings(mapgensettings)
-	return (mapgensettings and mapgensettings.terrain_segmentation and mapgensettings.water and mapgensettings.autoplace_controls and mapgensettings.seed and mapgensettings.shift and mapgensettings.width and mapgensettings.height and mapgensettings.peaceful_mode) and ((struct.is_MapGenFrequency(mapgensettings.terrain_segmentation) and mapgensettings.terrain_segmentation ~= "none") and struct.is_MapGenSize(mapgensettings.water) and struct.is_AutoplaceControls(mapgensettings.autoplace_controls) and type(mapgensettings.seed) == "number" and struct.is_Position(mapgensettings.shift) and type(mapgensettings.width) == "number" and type(mapgensettings.height) == "number" and type(mapgensettings.peaceful_mode) == "string") or false
+	return (mapgensettings and mapgensettings.terrain_segmentation and mapgensettings.water and mapgensettings.autoplace_controls and mapgensettings.seed and mapgensettings.width and mapgensettings.height and mapgensettings.peaceful_mode) and ((struct.is_MapGenFrequency(mapgensettings.terrain_segmentation) and mapgensettings.terrain_segmentation ~= "none") and struct.is_MapGenSize(mapgensettings.water) and struct.is_AutoplaceControls(mapgensettings.autoplace_controls) and type(mapgensettings.seed) == "number" and type(mapgensettings.width) == "number" and type(mapgensettings.height) == "number" and type(mapgensettings.peaceful_mode) == "boolean") or false
 end
 
 function struct.AutoplaceControl(frequency, size, richness)
 	return {
 		frequency = struct.is_MapGenFrequency(frequency) and frequency or "normal",
-		size = struct.is_MapGenSize(size) and size or "medium",
-		richness = struct.is_MapGenRichness(richness) and richness or "regular"}
+		size = struct.is_MapGenSize(size) and size or "normal",
+		richness = struct.is_MapGenRichness(richness) and richness or "normal"}
 end
 
 --[[
@@ -170,11 +164,11 @@ end
 
 function struct.TaskData(id, fields)
 	if fields and struct.is_TaskID(id) then
-		local tasks = enum.eventmgr.task
+		local tasks = const.eventmgr.task
 		if id == tasks.trigger_create_paired_entity then
 			return api.valid({fields[1]}) and {entity = fields[1], player_index = fields[2]} or nil
 		elseif id == tasks.trigger_create_paired_surface then
-			return (api.valid({fields[1], fields[2]}) and table.reverse(enum.surface.rel_loc)[fields[2]]) and {entity = fields[1], pair_location = fields[2], player_index = fields[3]} or nil
+			return (api.valid({fields[1], fields[2]}) and table.reverse(const.surface.rel_loc)[fields[2]]) and {entity = fields[1], pair_location = fields[2], player_index = fields[3]} or nil
 		elseif id == tasks.create_paired_entity then
 			return (api.valid({fields[1], fields[2]})) and {entity = fields[1], paired_surface = fields[2], player_index = fields[3]} or nil
 		elseif id == tasks.finalize_paired_entity then
@@ -207,5 +201,5 @@ function struct.TaskData(id, fields)
 end	
 
 function struct.is_TaskID(id)
-	return (type(id) == "number" and table.reverse(enum.eventmgr.task)[id] ~= nil)
+	return (type(id) == "number" and table.reverse(const.eventmgr.task)[id] ~= nil)
 end

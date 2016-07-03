@@ -1,12 +1,6 @@
 local iconpath, filetype = "__Surfaces__/graphics/icons/transport/", ".png"
 
-local access_shaft = {type = "item", flags = {}, stack_size = 1}
-
-local access_shaft_components = table.deepcopy(data.raw["item"]["electronic-circuit"])
-access_shaft_components.place_result = ""
-access_shaft_components.flags = {}
-access_shaft_components.name = "access-shaft-components"
-data:extend({access_shaft_components})
+local access_shaft = {type = "item", flags = {"goes-to-quickbar"}, stack_size = 1}
 
 local sky_entrance = table.deepcopy(access_shaft)
 sky_entrance.name = "sky-entrance"

@@ -12,7 +12,7 @@ fluid_transport.pictures.picture.sheet = blank()
 fluid_transport.pictures.fluid_background = blank()
 fluid_transport.pictures.window_background = blank()
 fluid_transport.pictures.flow_sprite = blank()
-fluid_transport.circuit_wire_connection_point = table.deepcopy(data.raw["smart-container"]["smart-chest"].circuit_wire_connection_point)
+fluid_transport.circuit_wire_connection_point = table.deepcopy(data.raw["container"]["steel-chest"].circuit_wire_connection_point)
 
 local fluid_transport_lower = table.deepcopy(fluid_transport)
 fluid_transport_lower.name = "fluid-transport-lower"
