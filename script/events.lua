@@ -7,17 +7,17 @@
 
 require("config")
 require("script.const")
-require("script.lib.struct")
-require("script.lib.surfaces")
-require("script.lib.util")
 require("script.lib.api")
 require("script.lib.pair-util")
 require("script.lib.pair-data")
+require("script.lib.struct")
+require("script.lib.surfaces")
+require("script.lib.util")
 
 events = {}
 local eventmgr = {}
 
--- This function is called every game tick, it's primary purpose is to act as a timer for each of the handles in the event manager according to data defined in enum
+-- This function is called every game tick, it's primary purpose is to act as a timer for each of the handles in the event manager
 function events.on_tick(event)
 	for k, v in pairs(const.eventmgr.handle) do
 		if event.tick % v.tick == 0 then

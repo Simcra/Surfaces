@@ -1,57 +1,50 @@
+require("script.proto")
 local iconpath, filetype = "__Surfaces__/graphics/icons/transport/", ".png"
 
-local big_electric_pole_upper = table.deepcopy(data.raw["item"]["big-electric-pole"])
-big_electric_pole_upper.name = "big-electric-pole-upper"
-big_electric_pole_upper.icon = iconpath .. big_electric_pole_upper.name .. filetype
-big_electric_pole_upper.place_result = big_electric_pole_upper.name
-big_electric_pole_upper.flags = {"goes-to-quickbar"}
-data:extend({big_electric_pole_upper})
+local small_electric_pole_upper, small_electric_pole_lower, medium_electric_pole_upper, medium_electric_pole_lower, big_electric_pole_upper, big_electric_pole_lower, substation_upper, substation_lower = table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common)
+for k, v in pairs(proto.item.electric_pole.common) do
+	small_electric_pole_lower[k] = v
+	small_electric_pole_upper[k] = v
+	medium_electric_pole_lower[k] = v
+	medium_electric_pole_upper[k] = v
+	big_electric_pole_lower[k] = v
+	big_electric_pole_upper[k] = v
+	substation_lower[k] = v
+	substation_upper[k] = v
+end
 
-local big_electric_pole_lower = table.deepcopy(data.raw["item"]["big-electric-pole"])
-big_electric_pole_lower.name = "big-electric-pole-lower"
-big_electric_pole_lower.icon = iconpath .. big_electric_pole_lower.name .. filetype
-big_electric_pole_lower.place_result = big_electric_pole_lower.name
-big_electric_pole_lower.flags = {"goes-to-quickbar"}
-data:extend({big_electric_pole_lower})
+-- small electric pole
+for k, v in pairs(proto.item.electric_pole.small.lower) do
+	small_electric_pole_lower[k] = v
+end
+for k, v in pairs(proto.item.electric_pole.small.upper) do
+	small_electric_pole_upper[k] = v
+end
+data:extend({small_electric_pole_lower, small_electric_pole_upper})
 
-local medium_electric_pole_upper = table.deepcopy(data.raw["item"]["medium-electric-pole"])
-medium_electric_pole_upper.name = "medium-electric-pole-upper"
-medium_electric_pole_upper.icon = iconpath .. medium_electric_pole_upper.name .. filetype
-medium_electric_pole_upper.place_result = medium_electric_pole_upper.name
-medium_electric_pole_upper.flags = {"goes-to-quickbar"}
-data:extend({medium_electric_pole_upper})
+-- medium electric pole
+for k, v in pairs(proto.item.electric_pole.medium.lower) do
+	medium_electric_pole_lower[k] = v
+end
+for k, v in pairs(proto.item.electric_pole.medium.upper) do
+	medium_electric_pole_upper[k] = v
+end
+data:extend({medium_electric_pole_lower, medium_electric_pole_upper})
 
-local medium_electric_pole_lower = table.deepcopy(data.raw["item"]["medium-electric-pole"])
-medium_electric_pole_lower.name = "medium-electric-pole-lower"
-medium_electric_pole_lower.icon = iconpath .. medium_electric_pole_lower.name .. filetype
-medium_electric_pole_lower.place_result = medium_electric_pole_lower.name
-medium_electric_pole_lower.flags = {"goes-to-quickbar"}
-data:extend({medium_electric_pole_lower})
+-- big electric pole
+for k, v in pairs(proto.item.electric_pole.big.lower) do
+	big_electric_pole_lower[k] = v
+end
+for k, v in pairs(proto.item.electric_pole.big.upper) do
+	big_electric_pole_upper[k] = v
+end
+data:extend({big_electric_pole_lower, big_electric_pole_upper})
 
-local small_electric_pole_upper = table.deepcopy(data.raw["item"]["small-electric-pole"])
-small_electric_pole_upper.name = "small-electric-pole-upper"
-small_electric_pole_upper.icon = iconpath .. small_electric_pole_upper.name .. filetype
-small_electric_pole_upper.place_result = small_electric_pole_upper.name
-small_electric_pole_upper.flags = {"goes-to-quickbar"}
-data:extend({small_electric_pole_upper})
-
-local small_electric_pole_lower = table.deepcopy(data.raw["item"]["small-electric-pole"])
-small_electric_pole_lower.name = "small-electric-pole-lower"
-small_electric_pole_lower.icon = iconpath .. small_electric_pole_lower.name .. filetype
-small_electric_pole_lower.place_result = small_electric_pole_lower.name
-small_electric_pole_lower.flags = {"goes-to-quickbar"}
-data:extend({small_electric_pole_lower})
-
-local substation_upper = table.deepcopy(data.raw["item"]["substation"])
-substation_upper.name = "substation-upper"
-substation_upper.icon = iconpath .. substation_upper.name .. filetype
-substation_upper.place_result = substation_upper.name
-substation_upper.flags = {"goes-to-quickbar"}
-data:extend({substation_upper})
-
-local substation_lower = table.deepcopy(data.raw["item"]["substation"])
-substation_lower.name = "substation-lower"
-substation_lower.icon = iconpath .. substation_lower.name .. filetype
-substation_lower.place_result = substation_lower.name
-substation_lower.flags = {"goes-to-quickbar"}
-data:extend({substation_lower})
+-- substation
+for k, v in pairs(proto.item.electric_pole.substation.lower) do
+	substation_lower[k] = v
+end
+for k, v in pairs(proto.item.electric_pole.substation.upper) do
+	substation_upper[k] = v
+end
+data:extend({substation_lower, substation_upper})

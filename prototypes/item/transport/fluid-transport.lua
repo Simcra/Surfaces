@@ -1,3 +1,4 @@
+require("script.proto")
 local iconpath, filetype = "__Surfaces__/graphics/icons/transport/", ".png"
 
 local fluid_transport_upper = table.deepcopy(data.raw["item"]["storage-tank"])

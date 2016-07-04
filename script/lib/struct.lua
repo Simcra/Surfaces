@@ -1,38 +1,25 @@
 --[[
 	Surfaces (Factorio Mod)
-	Copyright (C) 2016	Simon Crawley
+    Copyright (C) 2016  Simon Crawley
 
-	This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+    This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 ]]
 
+require("config")
 require("script.const")
+require("script.lib.struct-base")
 require("script.lib.util-base")
-
-
-struct = {}
 
 -- Declaring local functions and variables
 local TilePositions
-local valid_MapGenFrequency = table.reverse({"none", "very-low", "normal", "high", "very-high"})
-local valid_MapGenSize = table.reverse({"none", "very-low", "normal", "high", "very-high"})
-local valid_MapGenRichness = table.reverse({"none", "very-low", "normal", "high", "very-high"})
+local MapGenFrequency = {valid = table.reverse({"none", "very-low", "normal", "high", "very-high"}), default = "normal"}
+local MapGenSize = {valid = table.reverse({"none", "very-low", "normal", "high", "very-high"}), default = "normal"}
+local MapGenRichness = {valid = table.reverse({"none", "very-low", "normal", "high", "very-high"}), default = "normal"}
 
 --[[
-Functions in the section below are intended to construct and return predefined structures from provided data, some are defined by Factorio concepts
+Functions in the section below are intended to construct and return predefined structures from provided data, some designed to follow Factorio concepts
 For more information on these concepts, see the LuaAPI (http://lua-api.factorio.com/0.13.3/Concepts.html)
 ]]
-function struct.BoundingBox(x1, y1, x2, y2)
-	return (x1 and y1 and x2 and y2) and {left_top = struct.Position(x1, y1), right_bottom = struct.Position(x2, y2)} or nil
-end
-
-function struct.Position(x, y)
-	return (x and y) and {x = x, y = y} or nil
-end
-
-function struct.ItemStack(name, count, health)
-	return name and {name = name, count = count or 1, health = health or 1} or nil
-end
-
 function struct.TilePositions(boundingbox) -- Pass-through function for local TilePositions 
 	return struct.is_BoundingBox(boundingbox) and TilePositions(boundingbox.left_top.x, boundingbox.left_top.y, boundingbox.right_bottom.x, boundingbox.right_bottom.y) or (struct.is_Position(boundingbox) and TilePositions(boundingbox.x, boundingbox.y, boundingbox.x, boundingbox.y) or nil)
 end
@@ -70,8 +57,8 @@ end
 
 function struct.MapGenSettings(terrain, water, autoplace_controls, seed, width, height, peaceful)
 	return {
-		terrain_segmentation = (struct.is_MapGenFrequency(terrain) and terrain ~= "none") and terrain or "normal",
-		water = (struct.is_MapGenSize(water)) and water or "normal",
+		terrain_segmentation = (struct.is_MapGenFrequency(terrain) and terrain ~= "none") and terrain or MapGenFrequency.default,
+		water = (struct.is_MapGenSize(water)) and water or MapGenSize.default,
 		autoplace_controls = struct.is_AutoplaceControls(autoplace_controls) and autoplace_controls or {},
 		seed = type(seed) == "number" and math.round(seed) or math.round(math.random() * const.max_int),
 		width = type(width) == "number" and math.round(width) or 0,
@@ -79,40 +66,22 @@ function struct.MapGenSettings(terrain, water, autoplace_controls, seed, width, 
 		peaceful_mode = type(peaceful) == "boolean" and peaceful or false}
 end
 
-function struct.is_MapGenSettings(mapgensettings)
-	return (mapgensettings and mapgensettings.terrain_segmentation and mapgensettings.water and mapgensettings.autoplace_controls and mapgensettings.seed and mapgensettings.width and mapgensettings.height and mapgensettings.peaceful_mode) and ((struct.is_MapGenFrequency(mapgensettings.terrain_segmentation) and mapgensettings.terrain_segmentation ~= "none") and struct.is_MapGenSize(mapgensettings.water) and struct.is_AutoplaceControls(mapgensettings.autoplace_controls) and type(mapgensettings.seed) == "number" and type(mapgensettings.width) == "number" and type(mapgensettings.height) == "number" and type(mapgensettings.peaceful_mode) == "boolean") or false
-end
-
-function struct.AutoplaceControl(frequency, size, richness)
+function struct.AutoplaceControl(_frequency, _size, _richness)
 	return {
-		frequency = struct.is_MapGenFrequency(frequency) and frequency or "normal",
-		size = struct.is_MapGenSize(size) and size or "normal",
-		richness = struct.is_MapGenRichness(richness) and richness or "normal"}
+		frequency = struct.is_MapGenFrequency(_frequency) and _frequency or MapGenFrequency.default,
+		size = struct.is_MapGenSize(_size) and _size or MapGenSize.default,
+		richness = struct.is_MapGenRichness(_richness) and _richness or MapGenRichness.default
+	}
 end
 
 --[[
-Functions in the section below are used to determine if data structure is valid
+Functions in the section below are used to determine validity
 ]]
-function struct.is_Position(position)
-	return (position and type(position.x) == "number" and type(position.y) == "number")
-end
 
-function struct.is_BoundingBox(area)
-	return (area and struct.is_Position(area.left_top) and struct.is_Position(area.right_bottom))
-end
-
-function struct.is_ItemStack(itemstack)
-	return (itemstack and type(itemstack.name) == "string" and type(itemstack.count) == "number")
-end
-
-function struct.is_AutoplaceControl(control)
-	return (control and struct.is_MapGenFrequency(control.frequency) and struct.is_MapGenSize(control.size) and struct.is_MapGenRichness(control.richness))
-end
-
-function struct.is_Tiles(tiles)
+function struct.is_Tiles(_tiles)
 	local count = 0
-	if tiles ~= nil then
-		for k, v in pairs(tiles) do
+	if _tiles ~= nil then
+		for k, v in pairs(_tiles) do
 			count = count + 1
 			if type(v.name) ~= "string" or struct.is_Position(v.position) ~= true then
 				return false
@@ -122,19 +91,19 @@ function struct.is_Tiles(tiles)
 	return (count > 0)
 end
 
-function struct.is_Direction(direction)
-	return (direction == defines.direction.north or 
-		direction == defines.direction.northeast or 
-		direction == defines.direction.east or 
-		direction == defines.direction.southeast or 
-		direction == defines.direction.south or
-		direction == defines.direction.southwest or
-		direction == defines.direction.west or
-		direction == defines.direction.northwest)
+function struct.is_Direction(_direction)
+	return (_direction == defines.direction.north or 
+		_direction == defines.direction.northeast or 
+		_direction == defines.direction.east or 
+		_direction == defines.direction.southeast or 
+		_direction == defines.direction.south or
+		_direction == defines.direction.southwest or
+		_direction == defines.direction.west or
+		_direction == defines.direction.northwest)
 end
 
-function struct.is_AutoplaceControls(controls)
-	for k, v in pairs(controls) do
+function struct.is_AutoplaceControls(_controls)
+	for k, v in pairs(_controls) do
 		if struct.is_AutoplaceControl(v) == false then
 			return false
 		end
@@ -142,20 +111,28 @@ function struct.is_AutoplaceControls(controls)
 	return true
 end
 
-function struct.is_MapGenFrequency(frequency)
-	return (type(frequency) == "string" and valid_MapGenFrequency[frequency] ~= nil)
+function struct.is_MapGenFrequency(_frequency)
+	return (type(_frequency) == "string" and MapGenFrequency.valid[_frequency] ~= nil)
 end
 
-function struct.is_MapGenSize(size)
-	return (type(size) == "string" and valid_MapGenSize[size] ~= nil)
+function struct.is_MapGenSize(_size)
+	return (type(_size) == "string" and MapGenSize.valid[_size] ~= nil)
 end
 
-function struct.is_MapGenRichness(richness)
-	return (type(richness) == "string" and valid_MapGenRichness[richness] ~= nil)
+function struct.is_MapGenRichness(_richness)
+	return (type(_richness) == "string" and MapGenRichness.valid[_richness] ~= nil)
+end
+
+function struct.is_MapGenSettings(_mapgensettings)
+	return (_mapgensettings and _mapgensettings.terrain_segmentation and _mapgensettings.water and _mapgensettings.autoplace_controls and _mapgensettings.seed and _mapgensettings.width and _mapgensettings.height and _mapgensettings.peaceful_mode) and ((struct.is_MapGenFrequency(_mapgensettings.terrain_segmentation) and _mapgensettings.terrain_segmentation ~= "none") and struct.is_MapGenSize(_mapgensettings.water) and struct.is_AutoplaceControls(_mapgensettings.autoplace_controls) and type(_mapgensettings.seed) == "number" and type(_mapgensettings.width) == "number" and type(_mapgensettings.height) == "number" and type(_mapgensettings.peaceful_mode) == "boolean") or false
+end
+
+function struct.is_AutoplaceControl(_control)
+	return (_control and struct.is_MapGenFrequency(_control.frequency) and struct.is_MapGenSize(_control.size) and struct.is_MapGenRichness(_control.richness))
 end
 
 --[[
-Internal task queue structures
+Internal task queue structs
 ]]
 function struct.TaskSpecification(id, data)
 	local new_data = struct.TaskData(id, data)

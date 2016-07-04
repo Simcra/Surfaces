@@ -6,6 +6,7 @@
 ]]
 
 require("config")
+require("script.lib.struct-base")
 
 --[[
 Note: This is NOT a configuration file! Data in this file CAN and most probably WILL break your savegame if modified.
@@ -76,5 +77,14 @@ const = {
 		green = 3,
 		circuit = 4,
 		all = 5
+	},
+	pictures = {
+		blank = struct.Picture("__Surfaces__/graphics/icons/blank.png", "extra-high", 32, 32),
+		pipecovers = {
+			north = struct.Picture("__base__/graphics/entity/pipe-covers/pipe-cover-north.png", "extra-high", 44, 32),
+			east = struct.Picture("__base__/graphics/entity/pipe-covers/pipe-cover-east.png", "extra-high", 32, 32),
+			south = struct.Picture("__base__/graphics/entity/pipe-covers/pipe-cover-south.png", "extra-high", 46, 52),
+			west = struct.Picture("__base__/graphics/entity/pipe-covers/pipe-cover-west.png", "extra-high", 32, 32)
+		}
 	}
 }
