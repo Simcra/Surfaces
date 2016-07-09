@@ -29,6 +29,10 @@ function api.valid(objects)
 	end
 end
 
+function api.localised_name(object)
+	return object and (api.prototype(object) and api.prototype(object).localised_name[1] or nil) or nil
+end
+
 function api.name(object)
 	return object and (type(object) == "string" and object or ((api.valid(object) and object.name) and object.name or tostring(object))) or nil
 end
@@ -126,19 +130,19 @@ end
 
 function api.entity.connect_neighbour(entity_a, entity_b, wire)
 	if api.valid({entity_a, entity_b}) then
-		if wire == enum.wire.copper then
+		if wire == const.wire.copper then
 			entity_a.connect_neighbour(entity_b)
-		elseif wire == enum.wire.red then
-			entity_a.connect_neighbour{wire = defines.circuitconnector.red, target_entity = entity_b}
-		elseif wire == enum.wire.green then
-			entity_a.connect_neighbour{wire = defines.circuitconnector.green, target_entity = entity_b}
-		elseif wire == enum.wire.circuit then
-			entity_a.connect_neighbour{wire = defines.circuitconnector.red, target_entity = entity_b}
-			entity_a.connect_neighbour{wire = defines.circuitconnector.green, target_entity = entity_b}
-		elseif wire == enum.wire.all then
+		elseif wire == const.wire.red then
+			entity_a.connect_neighbour{wire = defines.wire_type.red, target_entity = entity_b}
+		elseif wire == const.wire.green then
+			entity_a.connect_neighbour{wire = defines.wire_type.green, target_entity = entity_b}
+		elseif wire == const.wire.circuit then
+			entity_a.connect_neighbour{wire = defines.wire_type.red, target_entity = entity_b}
+			entity_a.connect_neighbour{wire = defines.wire_type.green, target_entity = entity_b}
+		elseif wire == const.wire.all then
 			entity_a.connect_neighbour(entity_b)
-			entity_a.connect_neighbour{wire = defines.circuitconnector.red, target_entity = entity_b}
-			entity_a.connect_neighbour{wire = defines.circuitconnector.green, target_entity = entity_b}
+			entity_a.connect_neighbour{wire = defines.wire_type.red, target_entity = entity_b}
+			entity_a.connect_neighbour{wire = defines.wire_type.green, target_entity = entity_b}
 		end
 	end
 end
@@ -189,6 +193,14 @@ end
 
 function api.game.forces()
 	return game.forces
+end
+
+function api.game.active_mod(id)
+	return id and game.active_mods[id]
+end
+
+function api.game.active_mods()
+	return game.active_mods
 end
 
 function api.game.entity_prototype(id)

@@ -1,22 +1,12 @@
 require("script.proto")
 
-local sky_entrance, sky_exit, underground_entrance, underground_exit = table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common)
-for k, v in pairs(proto.item.access_shaft.common) do
-	sky_entrance[k] = v
-	sky_exit[k] = v
-	underground_entrance[k] = v
-	underground_exit[k] = v
-end
-for k, v in pairs(proto.item.access_shaft.sky_entrance) do
-	sky_entrance[k] = v
-end
-for k, v in pairs(proto.item.access_shaft.sky_exit) do
-	sky_exit[k] = v
-end
-for k, v in pairs(proto.item.access_shaft.underground_entrance) do
-	underground_entrance[k] = v
-end
-for k, v in pairs(proto.item.access_shaft.underground_exit) do
-	underground_exit[k] = v
-end
-data:extend({sky_entrance, sky_exit, underground_entrance, underground_exit})
+local underground_entrance = proto.get({"item", "access_shaft"}, "underground_entrance", true)
+local underground_exit = proto.get({"item", "access_shaft"}, "underground_exit", true)
+local sky_entrance = proto.get({"item", "access_shaft"}, "sky_entrance", true)
+local sky_exit = proto.get({"item", "access_shaft"}, "sky_exit", true)
+underground_entrance.place_result = proto.get_field({"entity", "access_shaft", "underground_entrance"}, "name")
+underground_exit.place_result = proto.get_field({"entity", "access_shaft", "underground_exit"}, "name")
+sky_entrance.place_result = proto.get_field({"entity", "access_shaft", "sky_entrance"}, "name")
+sky_exit.place_result = proto.get_field({"entity", "access_shaft", "sky_exit"}, "name")
+
+data:extend({underground_entrance, underground_exit, sky_entrance, sky_exit})

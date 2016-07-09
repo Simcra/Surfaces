@@ -11,7 +11,10 @@ require("script.lib.util-base")
 util = {}
 -- prints text to a player's screen
 function util.message(player_id, text)
-	api.game.player(player_id).print(text)
+	local player = api.game.player(player_id)
+	if player and (type(text) == "string" or type(text) == "table") then
+		player.print(text)
+	end
 end
 
 -- just a boring debug function to print text to every player's screen

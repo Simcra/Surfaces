@@ -1,28 +1,12 @@
-local access_shaft = {
-	type = "recipe",
-	enabled = true,
-	group = "surfaces",
-	subgroup = "surfaces-transport-player",
-	ingredients = {{"wood", 48}, {"steel-plate", 16}},
-	result_count = 1
-}
+require("script.proto")
 
-local sky_entrance = table.deepcopy(access_shaft)
-sky_entrance.name = "sky-entrance"
-sky_entrance.result = sky_entrance.name
-data:extend({sky_entrance})
+local sky_entrance = proto.get({"recipe", "access_shaft"}, "sky_entrance", true)
+local sky_exit = proto.get({"recipe", "access_shaft"}, "sky_exit", true)
+local underground_entrance = proto.get({"recipe", "access_shaft"}, "underground_entrance", true)
+local underground_exit = proto.get({"recipe", "access_shaft"}, "underground_exit", true)
+sky_entrance.result = proto.get_field({"item", "access_shaft", "sky_entrance"}, "name")
+sky_exit.result = proto.get_field({"item", "access_shaft", "sky_exit"}, "name")
+underground_entrance.result = proto.get_field({"item", "access_shaft", "underground_entrance"}, "name")
+underground_exit.result = proto.get_field({"item", "access_shaft", "underground_exit"}, "name")
 
-local sky_exit = table.deepcopy(access_shaft)
-sky_exit.name = "sky-exit"
-sky_exit.result = sky_exit.name
-data:extend({sky_exit})
-	
-local underground_entrance = table.deepcopy(access_shaft)
-underground_entrance.name = "underground-entrance"
-underground_entrance.result = underground_entrance.name
-data:extend({underground_entrance})
-
-local underground_exit = table.deepcopy(access_shaft)
-underground_exit.name = "underground-exit"
-underground_exit.result = underground_exit.name
-data:extend({underground_exit})
+data:extend({sky_entrance, sky_exit, underground_entrance, underground_exit})

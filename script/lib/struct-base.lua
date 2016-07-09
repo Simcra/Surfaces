@@ -9,30 +9,38 @@ require("script.lib.util-base")
 
 struct = {}
 
-function struct.Picture(_filename, _priority, _width, _height, _frame_count, _direction_count, _shift)
-	local result = {filename = _filename, priority = _priority, width = _width, height = _height}
-	if type(_frame_count) == "number" and _frame_count >= 1 then result.frame_count = _frame_count end
-	if type(_direction_count) == "number" and _direction_count >= 1 then result.direction_count = _direction_count end
-	if struct.is_Position(_shift) then result.shift = _shift end
-	return result
+function struct.Picture(_filename, _priority, _width, _height, _frames, _direction_count, _shift)
+	local _result = {filename = _filename, priority = _priority, width = _width, height = _height}
+	if type(_frames) == "number" and _frames >= 1 then _result.frames = _frames end
+	if type(_direction_count) == "number" and _direction_count >= 1 then _result.direction_count = _direction_count end
+	if struct.is_Position(_shift) then _result.shift = _shift end
+	return _result
+end
+
+function struct.Variant(_picture, _count, _size, _probability)
+	local _result = {picture = _picture}
+	if type(_count) == "number" and _count >= 0 then _result.count = _count end
+	if type(_size) == "number" and _size >= 0 then _result.size = _size end
+	if type(_probability) == "number" and _probability > 0 and _probability <= 1 then _result.probability = _probability end
+	return _result
 end
 
 function struct.Sound(_filename, _volume)
-	local sound = {filename = _filename}
-	if type(_volume) == "number" and _volume > 0 then sound.volume = _volume end
-	return sound
+	local _sound = {filename = _filename}
+	if type(_volume) == "number" and _volume > 0 then _sound.volume = _volume end
+	return _sound
 end
 
 function struct.BoundingBox(_x1, _y1, _x2, _y2)
-	return (_x1 and _y1 and _x2 and _y2) and {left_top = struct.Position(_x1, _y1), right_bottom = struct.Position(_x2, _y2)} or nil
+	return (type(_x1) == "number" and type(_y1) == "number" and type(_x2) == "number" and type(_y2) == "number") and {left_top = struct.Position(_x1, _y1), right_bottom = struct.Position(_x2, _y2)} or nil
 end
 
 function struct.Position(_x, _y)
-	return (_x and _y) and {x = _x, y = _y} or nil
+	return (type(_x) == "number" and type(_y)=="number") and {x = _x, y = _y} or nil
 end
 
 function struct.ItemStack(_name, _count, _health)
-	return _name and {name = _name, count = _count or 1, health = _health or 1} or nil
+	return type(_name) == "string" and {name = _name, count = type(_count) == "number" and _count or 1, health = type(_health) == "number" and _health or 1} or nil
 end
 
 function struct.Resistances(_data)
@@ -60,19 +68,13 @@ end
 
 function struct.is_ResistanceProfile(_resistance)
 	if type(_resistance) == "table" then
-		local has_percent, has_decrease = _resistance.percent ~= nil, _resistance.decrease ~= nil
-		if _resistance.type ~= nil and (has_percent or has_decrease) then
-			if has_percent and has_decrease then
-				if type(_resistance.percent) ~= "number" or _resistance.percent > 100 then return false end
-				if type(_resistance.decrease) ~= "number" then return false end
-			elseif has_percent then
-				if type(_resistance.percent) ~= "number" or _resistance.percent > 100 then return false end
-			elseif has_decrease then
-				if type(_resistance.decrease) ~= "number" then return false end
-			else
-				return false
+		local _percent, _decrease, _type = _resistance.percent, _resistance.decrease, _resistance.type
+		if type(_type) == "string" and (_decrease or _percent) then
+			if type(_percent) == "number" and _percent <= 100 and (_decrease == nil or type(decrease) == "number") then
+				return true
+			elseif type(_decrease) == "number" and (_percent == nil or (type(_percent) == "number" and _percent <= 100 and _percent > 0)) then
+				return true
 			end
-			return true
 		end
 	end
 	return false

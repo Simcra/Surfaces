@@ -1,58 +1,21 @@
-local iconpath, filetype = "__Surfaces__/graphics/icons/transport/", ".png"
+require("script.proto")
 
--- Transport chests
-local wooden_transport_chest_up = table.deepcopy(data.raw["item"]["wooden-chest"])
-wooden_transport_chest_up.name = "wooden-transport-chest-up"
-wooden_transport_chest_up.icon = iconpath .. wooden_transport_chest_up.name .. filetype
-wooden_transport_chest_up.place_result = wooden_transport_chest_up.name
-wooden_transport_chest_up.flags = {"goes-to-quickbar"}
-data:extend({wooden_transport_chest_up})
+-- transport chest
+local wooden_transport_down = proto.get({"item", "transport_chest", "wood"}, "down", true)
+local wooden_transport_up = proto.get({"item", "transport_chest", "wood"}, "up", true)
+local iron_transport_down = proto.get({"item", "transport_chest", "iron"}, "down", true)
+local iron_transport_up = proto.get({"item", "transport_chest", "iron"}, "up", true)
+local steel_transport_down = proto.get({"item", "transport_chest", "steel"}, "down", true)
+local steel_transport_up = proto.get({"item", "transport_chest", "steel"}, "up", true)
+local logistic_transport_down = proto.get({"item", "transport_chest", "logistic"}, "down", true)
+local logistic_transport_up = proto.get({"item", "transport_chest", "logistic"}, "up", true)
+wooden_transport_down.place_result = proto.get_field({"entity", "transport_chest", "wood", "down"}, "name")
+wooden_transport_up.place_result = proto.get_field({"entity", "transport_chest", "wood", "up"}, "name")
+iron_transport_down.place_result = proto.get_field({"entity", "transport_chest", "iron", "down"}, "name")
+iron_transport_up.place_result = proto.get_field({"entity", "transport_chest", "iron", "up"}, "name")
+steel_transport_down.place_result = proto.get_field({"entity", "transport_chest", "steel", "down"}, "name")
+steel_transport_up.place_result = proto.get_field({"entity", "transport_chest", "steel", "up"}, "name")
+logistic_transport_down.place_result = proto.get_field({"entity", "transport_chest", "logistic", "down"}, "name")
+logistic_transport_up.place_result = proto.get_field({"entity", "transport_chest", "logistic", "up"}, "name")
 
-local wooden_transport_chest_down = table.deepcopy(data.raw["item"]["wooden-chest"])
-wooden_transport_chest_down.name = "wooden-transport-chest-down"
-wooden_transport_chest_down.icon = iconpath .. wooden_transport_chest_down.name .. filetype
-wooden_transport_chest_down.place_result = wooden_transport_chest_down.name
-wooden_transport_chest_down.flags = {"goes-to-quickbar"}
-data:extend({wooden_transport_chest_down})
-
-local iron_transport_chest_up = table.deepcopy(data.raw["item"]["iron-chest"])
-iron_transport_chest_up.name = "iron-transport-chest-up"
-iron_transport_chest_up.icon = iconpath .. iron_transport_chest_up.name .. filetype
-iron_transport_chest_up.place_result = iron_transport_chest_up.name
-iron_transport_chest_up.flags = {"goes-to-quickbar"}
-data:extend({iron_transport_chest_up})
-
-local iron_transport_chest_down = table.deepcopy(data.raw["item"]["iron-chest"])
-iron_transport_chest_down.name = "iron-transport-chest-down"
-iron_transport_chest_down.icon = iconpath .. iron_transport_chest_down.name .. filetype
-iron_transport_chest_down.place_result = iron_transport_chest_down.name
-iron_transport_chest_down.flags = {"goes-to-quickbar"}
-data:extend({iron_transport_chest_down})
-
-local steel_transport_chest_up = table.deepcopy(data.raw["item"]["steel-chest"])
-steel_transport_chest_up.name = "steel-transport-chest-up"
-steel_transport_chest_up.icon = iconpath .. steel_transport_chest_up.name .. filetype
-steel_transport_chest_up.place_result = steel_transport_chest_up.name
-steel_transport_chest_up.flags = {"goes-to-quickbar"}
-data:extend({steel_transport_chest_up})
-
-local steel_transport_chest_down = table.deepcopy(data.raw["item"]["steel-chest"])
-steel_transport_chest_down.name = "steel-transport-chest-down"
-steel_transport_chest_down.icon = iconpath .. steel_transport_chest_down.name .. filetype
-steel_transport_chest_down.place_result = steel_transport_chest_down.name
-steel_transport_chest_down.flags = {"goes-to-quickbar"}
-data:extend({steel_transport_chest_down})
-
-local logistic_transport_chest_up = table.deepcopy(data.raw["item"]["logistic-chest-requester"])
-logistic_transport_chest_up.name = "logistic-transport-chest-up"
-logistic_transport_chest_up.icon = iconpath .. logistic_transport_chest_up.name .. filetype
-logistic_transport_chest_up.place_result = logistic_transport_chest_up.name
-logistic_transport_chest_up.flags = {"goes-to-quickbar"}
-data:extend({logistic_transport_chest_up})
-
-local logistic_transport_chest_down = table.deepcopy(data.raw["item"]["logistic-chest-requester"])
-logistic_transport_chest_down.name = "logistic-transport-chest-down"
-logistic_transport_chest_down.icon = iconpath .. logistic_transport_chest_down.name .. filetype
-logistic_transport_chest_down.place_result = logistic_transport_chest_down.name
-logistic_transport_chest_down.flags = {"goes-to-quickbar"}
-data:extend({logistic_transport_chest_down})
+data:extend({wooden_transport_down, wooden_transport_up, iron_transport_down, iron_transport_up, steel_transport_down, steel_transport_up, logistic_transport_down, logistic_transport_up})

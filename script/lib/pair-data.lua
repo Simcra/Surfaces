@@ -12,88 +12,123 @@ require("script.lib.util")
 
 pairdata, pairclass, skytiles = {}, {}, {}
 
-local paired_entity_data, paired_entity_classes, sky_tile_whitelist, next_pairclass_id = {}, {}, {}, 0
+local paired_entity_data, paired_entity_data_reverse = {}, {}
+local paired_entity_classes, paired_entity_classes_reverse = {}, {}
+local sky_tile_whitelist = {}
+local next_pairclass_id = 0
+local pause_index = false
+local index_data, index_classes
 
 --[[
 Paired entity data
 ]]
-function pairdata.get(entity)
-	return entity ~= nil and paired_entity_data[api.name(entity)]			-- inputs may be actual entities or their just their name, api.name(entity) is cool like that
+function pairdata.get(_id)		-- inputs may be actual entities or their just their name, api.name(entity) is cool like that
+	local _name = api.name(_id)
+	if paired_entity_data[_name] then
+		return table.deepcopy(paired_entity_data[_name])
+	end
 end
 
-function pairdata.insert(entity_name, pair_name, pair_location, entity_pairclass, allowed_on_nauvis, ground_clear_radius, valid_domain, sky_tile)
-	if type(entity_name) == "string" and type(pair_name) == "string" then
-		if type(pair_location) == "number" and table.reverse(const.surface.rel_loc)[pair_location] then
-			if type(entity_pairclass) == "number" and table.reverse(paired_entity_classes)[entity_pairclass] then
-				if paired_entity_data[entity_name] == nil then
-					if sky_tile ~= nil then
-						skytiles.insert(sky_tile)
-					end
-					paired_entity_data[entity_name] = {
-						name = pair_name,
-						destination = pair_location,
-						class = entity_pairclass,
-						domain = valid_domain and (table.reverse(const.surface.type, false, "id")[valid_domain] and valid_domain or const.surface.type.all.id) or const.surface.type.all.id,
-						nauvis = (allowed_on_nauvis ~= nil and (allowed_on_nauvis == true or allowed_on_nauvis == "true")) and true or false,
-						radius = (type(ground_clear_radius) == "number" and ground_clear_radius >= 0) and ground_clear_radius or 0,
-						tile = (type(sky_tile) == "string") and sky_tile or proto.tile.platform.name}
-				end
-			end
+function pairdata.insert(_entity_name, _pair_name, _pair_location, _pair_class, _allowed_on_nauvis, _custom_data, _ground_clear_radius, _valid_surface_type, _sky_tile)
+	if type(_entity_name) == "string" and type(_pair_name) == "string" and type(_pair_location) == "number" and table.reverse(const.surface.rel_loc)[_pair_location] and type(_pair_class) == "number" and paired_entity_classes_reverse[_pair_class] and paired_entity_data[_entity_name] == nil then
+		local _pairdata = {}
+		_pairdata.name = _pair_name
+		_pairdata.destination = _pair_location
+		_pairdata.class = _pair_class
+		_pairdata.domain = _valid_surface_type and (table.reverse(const.surface.type, false, "id")[_valid_surface_type] and _valid_surface_type or const.surface.type.all.id) or const.surface.type.all.id
+		_pairdata.nauvis = _allowed_on_nauvis and (_allowed_on_nauvis == true or _allowed_on_nauvis == "true") or false
+		_pairdata.radius = (type(_ground_clear_radius) == "number" and _ground_clear_radius >= 0) and _ground_clear_radius or 0
+		_pairdata.tile = (type(_sky_tile) == "string") and _sky_tile or proto.get_field({"tile", "floor", "wood"}, "name")
+		_pairdata.custom = _custom_data or {}
+		if _sky_tile then
+			skytiles.insert(_sky_tile)
 		end
-	end
-end
-
-function pairdata.reverse(paired_entity) -- gets the paired entity data from the 
-	if paired_entity ~= nil then
-		local pair_data = table.reverse(paired_entity_data, true, "name")
-		local pair_index = pair_data[api.name(paired_entity)]
-		if pair_index ~= nil then
-			return paired_entity_data[pair_index]
+		if _pair_class == pairclass.get("transport-chest") and (_custom_data == nil or _custom_data.tier == nil or table.reverse(const.tier)[_custom_data.tier] == nil) then
+			_pairdata.custom.tier = const.tier.crude
 		end
+		paired_entity_data[_entity_name] = _pairdata
+		index_data()
 	end
 end
 
-function pairdata.insert_array(array)
-	for k,v in pairs(array) do
-		pairdata.insert(v[1],v[2],v[3],v[4],v[5],v[6],v[7],v[8])
+function pairdata.reverse(_id) -- gets the paired entity data from the reverse pair
+	local _name = api.name(_id)
+	if _name and paired_entity_data_reverse[_name] and paired_entity_data[paired_entity_data_reverse[_name]] then
+		return table.deepcopy(paired_entity_data[paired_entity_data_reverse[_name]])
 	end
+end
+
+function pairdata.insert_array(_array)
+	for k, v in pairs(_array) do
+		pause_index = true
+		pairdata.insert(v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9])
+	end
+	index_data()
 end
 
 --[[
 Paired entity classes
 ]]
-function pairclass.get(class_name)
-	return type(class_name) == "string" and paired_entity_classes[class_name]					-- returns the unique ID of the pair class if it exists, or otherwise nil
+function pairclass.get(_name)																		-- returns the unique ID of the pair class if it exists, or otherwise nil
+	return (type(_name) == "string" and paired_entity_classes[_name]) and table.deepcopy(paired_entity_classes[_name]) or nil
 end
 
-function pairclass.insert(class_name)
-	if pairclass.get(class_name) == nil then													-- if the pair class is not already defined
-		next_pairclass_id = next_pairclass_id + 1
-		paired_entity_classes[class_name] = next_pairclass_id									-- insert our new pair class, giving it a unique ID
+function pairclass.insert(_name)
+	if type(_name) == "string" and paired_entity_classes[_name] == nil then							-- if the pair class is not already defined
+		next_pairclass_id = next_pairclass_id + 1													-- increment pairclass ID
+		paired_entity_classes[_name] = next_pairclass_id										-- insert our new pair class, giving it an ID
+		index_classes()
 	end
 end
 
-function pairclass.insert_array(pair_classes)													-- pair_classes is a table of strings, example: {"sm-access-shaft", "sm-electric-pole"}
-	for k, v in pairs(pair_classes) do
-		pairclass.insert(v)																		-- each pair class will be inserted and assigned a unique identifier
+function pairclass.insert_array(_classes)															-- _classes is a table of strings, for example: {"access-shaft", "electric-pole"}
+	for k, v in pairs(_classes) do
+		pause_index = true
+		pairclass.insert(v)																			-- each pair class will be inserted and assigned a unique identifier
+	end
+	index_classes()
+end
+
+function pairclass.reverse(_id) 																	-- gets the string index of the pair class from the pair class ID
+	if type(_id) == "number" and paired_entity_classes_reverse[_id] and paired_entity_classes[paired_entity_classes_reverse[_id]] then
+		return table.deepcopy(paired_entity_classes[paired_entity_classes_reverse[_id]])
 	end
 end
 
 --[[
 Sky tile whitelist
 ]]
-function skytiles.get(tile)
-	return tile and sky_tile_whitelist[api.name(tile)]											-- returns true if the tile prototype is in the whitelist, or otherwise nil
+function skytiles.get(_name)																		-- returns true if the tile prototype is in the whitelist, or otherwise nil
+	return _name and sky_tile_whitelist[api.name(_name)]
 end
 
-function skytiles.insert(prototype)
-	if skytiles.get(prototype) == nil then														-- if the tile prototype is not already in the whitelist
-		sky_tile_whitelist[prototype] = true													-- insert the tile prototype into the whitelist
+function skytiles.insert(_name)
+	if type(_name) == "string" and skytiles.get(_name) == nil then									-- if the tile prototype is not already in the whitelist
+		sky_tile_whitelist[_name] = true															-- insert the tile prototype
 	end
 end
 
-function skytiles.insert_array(prototypes)														-- prototypes is a table of strings of valid game tile prototypes, example: {"sky-floor", "underground-floor", "sky-concrete"}
-	for k, v in pairs(prototypes) do
-		skytiles.insert(v)																		-- each tile name will be insterted sequentually
+function skytiles.insert_array(_array)																-- _array is a table of strings of valid game tile prototypes, for example: {"concrete", "stone-path"}
+	for k, v in pairs(_array) do
+		skytiles.insert(v)																			-- each tile name will be insterted sequentually
+	end
+end
+
+--[[
+Indexing functions
+]]
+index_data = function()
+	if pause_index == false then
+		paired_entity_data_reverse = table.reverse(paired_entity_data, true, "name")
+	else
+		pause_index = false
+	end
+end
+
+index_classes = function()
+	if pause_index == false then
+		paired_entity_classes_reverse = table.reverse(paired_entity_classes, true)
+	else
+		pause_index = false
 	end
 end

@@ -7,6 +7,7 @@
 
 require("config")
 require("script.const")
+require("script.proto")
 require("script.lib.api")
 require("script.lib.pair-data")
 require("script.lib.util")
@@ -59,21 +60,22 @@ function surfaces.chunk_generator_corrections(surface, area)
 	local tile_name, entity_name
 	local is_below_nauvis = surfaces.is_below_nauvis(surface)
 	if is_below_nauvis == true then
-		tile_name = proto.tile.underground_dirt.name
-		entity_name = proto.entity.underground_wall.name
+		tile_name = proto.get_field({"tile", "underground_dirt"}, "name")
+		entity_name = proto.get_field({"entity", "underground_wall"}, "name")
 		if global.mod_surfaces[api.name(surface)] == nil then
 			surface.daytime = 0.5
 			surface.freeze_daytime(true)
 			global.mod_surfaces[api.name(surface)] = true
 		end
 	else
-		tile_name = proto.tile.sky.name
+		tile_name = proto.get_field({"tile", "sky_void"}, "name")
 	end
 	local validArea = struct.BoundingBox(area.left_top.x, area.left_top.y, area.right_bottom.x-1, area.right_bottom.y-1)
 	
 	-- destroy entities which should not spawn on this surface and gather information for fixing entity location
 	for k, v in pairs(api.surface.find_entities(surface, validArea)) do
-		local pair_data, entity_type = pairdata.get(v) or pairdata.reverse(v), api.type(v)
+		local pair_data = pairdata.get(v) or pairdata.reverse(v)
+		local entity_type = api.type(v)
 		if is_below_nauvis == true then
 			if pair_data ~= nil then
 				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = pair_data.radius}) -- Underground surfaces don't need tiles passed through (only works for sky surfaces)
@@ -105,10 +107,8 @@ function surfaces.chunk_generator_corrections(surface, area)
 		if is_below_nauvis == true then
 			api.surface.create_entity(surface, {name = entity_name, position = v, force = api.game.force("player")})
 			table.insert(newTiles, {name = tile_name, position = v})
-		else
-			if skytiles.get(api.name(api.surface.get_tile(surface, v))) == nil then
-				table.insert(newTiles, {name = tile_name, position = v})
-			end
+		elseif skytiles.get(api.name(api.surface.get_tile(surface, v))) == nil then
+			table.insert(newTiles, {name = tile_name, position = v})
 		end
 	end
 	api.surface.set_tiles(surface, newTiles)
@@ -121,23 +121,23 @@ function surfaces.chunk_generator_corrections(surface, area)
 	end
 end
 
-function surfaces.transport_player_to_access_shaft(player_entity, destination_access_shaft)
-	local new_position = api.surface.find_non_colliding_position(destination_access_shaft.surface, player_entity.character.prototype.name, destination_access_shaft.position, 2, 1)
+function surfaces.transport_player_to_access_shaft(player, destination_access_shaft)
+	local new_position = api.surface.find_non_colliding_position(destination_access_shaft.surface, player.character.prototype.name, destination_access_shaft.position, 2, 1)
 	if new_position ~= nil then
-		api.entity.teleport(player_entity, new_position, destination_access_shaft.surface)
+		api.entity.teleport(player, new_position, destination_access_shaft.surface)
 	end
 end
 
-function surfaces.transport_player(player_entity, surface, position)
-	local new_position = api.surface.find_non_colliding_position(surface, player_entity.character.prototype.name, position, 0, 1)
+function surfaces.transport_player(player, surface, position)
+	local new_position = api.surface.find_non_colliding_position(surface, player.character.prototype.name, position, 0, 1)
 	if new_position ~= nil then
-		api.entity.teleport(player_entity, new_position, surface)
+		api.entity.teleport(player, new_position, surface)
 	end
 end
 
 function surfaces.find_nearby_access_shaft(entity, radius, surface)
 	if radius and api.valid({entity, surface}) and struct.is_Position(entity.position) then
-		local entities = api.surface.find_entities(surface, struct.BoundingBox(entity.position.x - radius, entity.position.y - radius, entity.position.x + radius, entity.position.y + radius), nil, proto.entity.access_shaft.type)
+		local entities = api.surface.find_entities(surface, struct.BoundingBox(entity.position.x - radius, entity.position.y - radius, entity.position.x + radius, entity.position.y + radius), nil, proto.get_field({"entity", "access_shaft"}, "type"))
 		if entities ~= nil then
 			for k, v in pairs(entities) do
 				local pair_data = pairdata.get(v)
@@ -200,7 +200,7 @@ get_relative_surface = function(surface, relative_location)
 		if type(surface) == "string" then
 			surface = api.game.surface(surface_name) -- if provided input was a string and not the surface, attempt to get the surface from game surfaces table
 		end
-		if api.valid(surface) then		-- if the surface exists and is still valid in the game engine
+		if api.valid(surface) then		-- if the surface exists and is valid
 			if relative_location == const.surface.rel_loc.below then
 				if surfaces.is_above_nauvis(surface_name) then
 					return surfaces.get_layer(surface_name) > 1 and api.game.surface(get_mapname(const.surface.type.sky.id, surfaces.get_layer(surface_name) - 1)) or api.game.surface("nauvis")
@@ -221,14 +221,10 @@ end
 create_relative_surface = function(surface, relative_location)
 	if surface and (surfaces.is_from_this_mod(surface) or api.name(surface) == "nauvis") then
 		local surface_name = api.name(surface)
-		if relative_location == const.surface.rel_loc.below then
-			if surfaces.is_below_nauvis(surface_name) or surface_name == "nauvis" then
-				return create_surface(const.surface.type.underground.id, surfaces.get_layer(surface_name) + 1)
-			end
-		elseif relative_location == const.surface.rel_loc.above then
-			if surfaces.is_above_nauvis(surface_name) or surface_name == "nauvis" then
-				return create_surface(const.surface.type.sky.id, surfaces.get_layer(surface_name) + 1)
-			end
+		if relative_location == const.surface.rel_loc.below and (surfaces.is_below_nauvis(surface_name) or surface_name == "nauvis") then
+			return create_surface(const.surface.type.underground.id, surfaces.get_layer(surface_name) + 1)
+		elseif relative_location == const.surface.rel_loc.above and (surfaces.is_above_nauvis(surface_name) or surface_name == "nauvis") then
+			return create_surface(const.surface.type.sky.id, surfaces.get_layer(surface_name) + 1)
 		end
 		return get_relative_surface(surface, relative_location)
 	end

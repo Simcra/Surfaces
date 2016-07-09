@@ -1,37 +1,11 @@
-data:extend({{
-	type = "item-group",
-	name = "surfaces",
-	icon = "__Surfaces__/graphics/item-group/surfaces.png",
-	inventory_order = "surfaces",
-	order = "surfaces"
-},{
-	type = "item-subgroup",
-	name = "surfaces-transport-player",
-	group = "surfaces",
-	inventory_order = "surfaces-a",
-	order = "surfaces-a"
-},{
-	type = "item-subgroup",
-	name = "surfaces-components",
-	group = "surfaces",
-	inventory_order = "surfaces-z",
-	order = "surfaces-z"
-},{
-	type = "item-subgroup",
-	name = "surfaces-transport-chests",
-	group = "surfaces",
-	inventory_order = "surfaces-c",
-	order = "surfaces-c"
-},{
-	type = "item-subgroup",
-	name = "surfaces-transport-power",
-	group = "surfaces",
-	inventory_order = "surfaces-b",
-	order = "surfaces-b"
-},{
-	type = "item-subgroup",
-	name = "surfaces-transport-other",
-	group = "surfaces",
-	inventory_order = "surfaces-d",
-	order = "surfaces-d"
-}})
+require("script.proto")
+
+local surfaces = proto.get({"item_group"}, "surfaces", true)
+local surfaces_component = proto.get({"item_subgroup", "surfaces"}, "component", true)
+local surfaces_tile = proto.get({"item_subgroup", "surfaces"}, "tile", true)
+local surfaces_transport_player = proto.get({"item_subgroup", "surfaces", "transport"}, "player", true)
+local surfaces_transport_power = proto.get({"item_subgroup", "surfaces", "transport"}, "power", true)
+local surfaces_transport_chest = proto.get({"item_subgroup", "surfaces", "transport"}, "chest", true)
+local surfaces_transport_other = proto.get({"item_subgroup", "surfaces", "transport"}, "other", true)
+
+data:extend({surfaces, surfaces_component, surfaces_tile, surfaces_transport_player, surfaces_transport_power, surfaces_transport_chest, surfaces_transport_other})

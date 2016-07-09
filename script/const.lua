@@ -7,6 +7,7 @@
 
 require("config")
 require("script.lib.struct-base")
+require("script.lib.util-base")
 
 --[[
 Note: This is NOT a configuration file! Data in this file CAN and most probably WILL break your savegame if modified.
@@ -24,7 +25,7 @@ const = {
 				id = 2,
 				name = "platform"
 			},
-			all = { -- this does not classify "all" in general, only surface types specified in this mod.
+			all = { -- this does not classify "all" surfaces, only surface types specified in this mod.
 				id = 3,
 				name = "all"
 			}
@@ -78,13 +79,30 @@ const = {
 		circuit = 4,
 		all = 5
 	},
+	tier = {
+		crude = 1,
+		basic = 2,
+		standard = 3,
+		improved = 4,
+		advanced = 5
+	},
 	pictures = {
-		blank = struct.Picture("__Surfaces__/graphics/icons/blank.png", "extra-high", 32, 32),
+		blank = struct.Picture("__base__/graphics/terrain/blank.png", "extra-high", 32, 32),
 		pipecovers = {
 			north = struct.Picture("__base__/graphics/entity/pipe-covers/pipe-cover-north.png", "extra-high", 44, 32),
 			east = struct.Picture("__base__/graphics/entity/pipe-covers/pipe-cover-east.png", "extra-high", 32, 32),
 			south = struct.Picture("__base__/graphics/entity/pipe-covers/pipe-cover-south.png", "extra-high", 46, 52),
 			west = struct.Picture("__base__/graphics/entity/pipe-covers/pipe-cover-west.png", "extra-high", 32, 32)
 		}
+	},
+	sounds = {
+		resource_mining = {
+			struct.Sound("__core__/sound/axe-mining-ore-1.ogg", 1.0),
+			struct.Sound("__core__/sound/axe-mining-ore-2.ogg", 1.0),
+			struct.Sound("__core__/sound/axe-mining-ore-3.ogg", 1.0),
+			struct.Sound("__core__/sound/axe-mining-ore-4.ogg", 1.0),
+			struct.Sound("__core__/sound/axe-mining-ore-5.ogg", 1.0)
+		}
 	}
 }
+const.eventmgr.task_valid = table.reverse(const.eventmgr.task)

@@ -1,50 +1,20 @@
 require("script.proto")
-local iconpath, filetype = "__Surfaces__/graphics/icons/transport/", ".png"
 
-local small_electric_pole_upper, small_electric_pole_lower, medium_electric_pole_upper, medium_electric_pole_lower, big_electric_pole_upper, big_electric_pole_lower, substation_upper, substation_lower = table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common), table.deepcopy(proto.item.common)
-for k, v in pairs(proto.item.electric_pole.common) do
-	small_electric_pole_lower[k] = v
-	small_electric_pole_upper[k] = v
-	medium_electric_pole_lower[k] = v
-	medium_electric_pole_upper[k] = v
-	big_electric_pole_lower[k] = v
-	big_electric_pole_upper[k] = v
-	substation_lower[k] = v
-	substation_upper[k] = v
-end
+local small_lower = proto.get({"item", "electric_pole", "small"}, "lower", true)
+local small_upper = proto.get({"item", "electric_pole", "small"}, "upper", true)
+local medium_lower = proto.get({"item", "electric_pole", "medium"}, "lower", true)
+local medium_upper = proto.get({"item", "electric_pole", "medium"}, "upper", true)
+local big_lower = proto.get({"item", "electric_pole", "big"}, "lower", true)
+local big_upper = proto.get({"item", "electric_pole", "big"}, "upper", true)
+local substation_lower = proto.get({"item", "electric_pole", "substation"}, "lower", true)
+local substation_upper = proto.get({"item", "electric_pole", "substation"}, "upper", true)
+small_lower.place_result = proto.get_field({"entity", "electric_pole", "small", "lower"}, "name")
+small_upper.place_result = proto.get_field({"entity", "electric_pole", "small", "upper"}, "name")
+medium_lower.place_result = proto.get_field({"entity", "electric_pole", "medium", "lower"}, "name")
+medium_upper.place_result = proto.get_field({"entity", "electric_pole", "medium", "upper"}, "name")
+big_lower.place_result = proto.get_field({"entity", "electric_pole", "big", "lower"}, "name")
+big_upper.place_result = proto.get_field({"entity", "electric_pole", "big", "upper"}, "name")
+substation_lower.place_result = proto.get_field({"entity", "electric_pole", "substation", "lower"}, "name")
+substation_upper.place_result = proto.get_field({"entity", "electric_pole", "substation", "upper"}, "name")
 
--- small electric pole
-for k, v in pairs(proto.item.electric_pole.small.lower) do
-	small_electric_pole_lower[k] = v
-end
-for k, v in pairs(proto.item.electric_pole.small.upper) do
-	small_electric_pole_upper[k] = v
-end
-data:extend({small_electric_pole_lower, small_electric_pole_upper})
-
--- medium electric pole
-for k, v in pairs(proto.item.electric_pole.medium.lower) do
-	medium_electric_pole_lower[k] = v
-end
-for k, v in pairs(proto.item.electric_pole.medium.upper) do
-	medium_electric_pole_upper[k] = v
-end
-data:extend({medium_electric_pole_lower, medium_electric_pole_upper})
-
--- big electric pole
-for k, v in pairs(proto.item.electric_pole.big.lower) do
-	big_electric_pole_lower[k] = v
-end
-for k, v in pairs(proto.item.electric_pole.big.upper) do
-	big_electric_pole_upper[k] = v
-end
-data:extend({big_electric_pole_lower, big_electric_pole_upper})
-
--- substation
-for k, v in pairs(proto.item.electric_pole.substation.lower) do
-	substation_lower[k] = v
-end
-for k, v in pairs(proto.item.electric_pole.substation.upper) do
-	substation_upper[k] = v
-end
-data:extend({substation_lower, substation_upper})
+data:extend({small_lower, small_upper, medium_lower, medium_upper, big_lower, big_upper, substation_lower, substation_upper})

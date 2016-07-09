@@ -1,15 +1,8 @@
-local iconpath, filetype = "__Surfaces__/graphics/icons/transport/", ".png"
+require("script.proto")
 
-local train_stop_lower = table.deepcopy(data.raw["item"]["train-stop"])
-train_stop_lower.name = "train-stop-lower"
-train_stop_lower.icon = iconpath .. train_stop_lower.name .. filetype
-train_stop_lower.place_result = train_stop_lower.name
-train_stop_lower.flags = {"goes-to-quickbar"}
-data:extend({train_stop_lower})
+local train_stop_upper = proto.get({"item", "rail_transport", "standard"}, "upper", true)
+local train_stop_lower = proto.get({"item", "rail_transport", "standard"}, "lower", true)
+train_stop_lower.place_result = proto.get_field({"entity", "rail_transport", "standard", "lower"}, "name")
+train_stop_upper.place_result = proto.get_field({"entity", "rail_transport", "standard", "upper"}, "name")
 
-local train_stop_upper = table.deepcopy(data.raw["item"]["train-stop"])
-train_stop_upper.name = "train-stop-upper"
-train_stop_upper.icon = iconpath .. train_stop_upper.name .. filetype
-train_stop_upper.place_result = train_stop_upper.name
-train_stop_lower.flags = {"goes-to-quickbar"}
-data:extend({train_stop_upper})
+data:extend({train_stop_upper, train_stop_lower})

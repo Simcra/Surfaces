@@ -30,10 +30,6 @@ end
 function events.on_built_entity(event)
 	if pairdata.get(event.created_entity) ~= nil or pairdata.reverse(event.created_entity) ~= nil then
 		table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.trigger_create_paired_entity, {event.created_entity, event.player_index}))
-	elseif api.type(event.created_entity) == "solar-panel" and surfaces.is_below_nauvis(event.created_entity.surface) then
-		table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {event.created_entity, api.entity.minable_result(event.created_entity)}))
-		api.destroy(event.created_entity)
-		util.message(event.player_index, "Solar panels may not be placed in underground caverns, your solar panel was dropped on the ground.")
 	end
 end
 
@@ -41,9 +37,6 @@ end
 function events.on_robot_built_entity(event)
 	if pairdata.get(event.created_entity) ~= nil or pairdata.reverse(event.created_entity) ~= nil then
 		table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.trigger_create_paired_entity, {event.created_entity}))
-	elseif api.type(event.created_entity) == "solar-panel" and surfaces.is_below_nauvis(event.created_entity.surface) then
-		table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {event.created_entity, api.entity.minable_result(event.created_entity)}))
-		api.destroy(event.created_entity)
 	end
 end
 
@@ -175,14 +168,17 @@ function eventmgr.update_transport_chest_contents(event)
 			api.destroy({v.input, v.output})
 			global.transport_chests[k] = nil
 		else
+			local max_items = config.item_transport.base_count * config.item_transport.multiplier[table.reverse(const.tier, true)[v.tier]]
 			local input = api.entity.get_inventory(v.input, defines.inventory.chest)
 			local output = api.entity.get_inventory(v.output, defines.inventory.chest)
 			for key, value in pairs(api.inventory.get_contents(input)) do
-				local itemstack = struct.ItemStack(key, value)
+				local amount = value > max_items and max_items or value
+				local itemstack = struct.ItemStack(key, amount)
 				if api.inventory.can_insert(output, itemstack) then
 					local remove_itemstack = struct.ItemStack(key, api.inventory.insert(output, itemstack))
 					api.inventory.remove(input, remove_itemstack)
 				end
+				break
 			end
 		end
 	end

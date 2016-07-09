@@ -17,14 +17,14 @@ require("script.lib.util")
 pairutil = {}
 
 -- Attempts to find the paired entity of the provided entity, returning the result
-function pairutil.find_paired_entity(entity)
-	if api.valid(entity) then
-		local pair_data = pairdata.get(entity) or pairdata.reverse(entity)
-		if pair_data ~= nil then
-			if pair_data.destination == const.surface.rel_loc.above then
-				return surfaces.find_nearby_entity(entity, 0.5, surfaces.get_surface_above(entity.surface), pair_data.name, api.type(api.game.entity_prototype(pair_data.name)))
-			elseif pair_data.destination == const.surface.rel_loc.below then
-				return surfaces.find_nearby_entity(entity, 0.5, surfaces.get_surface_below(entity.surface), pair_data.name, api.type(api.game.entity_prototype(pair_data.name)))
+function pairutil.find_paired_entity(_entity)
+	if api.valid(_entity) then
+		local _pair_data = pairdata.get(_entity) or pairdata.reverse(_entity)
+		if _pair_data ~= nil then
+			if _pair_data.destination == const.surface.rel_loc.above then
+				return surfaces.find_nearby_entity(_entity, 0.5, surfaces.get_surface_above(_entity.surface), _pair_data.name, api.type(api.game.entity_prototype(_pair_data.name)))
+			elseif _pair_data.destination == const.surface.rel_loc.below then
+				return surfaces.find_nearby_entity(_entity, 0.5, surfaces.get_surface_below(_entity.surface), _pair_data.name, api.type(api.game.entity_prototype(_pair_data.name)))
 			end
 		end
 	end
@@ -32,69 +32,56 @@ end
 
 
 -- Internal function, called from events.execute_first_task_in_waiting_queue(event)
-function pairutil.validate_paired_entity(entity, player_index)
-	if api.valid(entity) and (surfaces.is_from_this_mod(entity.surface) == true or api.name(entity.surface) == "nauvis") then
-		local pair_data = pairdata.get(entity)
-		if surfaces.is_below_nauvis(entity.surface) then
-			if pair_data.domain == const.surface.type.sky.id then
-				if player_index and api.game.player(player_index) then
-					util.message(player_index, entity.name .. " may not be placed in sky surfaces, it has been dropped on the ground.")
+function pairutil.validate_paired_entity(_entity, _player_index)
+	if api.valid(_entity) and (surfaces.is_from_this_mod(_entity.surface) == true or api.name(_entity.surface) == "nauvis") then
+		local _pair_data = pairdata.get(_entity)
+		if surfaces.is_below_nauvis(_entity.surface) then
+			if _pair_data.domain == const.surface.type.sky.id then
+				if _player_index and api.game.player(_player_index) then
+					util.message(_player_index, api.name(_entity) .. " may not be placed in underground surfaces, it has been dropped on the ground.")
 				end
-				table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
-				api.destroy(entity)
+				table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {_entity, api.entity.minable_result(_entity)}))
+				api.destroy(_entity)
 			end
-		elseif surfaces.is_above_nauvis(entity.surface) then
-			if pair_data.domain == const.surface.type.underground.id then
-				if player_index and api.game.player(player_index) then
-					util.message(player_index, entity.name .. " may not be placed in underground surfaces, it has been dropped on the ground.")
+		elseif surfaces.is_above_nauvis(_entity.surface) then
+			if _pair_data.domain == const.surface.type.underground.id then
+				if _player_index and api.game.player(_player_index) then
+					util.message(_player_index, api.name(_entity) .. " may not be placed in sky surfaces, it has been dropped on the ground.")
 				end
-				table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
-				api.destroy(entity)
+				table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {_entity, api.entity.minable_result(_entity)}))
+				api.destroy(_entity)
 			end
 		else
-			if pair_data.nauvis ~= true then
-				if player_index and api.game.player(player_index) then
-					util.message(player_index, entity.name .. " may not be placed on the nauvis surface, it has been dropped on the ground.")
+			if _pair_data.nauvis ~= true then
+				if _player_index and api.game.player(_player_index) then
+					util.message(_player_index, api.name(_entity) .. " may not be placed on the nauvis surface, it has been dropped on the ground.")
 				end
-				table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
-				api.destroy(entity)
+				table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {_entity, api.entity.minable_result(_entity)}))
+				api.destroy(_entity)
 			end
 		end
-		if entity then
-			return pair_data.destination
+		if _entity then
+			return _pair_data.destination
 		end
 	else
-		if player_index and api.game.player(player_index) then
-			util.message(player_index, entity.name .. " may not be placed on this surface, it has been dropped on the ground.")
+		if _player_index and api.game.player(_player_index) then
+			util.message(_player_index, api.name(_entity) .. " may not be placed on this surface, it has been dropped on the ground.")
 		end
-		table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
-		api.destroy(entity)
+		table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {_entity, api.entity.minable_result(_entity)}))
+		api.destroy(_entity)
 	end
 end
 
 -- Internal function, called from events.execute_first_task_in_waiting_queue(event)
-function pairutil.create_paired_surface(entity, pair_location)
-	if api.valid(entity) and (pair_location and table.reverse(const.surface.rel_loc)[pair_location]) then
-		if pair_location == const.surface.rel_loc.above then
-			local paired_surface = surfaces.get_surface_above(entity)
-			return (paired_surface == nil) and surfaces.create_surface_above(entity.surface) or paired_surface
+function pairutil.create_paired_surface(_entity, _pair_location)
+	if api.valid(_entity) and (_pair_location and table.reverse(const.surface.rel_loc)[_pair_location]) then
+		if _pair_location == const.surface.rel_loc.above then
+			local _paired_surface = surfaces.get_surface_above(_entity)
+			return (_paired_surface == nil) and surfaces.create_surface_above(_entity.surface) or _paired_surface
 		else
-			local paired_surface = surfaces.get_surface_below(entity)
-			return (paired_surface == nil) and surfaces.create_surface_below(entity.surface) or paired_surface
+			local _paired_surface = surfaces.get_surface_below(_entity)
+			return (_paired_surface == nil) and surfaces.create_surface_below(_entity.surface) or _paired_surface
 		end
-	else
-		return false
-	end
-	return nil
-end
-
--- Internal function, called from events.execute_first_task_in_waiting_queue(event)
-function pairutil.create_paired_entity(entity, paired_surface)
-	if api.valid({entity, paired_surface}) then
-		local pair_data = pairdata.get(entity)
-		pairutil.clear_ground(entity.position, paired_surface, pair_data.radius, pair_data.tile)
-		local paired_entity = api.surface.create_entity(paired_surface, {name = pair_data.name, position = entity.position, force = entity.force})
-		return (api.valid(paired_entity) == true) and paired_entity or false
 	else
 		return false
 	end
@@ -102,36 +89,49 @@ function pairutil.create_paired_entity(entity, paired_surface)
 end
 
 -- Internal function, called from events.execute_first_task_in_waiting_queue(event)
-function pairutil.finalize_paired_entity(entity, paired_entity, player_index)
-	if api.valid(entity) then
-		local pair_data = pairdata.get(entity)
-		paired_entity = paired_entity or pairutil.find_paired_entity(entity)
-		if paired_entity then
-			if pair_data.class == pairclass.get("electric-pole") then
-				api.entity.connect_neighbour(entity, paired_entity, const.wire.all)
-			elseif pair_data.class == pairclass.get("fluid-transport") then
-				table.insert(global.fluid_transport, {a = entity, b = paired_entity})
-			elseif pair_data.class == pairclass.get("transport-chest") then
-				table.insert(global.transport_chests, {input = entity, output = paired_entity})
-			elseif pair_data.class == pairclass.get("rail-transport") then
-				api.entity.set_direction(paired_entity, api.entity.direction(entity))
+function pairutil.create_paired_entity(_entity, _paired_surface)
+	if api.valid({_entity, _paired_surface}) then
+		local _pair_data = pairdata.get(_entity)
+		pairutil.clear_ground(_entity.position, _paired_surface, _pair_data.radius, _pair_data.tile)
+		local _paired_entity = api.surface.create_entity(_paired_surface, {name = _pair_data.name, position = _entity.position, force = _entity.force})
+		return (api.valid(_paired_entity) == true) and _paired_entity or false
+	else
+		return false
+	end
+	return nil
+end
+
+-- Internal function, called from events.execute_first_task_in_waiting_queue(event)
+function pairutil.finalize_paired_entity(_entity, _paired_entity, _player_index)
+	if api.valid(_entity) then
+		local _pair_data = pairdata.get(_entity)
+		_paired_entity = _paired_entity or pairutil.find_paired_entity(_entity)
+		if _paired_entity then
+			if _pair_data.class == pairclass.get("electric-pole") then
+				api.entity.connect_neighbour(_entity, _paired_entity, const.wire.all)
+			elseif _pair_data.class == pairclass.get("fluid-transport") then
+				table.insert(global.fluid_transport, {a = _entity, b = _paired_entity})
+			elseif _pair_data.class == pairclass.get("transport-chest") then
+				table.insert(global.transport_chests, {input = _entity, output = _paired_entity, tier = _pair_data.custom.tier})
+			elseif _pair_data.class == pairclass.get("rail-transport") then
+				api.entity.set_direction(_paired_entity, api.entity.direction(_entity))
 			end
 		else
-			if player_index and api.game.player(player_index) then
-				util.message(player_index, entity.name .. " could not be paired successfully, it has been dropped on the ground.")
+			if _player_index and api.game.player(_player_index) then
+				util.message(_player_index, api.name(_entity) .. " could not be paired successfully, it has been dropped on the ground.")
 			end
-			table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {entity, api.entity.minable_result(entity)}))
-			api.destroy(entity)
+			table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.spill_entity_result, {_entity, api.entity.minable_result(_entity)}))
+			api.destroy(_entity)
 		end
 	end
 end
 
 -- Internal function, called from events.on_preplayer_mined_item(event) and events.on_robot_pre_mined(event)
-function pairutil.destroy_paired_entity(entity)
-	local pair_entity = pairutil.find_paired_entity(entity)
-	local pair_data = pairdata.get(entity) or pairdata.reverse(entity)
-	table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.remove_sky_tile, {entity, pair_entity, pair_data.radius}))
-	api.destroy(pair_entity)
+function pairutil.destroy_paired_entity(_entity)
+	local _paired_entity = pairutil.find_paired_entity(_entity)
+	local _pair_data = pairdata.get(_entity) or pairdata.reverse(_entity)
+	table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.remove_sky_tile, {_entity, _paired_entity, _pair_data.radius}))
+	api.destroy(_paired_entity)
 end
 
 -- Used to clear the ground around a position for placement of a paired entity, also used to clear ground around unit spawners and other things during chunk generation event
@@ -141,8 +141,7 @@ function pairutil.clear_ground(position, surface, radius, tile)
 			radius = radius or 0
 			local area = struct.BoundingBox(position.x - radius, position.y - radius, position.x + radius, position.y + radius)
 			if surfaces.is_below_nauvis(surface) then
-				local und_wall = proto.entity.underground_wall
-				for k, v in pairs(api.surface.find_entities(surface, area, und_wall.name, und_wall.type)) do
+				for k, v in pairs(api.surface.find_entities(surface, area, proto.get_field({"entity", "underground_wall"}, "name"), proto.get_field({"entity", "underground_wall"}, "type"))) do
 					api.destroy(v)
 				end
 			else
@@ -167,11 +166,10 @@ function pairutil.remove_tiles(position, surface, radius)
 			local area = struct.BoundingBox(position.x - radius, position.y - radius, position.x + radius, position.y + radius)
 			local safeArea = struct.BoundingBox(area.left_top.x - 1, area.left_top.y - 1, area.right_bottom.x + 1, area.right_bottom.y + 1)
 			local oldTiles, newTiles, entities = {}, {}, {}
-			local sky_tile_prototype = proto.tile.sky.name
 			for k, v in pairs(struct.TilePositions(area)) do
 				local tile_prototype = api.name(api.surface.get_tile(surface, v))
-				table.insert(oldTiles, {name = ((skytiles.get(tile_prototype) == nil) and tile_prototype or sky_tile_prototype), position = v})
-				table.insert(newTiles, {name = sky_tile_prototype, position = v})
+				table.insert(oldTiles, {name = ((skytiles.get(tile_prototype) == nil) and tile_prototype or proto.get_field({"tile", "sky_void"}, "name")), position = v})
+				table.insert(newTiles, {name = proto.get_field({"tile", "sky_void"}, "name"), position = v})
 			end
 			for k, v in pairs(api.surface.find_entities(surface, safeArea, "player", "player")) do
 				if v.player ~= nil then

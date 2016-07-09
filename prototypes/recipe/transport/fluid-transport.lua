@@ -1,17 +1,8 @@
-local fluid_transport = {
-	type = "recipe",
-	group = "surfaces",
-	subgroup = "surfaces-transport-other",
-	enabled = true,
-	ingredients = {{"storage-tank", 2}, {"fluid-servo", 1}}
-}
+require("script.proto")
 
-local fluid_transport_upper = table.deepcopy(fluid_transport)
-fluid_transport_upper.name = "fluid-transport-upper"
-fluid_transport_upper.result = fluid_transport_upper.name
-data:extend({fluid_transport_upper})
+local fluid_transport_upper = proto.get({"recipe", "fluid_transport", "standard"}, "upper", true)
+local fluid_transport_lower = proto.get({"recipe", "fluid_transport", "standard"}, "lower", true)
+fluid_transport_lower.result = proto.get_field({"item", "fluid_transport", "standard", "lower"}, "name")
+fluid_transport_upper.result = proto.get_field({"item", "fluid_transport", "standard", "upper"}, "name")
 
-local fluid_transport_lower = table.deepcopy(fluid_transport)
-fluid_transport_lower.name = "fluid-transport-lower"
-fluid_transport_lower.result = fluid_transport_lower.name
-data:extend({fluid_transport_lower})
+data:extend({fluid_transport_upper, fluid_transport_lower})

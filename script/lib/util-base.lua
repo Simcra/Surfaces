@@ -12,30 +12,36 @@ function math.round(number, decimal_places)
 end
 
 --[[
-Useful mostly for debugging tables but may also have other uses.
+Used mostly for debugging tables, however, may potentially have other uses.
 Returns a string representation of the table, traversing recursively, see example below:
 
-given that t = {parameterA = 2, parameterB = {innerParameterA = "A", innerParameterB = "B"}, parameterC = "42"}
-if add_spacing is specified, the result will be "{parameterA=2, parameterB={innerParameterA=A, innerParameterB=B}, parameterC=42}"
-Otherwise, "{parameterA = 2, parameterB = {innerParameterA = A, innerParameterB = B}, parameterC = 42}"
+Given that:
+	t = {parameterA = 2, parameterB = {innerParameterA = "A", innerParameterB = "B"}, parameterC = "42"},
+	string_a = table.tostring(t, false),
+	string_b = table.tostring(t, true)
+The following is true:
+	string_a == "{parameterA=2,parameterB={innerParameterA=A,innerParameterB=B},parameterC=42}",
+	string_b == "{parameterA = 2, parameterB = {innerParameterA = A, innerParameterB = B}, parameterC = 42}"
 ]]
 function table.tostring(t, add_spacing)
 	local result = "{"
 	local equalstring = "="
+	local commastring = ","
 	if add_spacing and (add_spacing == true or add_spacing == "true") then
 		equalstring = " = "
+		commastring = ", "
 	end
 	for k, v in pairs(t) do
 		if type(v) == "table" then
-			result = result .. tostring(k) .. equalstring .. table.tostring(v, add_spacing) .. ", "
+			result = result .. tostring(k) .. equalstring .. table.tostring(v, add_spacing) .. commastring
 		elseif type(v) == "string" then
-			result = result .. tostring(k) .. equalstring .. v .. ", "
+			result = result .. tostring(k) .. equalstring .. v .. commastring
 		else
-			result = result .. tostring(k) .. equalstring .. tostring(v) .. ", "
+			result = result .. tostring(k) .. equalstring .. tostring(v) .. commastring
 		end
 	end
 	if string.len(result) > 1 then
-		result = string.sub(result, 1, string.len(result) - 2)
+		result = string.sub(result, 1, string.len(result) - 2)		-- remove the last comma
 	end
 	return result .. "}"
 end
@@ -45,9 +51,11 @@ Intended to be used to verifying the existance of a value in a table.
 Creates a table indexed by the values from the provided table where new values are set to true, see usage example below:
 
 Given that:
-t = {"1", "12", {data = "34"}, "62"}; rt = table.reverse(t); rt_2 = table.reverse(t, true); and rt_3 = table.reverse(t, true, "data")
+	t = {"1", "12", {data = "34"}, "62"}, rt = table.reverse(t), rt_2 = table.reverse(t, true), rt_3 = table.reverse(t, true, "data")
 The following is true:
-rt["12"] == true; rt["62"] == true; rt["34"] == nil; rt_2["62"] == 4; rt_2["12"] == 2; and rt_3["34"] == 3;
+	rt["12"] == true, rt["34"] == nil,
+	rt_2["12"] == 2, rt_2["34"] == nil,
+	rt_3["12"] == nil, rt_3["34"] == 3
 ]] 
 function table.reverse(t, store_old_index, subtable_index)
 	local rTable = {}
