@@ -169,7 +169,7 @@ local proto_data = { -- Prototype data
 			common = {flags = {}},
 			wood = {
 				lower = {name = "wooden-receiver-chest-lower"},
-				upper = {name = "wooden-transport-chest-upper"}
+				upper = {name = "wooden-receiver-chest-upper"}
 			},
 			iron = {
 				lower = {name = "iron-receiver-chest-lower"},
