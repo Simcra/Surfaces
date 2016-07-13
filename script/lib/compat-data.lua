@@ -6,9 +6,14 @@
 ]]
 
 require("script.lib.api")
+require("script.lib.util-base")
 
 local moddata = {}
 compat = {}
+
+function compat.debug()
+	error(table.tostring(moddata))
+end
 
 function compat.insert_data(_data) -- only works prior to a map being loaded or created (designed for use during data loading phases)
 	if game == nil then

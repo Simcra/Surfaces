@@ -16,9 +16,25 @@ require("script.lib.util")
 
 events = {}
 local eventmgr = {}
+local addon_data, loaded_addon_data = nil, false
+
+function events.set_addon_data(data)
+	if addon_data == nil and type(data) == "table" then
+		addon_data = data
+	end
+end
 
 -- This function is called every game tick, it's primary purpose is to act as a timer for each of the handles in the event manager
 function events.on_tick(event)
+	if loaded_addon_data == false then
+		loaded_addon_data = true
+		compat.update_all()
+		for k, v in pairs(addon_data) do
+			if compat.active(k) == true then
+				pairdata.insert_array(v)
+			end
+		end
+	end
 	for k, v in pairs(const.eventmgr.handle) do
 		if event.tick % v.tick == 0 then
 			eventmgr[tostring(v.func)](event)

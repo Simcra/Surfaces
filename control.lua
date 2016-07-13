@@ -101,38 +101,31 @@ local init_globals = function()
 	global.fluid_transport = global.fluid_transport or {}
 end
 
-local function insert_addon_data()
-	local addon_entity_data = {}
-	if compat.active("warehousing") == true then
-		table.insert(addon_entity_data, {"transport-storehouse-up", "receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.standard}, 1})
-		table.insert(addon_entity_data, {"transport-storehouse-down", "receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.standard}, 1})
-		table.insert(addon_entity_data, {"logistic-transport-storehouse-up", "logistic-receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced}, 1})
-		table.insert(addon_entity_data, {"logistic-transport-storehouse-down", "logistic-receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced}, 1})
-		table.insert(addon_entity_data, {"transport-warehouse-up", "receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.improved}, 2})
-		table.insert(addon_entity_data, {"transport-warehouse-down", "receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.improved}, 2})
-		table.insert(addon_entity_data, {"logistic-transport-warehouse-up", "logistic-receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced}, 2})
-		table.insert(addon_entity_data, {"logistic-transport-warehouse-down", "logistic-receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced}, 2})
-	end
-	pairdata.insert_array(addon_entity_data)
-end
+local addon_data = {
+	warehousing = {
+		{"transport-storehouse-up", "receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.standard}, 1},
+		{"transport-storehouse-down", "receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.standard}, 1},
+		{"logistic-transport-storehouse-up", "logistic-receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced}, 1},
+		{"logistic-transport-storehouse-down", "logistic-receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced}, 1},
+		{"transport-warehouse-up", "receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.improved}, 2},
+		{"transport-warehouse-down", "receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.improved}, 2},
+		{"logistic-transport-warehouse-up", "logistic-receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced}, 2},
+		{"logistic-transport-warehouse-down", "logistic-receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced}, 2}
+	}
+}
+events.set_addon_data(addon_data)
 
 -- control functions (on_init, on_load, on_config_changed)
 local function on_init()
 	init_globals()
-	compat.update_all()
-	insert_addon_data()
 end
 
 local function on_load()
 	init_globals()
-	compat.update_all()
-	insert_addon_data()
 end
 
 local function on_configuration_changed()
 	init_globals()
-	compat.update_all()
-	insert_addon_data()
 end
 
 -- Register event handlers
