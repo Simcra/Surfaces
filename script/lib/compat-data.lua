@@ -15,7 +15,7 @@ function compat.insert_data(_data) -- only works prior to a map being loaded or 
 		for k, v in pairs(_data) do
 			if type(k) == "string" and type(v) == "boolean" then
 				compat.insert(k)
-				moddata[k].active = v
+				moddata[string.lower(k)].active = v
 			end
 		end
 	end
@@ -23,11 +23,12 @@ end
 
 function compat.insert(_name)
 	if type(_name) == "string" then
-		if moddata[_name] == nil then
-			moddata[_name] = {}
+		if moddata[string.lower(_name)] == nil then
+			moddata[string.lower(_name)] = {}
 			return true
 		end
 	end
+	return false
 end
 
 function compat.insert_and_update(_name)
@@ -46,10 +47,10 @@ end
 
 function compat.update(_name)
 	if type(_name) == "string" then
-		if moddata[_name] ~= nil then
+		if moddata[string.lower(_name)] ~= nil then
 			local _version = api.game.active_mod(_name)
-			moddata[_name].active = _version ~= nil
-			moddata[_name].version = _version or ""
+			moddata[string.lower(_name)].active = _version ~= nil
+			moddata[string.lower(_name)].version = _version or ""
 		end
 	end
 end
@@ -64,9 +65,17 @@ function compat.update_all()
 end
 
 function compat.active(_name)
-	return moddata[_name] ~= nil and (moddata[_name].active ~= nil and moddata[_name].active == true or false) or false
+	if type(_name) == "string" then
+		return moddata[string.lower(_name)] ~= nil and (moddata[string.lower(_name)].active ~= nil and moddata[string.lower(_name)].active == true or false) or false
+	else
+		return false
+	end
 end
 
 function compat.version(_name)
-	return moddata[_name] ~= nil and moddata[_name].version or nil
+	if type(_name) == "string" then
+		return moddata[string.lower(_name)] ~= nil and moddata[string.lower(_name)].version or nil
+	else
+		return nil
+	end
 end

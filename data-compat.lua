@@ -12,7 +12,8 @@ Pre-init mod compatibility stuff, array to be passed in format "index = data" wh
 	- data should be a boolean, may be a result of tests or otherwise passed simply as true or false
 ]]
 local mod_data = {
-	bobwarfare = (bobmods ~= nil and bobmods.warfare ~= nil)
+	["bobwarfare"] = (type(bobmods) == "table" and type(bobmods.warfare) == "table"),
+	["warehousing"] = (type(define_warehouse) == "function")
 }
 compat.insert_data(mod_data)
 -- compat.insert and compat.insert_data are not the same function, compat.insert may only be called after the game is loaded, meanwhile compat.insert_data will work in the data loading phases

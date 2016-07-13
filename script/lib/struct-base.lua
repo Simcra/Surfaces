@@ -8,13 +8,36 @@
 require("script.lib.util-base")
 
 struct = {}
+local PicturePriority = {
+	valid = table.reverse({"extra-low", "low", "normal", "high", "extra-high"}),
+	default = "normal"
+}
 
 function struct.Picture(_filename, _priority, _width, _height, _frames, _direction_count, _shift)
-	local _result = {filename = _filename, priority = _priority, width = _width, height = _height}
-	if type(_frames) == "number" and _frames >= 1 then _result.frames = _frames end
-	if type(_direction_count) == "number" and _direction_count >= 1 then _result.direction_count = _direction_count end
+	local _result = {filename = _filename, priority = struct.is_PicturePriority(_priority) == true and _priority or PicturePriority.default}
+	if type(_width) == "number" and _width >= 1 then _result.width = math.round(_width) end
+	if type(_height) == "number" and _height >= 1 then _result.height = math.round(_height) end
+	if type(_frames) == "number" and _frames >= 1 then _result.frames = math.round(_frames) end
+	if type(_direction_count) == "number" and _direction_count >= 1 then _result.direction_count = math.round(_direction_count) end
 	if struct.is_Position(_shift) then _result.shift = _shift end
 	return _result
+end
+
+function struct.StorageTankPictures(_picture_sheet, _fluid_background, _window_background, _flow_sprite)
+	return {
+		picture = {sheet = struct.is_Picture(_picture_sheet) == true and _picture_sheet or const.pictures.blank},
+		fluid_background = struct.is_Picture(_fluid_background) == true and _fluid_background or const.pictures.blank,
+		window_background = struct.is_Picture(window_background) == true and window_background or const.pictures.blank,
+		flow_sprite = struct.is_Picture(flow_sprite) == true and flow_sprite or const.pictures.blank
+	}
+end
+
+function struct.is_PicturePriority(_priority)
+	return _priority and (PicturePriority.valid[_priority] == true)
+end
+
+function struct.is_Picture(_picture)
+	return (type(_picture) == "table" and type(_picture.filename) == "string" and struct.is_PicturePriority(_picture.priority) == true) and true or false
 end
 
 function struct.Variant(_picture, _count, _size, _probability)

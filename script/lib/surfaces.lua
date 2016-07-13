@@ -7,10 +7,11 @@
 
 require("config")
 require("script.const")
-require("script.proto")
 require("script.lib.api")
 require("script.lib.pair-data")
+require("script.lib.struct")
 require("script.lib.util")
+require("script.proto")
 
 surfaces = {}
 
@@ -80,9 +81,9 @@ function surfaces.chunk_generator_corrections(surface, area)
 			if pair_data ~= nil then
 				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = pair_data.radius}) -- Underground surfaces don't need tiles passed through (only works for sky surfaces)
 			elseif entity_type == "unit-spawner" then
-				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = 5})
+				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = 9})
 			elseif entity_type == "turret" then
-				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = 4})
+				table.insert(entitiesToCorrect, {position = table.deepcopy(v.position), radius = 8})
 			elseif entity_type ~= "resource" and api.name(v) ~= entity_name and entity_type ~= "player" then
 				api.destroy(v)
 			end
@@ -178,11 +179,11 @@ end
 
 get_map_gen_settings = function(surface_type)
 	if surface_type == const.surface.type.underground.id then
-		local mapgensettings = api.surface.map_gen_settings(api.game.surface("nauvis"))
-		return struct.MapGenSettings_copy(api.surface.map_gen_settings(api.game.surface("nauvis")), false, true, "none")
+		local nauvis_settings = api.surface.map_gen_settings(api.game.surface("nauvis"))
+		return struct.MapGenSettings_copy(nauvis_settings, false, true, "none")
 	elseif surface_type == const.surface.type.sky.id then
-		local mapgensettings = api.surface.map_gen_settings(api.game.surface("nauvis"))
-		return struct.MapGenSettings_copy(api.surface.map_gen_settings(api.game.surface("nauvis")), true, true, "none")
+		local nauvis_settings = api.surface.map_gen_settings(api.game.surface("nauvis"))
+		return struct.MapGenSettings_copy(nauvis_settings, true, true, "none")
 	end
 end
 

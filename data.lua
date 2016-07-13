@@ -41,3 +41,11 @@ require("prototypes.recipe.transport.transport-chest")
 require("prototypes.recipe.transport.electric-pole")
 --require("prototypes.recipe.transport.rail-transport")
 require("prototypes.recipe.transport.fluid-transport")
+
+-- Other prototypes which are only loaded when optional mods are installed
+
+if compat.active("warehousing") == true then
+	require("prototypes.item.addons.warehousing")
+	require("prototypes.entity.addons.warehousing")
+	require("prototypes.recipe.addons.warehousing")
+end

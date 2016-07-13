@@ -4,6 +4,7 @@
 
     This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 ]]
+
 require("util")
 require("script.const")
 require("script.events")
@@ -100,19 +101,38 @@ local init_globals = function()
 	global.fluid_transport = global.fluid_transport or {}
 end
 
+local function insert_addon_data()
+	local addon_entity_data = {}
+	if compat.active("warehousing") == true then
+		table.insert(addon_entity_data, {"transport-storehouse-up", "receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.standard}, 1})
+		table.insert(addon_entity_data, {"transport-storehouse-down", "receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.standard}, 1})
+		table.insert(addon_entity_data, {"logistic-transport-storehouse-up", "logistic-receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced}, 1})
+		table.insert(addon_entity_data, {"logistic-transport-storehouse-down", "logistic-receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced}, 1})
+		table.insert(addon_entity_data, {"transport-warehouse-up", "receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.improved}, 2})
+		table.insert(addon_entity_data, {"transport-warehouse-down", "receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.improved}, 2})
+		table.insert(addon_entity_data, {"logistic-transport-warehouse-up", "logistic-receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced}, 2})
+		table.insert(addon_entity_data, {"logistic-transport-warehouse-down", "logistic-receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced}, 2})
+	end
+	pairdata.insert_array(addon_entity_data)
+end
+
 -- control functions (on_init, on_load, on_config_changed)
 local function on_init()
 	init_globals()
 	compat.update_all()
+	insert_addon_data()
 end
 
 local function on_load()
 	init_globals()
+	compat.update_all()
+	insert_addon_data()
 end
 
 local function on_configuration_changed()
 	init_globals()
 	compat.update_all()
+	insert_addon_data()
 end
 
 -- Register event handlers

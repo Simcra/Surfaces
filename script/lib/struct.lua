@@ -35,14 +35,26 @@ TilePositions = function(_x1, _y1, _x2, _y2) -- Returns a table of positions ins
 end
 
 function struct.MapGenSettings_copy(_mapgensettings, _remove_autoplace, _random_seed, _water, _peaceful, _terrain, _autoplace, _seed, _width, _height)
-	return struct.is_MapGenSettings(_mapgensettings) and struct.MapGenSettings(
-		_terrain or _mapgensettings.terrain_segmentation,
-		_water or _mapgensettings.water,
-		(type(_remove_autoplace) == "boolean" and _remove_autoplace == true) and struct.AutoplaceControls_copy(_mapgensettings.autoplace_controls, nil, "none") or (_autoplace or _mapgensettings.autoplace_controls),
-		(type(_random_seed) == "boolean" and _random_seed == true) and nil or (_seed or _mapgensettings.seed),
-		_width or _mapgensettings.width,
-		_height or _mapgensettings.height,
-		_peaceful or (_mapgensettings.peaceful_mode)) or nil
+	if struct.is_MapGenSettings(_mapgensettings) == true then
+		local terrain_segmentation = _terrain or _mapgensettings.terrain_segmentation
+		local water = _water or _mapgensettings.water
+		local autoplace_controls
+		if type(_remove_autoplace) == "boolean" and _remove_autoplace == true then
+			autoplace_controls = struct.AutoplaceControls_copy(_mapgensettings.autoplace_controls, nil, "none")
+		else
+			autoplace_controls = _autoplace or _mapgensettings.autoplace_controls
+		end
+		local seed
+		if type(_random_seed) == "boolean" and _random_seed == true then
+			seed = math.round(math.random() * const.max_int)
+		else
+			seed = _seed or _mapgensettings.seed
+		end
+		local width = _width or _mapgensettings.width
+		local height = _height or _mapgensettings.height
+		local peaceful_mode = _peaceful or _mapgensettings.peaceful_mode
+		return struct.MapGenSettings(terrain_segmentation, water, autoplace_controls, seed, width, height, peaceful_mode)
+	end
 end
 
 function struct.AutoplaceControls_copy(_controls, _frequency, _size, _richness)
@@ -59,15 +71,15 @@ function struct.AutoplaceControls_copy(_controls, _frequency, _size, _richness)
 end
 
 function struct.MapGenSettings(_terrain, _water, _autoplace_controls, _seed, _width, _height, _peaceful)
-	return {
-		terrain_segmentation = (struct.is_MapGenFrequency(_terrain) and _terrain ~= "none") and _terrain or MapGenFrequency.default,
-		water = (struct.is_MapGenSize(_water)) and _water or MapGenSize.default,
-		autoplace_controls = struct.is_AutoplaceControls(_autoplace_controls) and _autoplace_controls or {},
-		seed = type(_seed) == "number" and math.round(_seed) or math.round(math.random() * const.max_int),
-		width = type(_width) == "number" and math.round(_width) or 0,
-		height = type(_height) == "number" and math.round(_height) or 0,
-		peaceful_mode = type(_peaceful) == "boolean" and _peaceful or false
-	}
+	local result = {}
+	result.terrain_segmentation = (struct.is_MapGenFrequency(_terrain) == true and _terrain ~= "none") and _terrain or MapGenFrequency.default
+	result.water = (struct.is_MapGenSize(_water) == true) and _water or MapGenSize.default
+	result.autoplace_controls = (struct.is_AutoplaceControls(_autoplace_controls) == true) and _autoplace_controls or {}
+	result.seed = (type(_seed) == "number") and math.round(_seed) or math.round(math.random() * const.max_int)
+	result.width = (type(_width) == "number") and math.round(_width) or 0
+	result.height = (type(_height) == "number") and math.round(_height) or 0
+	result.peaceful_mode = (type(_peaceful) == "boolean") and _peaceful or false
+	return result
 end
 
 function struct.AutoplaceControl(_frequency, _size, _richness)
@@ -84,7 +96,7 @@ Functions in the section below are used to determine validity
 
 function struct.is_Tiles(_tiles)
 	local _count = 0
-	if _tiles ~= nil then
+	if _tiles then
 		for k, v in pairs(_tiles) do
 			_count = _count + 1
 			if type(v.name) ~= "string" or struct.is_Position(v.position) ~= true then
@@ -116,19 +128,19 @@ function struct.is_AutoplaceControls(_controls)
 end
 
 function struct.is_MapGenFrequency(_frequency)
-	return (type(_frequency) == "string" and MapGenFrequency.valid[_frequency] ~= nil)
+	return (type(_frequency) == "string" and MapGenFrequency.valid[_frequency])
 end
 
 function struct.is_MapGenSize(_size)
-	return (type(_size) == "string" and MapGenSize.valid[_size] ~= nil)
+	return (type(_size) == "string" and MapGenSize.valid[_size])
 end
 
 function struct.is_MapGenRichness(_richness)
-	return (type(_richness) == "string" and MapGenRichness.valid[_richness] ~= nil)
+	return (type(_richness) == "string" and MapGenRichness.valid[_richness])
 end
 
 function struct.is_MapGenSettings(_mapgensettings)
-	return (_mapgensettings and _mapgensettings.terrain_segmentation and _mapgensettings.water and _mapgensettings.autoplace_controls and _mapgensettings.seed and _mapgensettings.width and _mapgensettings.height and _mapgensettings.peaceful_mode) and ((struct.is_MapGenFrequency(_mapgensettings.terrain_segmentation) and _mapgensettings.terrain_segmentation ~= "none") and struct.is_MapGenSize(_mapgensettings.water) and struct.is_AutoplaceControls(_mapgensettings.autoplace_controls) and type(_mapgensettings.seed) == "number" and type(_mapgensettings.width) == "number" and type(_mapgensettings.height) == "number" and type(_mapgensettings.peaceful_mode) == "boolean") or false
+	return (type(_mapgensettings) == "table" and type(_mapgensettings.terrain_segmentation) == "string" and type(_mapgensettings.water) == "string" and type(_mapgensettings.autoplace_controls) == "table" and type(_mapgensettings.seed) == "number" and type(_mapgensettings.width) == "number" and type(_mapgensettings.height) == "number" and type(_mapgensettings.peaceful_mode) == "boolean") and ((struct.is_MapGenFrequency(_mapgensettings.terrain_segmentation) == true and _mapgensettings.terrain_segmentation ~= "none") and (struct.is_MapGenSize(_mapgensettings.water) == true) and (struct.is_AutoplaceControls(_mapgensettings.autoplace_controls) == true)) or false
 end
 
 function struct.is_AutoplaceControl(_control)
@@ -182,5 +194,5 @@ function struct.TaskData(_id, _fields)
 end	
 
 function struct.is_TaskID(_id)
-	return (type(_id) == "number" and const.eventmgr.task_valid[_id] ~= nil)
+	return (type(_id) == "number" and const.eventmgr.task_valid[_id])
 end
