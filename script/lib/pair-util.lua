@@ -112,7 +112,7 @@ function pairutil.finalize_paired_entity(_entity, _paired_entity, _player_index)
 			elseif _pair_data.class == pairclass.get("fluid-transport") then
 				table.insert(global.fluid_transport, {a = _entity, b = _paired_entity})
 			elseif _pair_data.class == pairclass.get("transport-chest") then
-				table.insert(global.transport_chests, {input = _entity, output = _paired_entity, tier = _pair_data.custom.tier})
+				table.insert(global.transport_chests, {input = _entity, output = _paired_entity, tier = _pair_data.custom.tier, size = _pair_data.custom.size})
 			elseif _pair_data.class == pairclass.get("rail-transport") then
 				api.entity.set_direction(_paired_entity, api.entity.direction(_entity))
 			end
