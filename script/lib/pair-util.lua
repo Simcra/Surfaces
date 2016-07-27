@@ -112,7 +112,7 @@ function pairutil.finalize_paired_entity(_entity, _paired_entity, _player_index)
 			elseif _pair_data.class == pairclass.get("fluid-transport") then
 				table.insert(global.fluid_transport, {a = _entity, b = _paired_entity})
 			elseif _pair_data.class == pairclass.get("transport-chest") then
-				table.insert(global.transport_chests, {input = _entity, output = _paired_entity, tier = _pair_data.custom.tier})
+				table.insert(global.transport_chests, {input = _entity, output = _paired_entity, tier = _pair_data.custom.tier, size = _pair_data.custom.size})
 			elseif _pair_data.class == pairclass.get("rail-transport") then
 				api.entity.set_direction(_paired_entity, api.entity.direction(_entity))
 			end
@@ -138,7 +138,7 @@ end
 function pairutil.clear_ground(position, surface, radius, tile)
 	if struct.is_Position(position) and api.valid(surface) then
 		if surfaces.is_from_this_mod(surface) then
-			radius = radius or 0
+			radius = radius or 1
 			local area = struct.BoundingBox(position.x - radius, position.y - radius, position.x + radius, position.y + radius)
 			if surfaces.is_below_nauvis(surface) then
 				for k, v in pairs(api.surface.find_entities(surface, area, proto.get_field({"entity", "underground_wall"}, "name"), proto.get_field({"entity", "underground_wall"}, "type"))) do
@@ -162,7 +162,7 @@ end
 function pairutil.remove_tiles(position, surface, radius)
 	if struct.is_Position(position) and api.valid(surface) then
 		if surfaces.is_from_this_mod(surface) and surfaces.is_above_nauvis(surface) then
-			radius = radius or 0
+			radius = radius or 1
 			local area = struct.BoundingBox(position.x - radius, position.y - radius, position.x + radius, position.y + radius)
 			local safeArea = struct.BoundingBox(area.left_top.x - 1, area.left_top.y - 1, area.right_bottom.x + 1, area.right_bottom.y + 1)
 			local oldTiles, newTiles, entities = {}, {}, {}
