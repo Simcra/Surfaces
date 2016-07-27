@@ -37,7 +37,7 @@ function pairdata.insert(_entity_name, _pair_name, _pair_location, _pair_class, 
 		_pairdata.class = _pair_class
 		_pairdata.domain = _valid_surface_type and (table.reverse(const.surface.type, false, "id")[_valid_surface_type] and _valid_surface_type or const.surface.type.all.id) or const.surface.type.all.id
 		_pairdata.nauvis = _allowed_on_nauvis and (_allowed_on_nauvis == true or _allowed_on_nauvis == "true") or false
-		_pairdata.radius = (type(_ground_clear_radius) == "number" and _ground_clear_radius >= 0) and _ground_clear_radius or 0
+		_pairdata.radius = (type(_ground_clear_radius) == "number" and _ground_clear_radius >= 0) and _ground_clear_radius or 1
 		_pairdata.tile = (type(_sky_tile) == "string") and _sky_tile or proto.get_field({"tile", "floor", "wood"}, "name")
 		_pairdata.custom = _custom_data or {}
 		if _sky_tile then
@@ -45,6 +45,9 @@ function pairdata.insert(_entity_name, _pair_name, _pair_location, _pair_class, 
 		end
 		if _pair_class == pairclass.get("transport-chest") and (_custom_data == nil or _custom_data.tier == nil or table.reverse(const.tier)[_custom_data.tier] == nil) then
 			_pairdata.custom.tier = const.tier.crude
+		end
+		if _pair_class == pairclass.get("transport-chest") and (_custom_data == nil or _custom_data.size == nil) then
+			_pairdata.custom.size = 1
 		end
 		paired_entity_data[_entity_name] = _pairdata
 		index_data()

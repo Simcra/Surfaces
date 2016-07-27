@@ -185,6 +185,9 @@ function eventmgr.update_transport_chest_contents(event)
 			global.transport_chests[k] = nil
 		else
 			local max_items = config.item_transport.base_count * config.item_transport.multiplier[table.reverse(const.tier, true)[v.tier]]
+			if v.size then
+				max_items = max_items * v.size
+			end
 			local input = api.entity.get_inventory(v.input, defines.inventory.chest)
 			local output = api.entity.get_inventory(v.output, defines.inventory.chest)
 			for key, value in pairs(api.inventory.get_contents(input)) do

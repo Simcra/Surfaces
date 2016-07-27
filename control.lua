@@ -65,26 +65,26 @@ local entity_pair_data = {
 	{"sky-exit", "sky-entrance", rl_below, pc_acc_shaft, false, nil, 1, st_sky},
 	{"underground-entrance", "underground-exit", rl_below, pc_acc_shaft, true, nil, 1, st_und},
 	{"underground-exit", "underground-entrance", rl_above, pc_acc_shaft, false, nil, 1, st_und},
-	{"wooden-transport-chest-up", "wooden-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = const.tier.crude}},
-	{"wooden-transport-chest-down", "wooden-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = const.tier.crude}},
-	{"iron-transport-chest-up", "iron-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = const.tier.standard}},
-	{"iron-transport-chest-down", "iron-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = const.tier.standard}},
-	{"steel-transport-chest-up", "steel-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = const.tier.improved}},
-	{"steel-transport-chest-down", "steel-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = const.tier.improved}},
-	{"logistic-transport-chest-up", "logistic-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced}},
-	{"logistic-transport-chest-down", "logistic-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced}},
-	{"big-electric-pole-upper", "big-electric-pole-lower", rl_below, pc_elec_pole, true, 1},
-	{"big-electric-pole-lower", "big-electric-pole-upper", rl_above, pc_elec_pole, true, 1},
-	{"medium-electric-pole-upper", "medium-electric-pole-lower", rl_below, pc_elec_pole, true},
-	{"medium-electric-pole-lower", "medium-electric-pole-upper", rl_above, pc_elec_pole, true},
-	{"small-electric-pole-upper", "small-electric-pole-lower", rl_below, pc_elec_pole, true},
-	{"small-electric-pole-lower", "small-electric-pole-upper", rl_above, pc_elec_pole, true},
-	{"substation-upper", "substation-lower", rl_below, pc_elec_pole, true, 1},
-	{"substation-lower", "substation-upper", rl_above, pc_elec_pole, true, 1},
-	{"fluid-transport-upper", "fluid-transport-lower", rl_below, pc_fluid_trans, true},
-	{"fluid-transport-lower", "fluid-transport-upper", rl_above, pc_fluid_trans, true},
-	--{"train-stop-upper", "train-stop-lower", rl_below, pc_rail_trans, true, 2},
-	--{"train-stop-lower", "train-stop-upper", rl_above, pc_rail_trans, true, 2}
+	{"wooden-transport-chest-up", "wooden-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = const.tier.crude}, 1},
+	{"wooden-transport-chest-down", "wooden-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = const.tier.crude}, 1},
+	{"iron-transport-chest-up", "iron-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = const.tier.standard}, 1},
+	{"iron-transport-chest-down", "iron-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = const.tier.standard}, 1},
+	{"steel-transport-chest-up", "steel-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = const.tier.improved}, 1},
+	{"steel-transport-chest-down", "steel-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = const.tier.improved}, 1},
+	{"logistic-transport-chest-up", "logistic-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced}, 1},
+	{"logistic-transport-chest-down", "logistic-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced}, 1},
+	{"big-electric-pole-upper", "big-electric-pole-lower", rl_below, pc_elec_pole, true, nil, 1},
+	{"big-electric-pole-lower", "big-electric-pole-upper", rl_above, pc_elec_pole, true, nil, 1},
+	{"medium-electric-pole-upper", "medium-electric-pole-lower", rl_below, pc_elec_pole, true, nil, 1},
+	{"medium-electric-pole-lower", "medium-electric-pole-upper", rl_above, pc_elec_pole, true, nil, 1},
+	{"small-electric-pole-upper", "small-electric-pole-lower", rl_below, pc_elec_pole, true, nil, 1},
+	{"small-electric-pole-lower", "small-electric-pole-upper", rl_above, pc_elec_pole, true, nil, 1},
+	{"substation-upper", "substation-lower", rl_below, pc_elec_pole, true, nil, 1},
+	{"substation-lower", "substation-upper", rl_above, pc_elec_pole, true, nil, 1},
+	{"fluid-transport-upper", "fluid-transport-lower", rl_below, pc_fluid_trans, true, nil, 1},
+	{"fluid-transport-lower", "fluid-transport-upper", rl_above, pc_fluid_trans, true, nil, 1}--,
+	--{"train-stop-upper", "train-stop-lower", rl_below, pc_rail_trans, true, nil, 2},
+	--{"train-stop-lower", "train-stop-upper", rl_above, pc_rail_trans, true, nil, 2}
 }
 pairdata.insert_array(entity_pair_data)
 
@@ -103,14 +103,14 @@ end
 
 local addon_data = {
 	warehousing = {
-		{"transport-storehouse-up", "receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.standard}, 1},
-		{"transport-storehouse-down", "receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.standard}, 1},
-		{"logistic-transport-storehouse-up", "logistic-receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced}, 1},
-		{"logistic-transport-storehouse-down", "logistic-receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced}, 1},
-		{"transport-warehouse-up", "receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.improved}, 2},
-		{"transport-warehouse-down", "receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.improved}, 2},
-		{"logistic-transport-warehouse-up", "logistic-receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced}, 2},
-		{"logistic-transport-warehouse-down", "logistic-receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced}, 2}
+		{"transport-storehouse-up", "receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.standard, size = 36}, 1},
+		{"transport-storehouse-down", "receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.standard, size = 36}, 1},
+		{"logistic-transport-storehouse-up", "logistic-receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced, size = 36}, 1},
+		{"logistic-transport-storehouse-down", "logistic-receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced, size = 36}, 1},
+		{"transport-warehouse-up", "receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.improved, size = 9}, 2},
+		{"transport-warehouse-down", "receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.improved, size = 9}, 2},
+		{"logistic-transport-warehouse-up", "logistic-receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced, size = 9}, 2},
+		{"logistic-transport-warehouse-down", "logistic-receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced, size = 9}, 2}
 	}
 }
 events.set_addon_data(addon_data)
