@@ -78,17 +78,15 @@ end
 -- This function is called whenever a chunk is generated
 function events.on_chunk_generated(_event)
 	if surfaces.is_from_this_mod(_event.surface) then
-		local _surface, _area = _event.surface, _event.area
-		local _surface_name, _is_underground, _tiles = api.name(_surface), surfaces.is_below_nauvis(_surface), {}
+		local _surface, _area, _tiles = _event.surface, _event.area, {}
+		local _is_underground = surfaces.is_below_nauvis(_surface.name)
 		local _tile_name = ((_is_underground == true) and tn_und_wall or tn_sky_void)
-		local _x1, _y1, _x2, _y2 = _area.left_top.x, _area.left_top.y, _area.right_bottom.x, _area.right_bottom.y
-		local _tile_positions = struct.Positions(struct.BoundingBox(_x1, _y1, _x2 - 1, _y2 - 1))
 		
 		-- freeze daytime for this surface at midnight if it is an underground surface
-		if _is_underground == true and global.mod_surfaces[_surface_name] == nil then
+		if _is_underground and global.mod_surfaces[_surface.name] == nil then
 			_surface.daytime = 0.5
 			_surface.freeze_daytime(true)
-			global.mod_surfaces[_surface_name] = true
+			global.mod_surfaces[_surface.name] = true
 		end
 		
 		-- destroy entities which should not spawn on this surface, gathering information for clearing the ground prior to replacing tiles
@@ -99,25 +97,29 @@ function events.on_chunk_generated(_event)
 				pairutil.clear_ground(_position, _surface, _pairdata.radius, _pairdata.custom.tile)
 			elseif _is_underground ~= true then
 				if _type ~= "player" then
-					api.destroy(v)
+					v.destroy()
 				end
 			elseif _type == "unit-spawner" then
 				pairutil.clear_ground(_position, _surface, 11)
 			elseif _type == "turret" then
 				pairutil.clear_ground(_position, _surface, 10)
 			elseif _type ~= "resource" and _type ~= "unit" and _name ~= en_und_wall and _type ~= "player" then
-				api.destroy(v)
+				v.destroy()
 			end
 		end
 		
 		-- iterate over tile positions in the chunk and gather data into one table so that the tiles may be replaced all at once.
-		for k, v in pairs(_tile_positions) do
-			local _current_tile = api.surface.get_tile(_surface, v)
-			local _current_tile_name = api.name(_current_tile)
-			if (_is_underground and (const.override_tiles[_current_tile_name] or _current_tile.collides_with("ground-tile") ~= true)) or 
-				(_is_underground ~= true and skytiles.get(_current_tile_name) == nil
-			) then
-				table.insert(_tiles, {name = _tile_name, position = v})
+		local _cur_x, _cur_y = {}
+		for _y = 0, 31, 1 do
+			_cur_y = _area.left_top.y + _y
+			for _x = 0, 31, 1 do
+				_cur_x = _area.left_top.x + _x
+				local _cur_tile = api.surface.get_tile(_surface, {x = _cur_x, y = _cur_y})
+				if (_is_underground and (const.override_tiles[_cur_tile.name] or _cur_tile.collides_with("ground-tile") ~= true)) or
+					(_is_underground ~= true and skytiles.get(_cur_tile.name) == nil
+				) then
+					table.insert(_tiles, {name = _tile_name, position = {x = _cur_x, y = _cur_y}})
+				end
 			end
 		end
 		api.surface.set_tiles(_surface, _tiles) -- replace the normally generated tiles with underground walls or sky tiles

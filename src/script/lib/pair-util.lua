@@ -159,24 +159,25 @@ function pairutil.clear_ground(_position, _surface, _radius, _tile_name, _ignore
 	if struct.is_Position(_position) and api.valid(_surface) then
 		if surfaces.is_from_this_mod(_surface) then
 			_radius = (type(_radius) == "number" and _radius >= 0) and _radius or 0
-			local _area = struct.BoundingBox(_position.x - _radius, _position.y - _radius, _position.x + _radius, _position.y + _radius)
+			local _x1, _y1, _x2, _y2 = _position.x - _radius, _position.y - _radius, _position.x + _radius, _position.y + _radius
+			local _area, _tiles, _old_tiles = struct.BoundingBox(_x1, _y1, _x2, _y2), {},  {}
 			local _is_underground = surfaces.is_below_nauvis(_surface)
-			local _tiles, _old_tiles = {}, {}
 			if _is_underground == true and _ignore_walls ~= true then
 				for k, v in pairs(api.surface.find_entities(_surface, _area, en_und_wall, et_und_wall)) do
 					api.destroy(v)
 				end
 			end
-			for k, v in pairs(struct.Positions(_area)) do
-				local _current_tile = api.surface.get_tile(_surface, v)
-				local _current_tile_name = api.name(_current_tile)
-				if _is_underground == true then
-					table.insert(_old_tiles, {name = ((override_tiles[_current_tile_name]) and tn_und_dirt or _current_tile_name), position = v})
-					table.insert(_tiles, {name = tn_und_dirt, position = v})
-				else
-					_tile_name = _tile_name or tn_wood_floor
-					table.insert(_old_tiles, {name = ((skytiles.get(_current_tile_name)) and _current_tile_name or _tile_name), position = v})
-					table.insert(_tiles, {name = _tile_name, position = v})
+			for _y = _y1, _y2, 1 do
+				for _x = _x1, _x2, 1 do
+					local _cur_tile = api.surface.get_tile(_surface, {x = _x, y = _y})
+					if _is_underground == true then
+						table.insert(_old_tiles, {name = ((override_tiles[_cur_tile.name]) and tn_und_dirt or _cur_tile.name), position = {x = _x, y = _y}})
+						table.insert(_tiles, {name = tn_und_dirt, position = {x = _x, y = _y}})
+					else
+						_tile_name = _tile_name or tn_wood_floor
+						table.insert(_old_tiles, {name = ((skytiles.get(_current_tile_name)) and _current_tile_name or _tile_name), position = {x = _x, y = _y}})
+						table.insert(_tiles, {name = _tile_name, position = {x = _x, y = _y}})
+					end
 				end
 			end
 			api.surface.set_tiles(_surface, _tiles)
