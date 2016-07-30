@@ -1,15 +1,17 @@
-Setting up the IDE:
-In order to make source code management easier I use Eclipse LDT (Lua Development Tools), you can download it for free from <a href=https://eclipse.org/ldt/>this page</a>.
-Wherever you set your default workspace location you should place the files you downloaded from this repository in a folder labelled "Surfaces"
+Setting up Eclipse LDT:
+In order to make source code management easier I use Eclipse LDT (Lua Development Tools), you can download it for free from https://eclipse.org/ldt/
+Remember where you choose to set your default workspace when you first open Eclipse LDT, this is where you will be putting the files you downloaded.
+In your workspace location, create a folder labelled "Surfaces" and place the files and directories from this repo into it
 
-I have included build scripts and run scripts for Windows but the Linux ones are a work-in-progress.
+I have included build scripts and run scripts for Windows but Linux scripts are a work-in-progress, feel free to contribute.
 The run script will only work if you have the Steam version of Factorio and use the AppData configuration path.
-For copyright reasons I cannot distribute all of the files required to build the mod, you will need to download the following files, put them in the root project folder (<workspace folder>\Surfaces\), and rename if they are not named as they should be.
+For copyright reasons I cannot distribute all of the files required to build the mod.
+You will need to download the following files, put them in the root project folder (<workspace folder>\Surfaces\), and rename if they are not named as they should be.
 
-Download URL | Filename
-<a href=http://stahlworks.com/dev/zip.exe>http://stahlworks.com/dev/zip.exe>zip</a> | zip.exe
-<a href=https://github.com/stedolan/jq/releases/download/jq-1.5/jq-win32.exe>jq (32-bit)</a> | jq.exe
-<a href=https://github.com/stedolan/jq/releases/download/jq-1.5/jq-win64.exe>jq (64-bit)</a> | jq.exe
+Download URL | Description | Filename
+http://stahlworks.com/dev/zip.exe | zip binaries for zipping files from the windows command line | zip.exe
+https://github.com/stedolan/jq/releases/download/jq-1.5/jq-win32.exe | reads data from .json files, this is the 32-bit version | jq.exe
+https://github.com/stedolan/jq/releases/download/jq-1.5/jq-win64.exe | reads data from .json files, this is the 64-bit version | jq.exe
 
 The provided build scripts can be tied into the Eclipse LDT through the following procedure:
 - Open any of the files in the Surfaces project.
