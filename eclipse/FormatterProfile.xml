@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<profiles>
+<profile formatter="org.eclipse.ldt.editor.LuaFormatterFactory" name="Simcra" version="1">
+<setting id="formatter.tabulation.char" value="tab"/>
+<setting id="formatter.indentation.indentTables" value="true"/>
+<setting id="formatter.indentation.size" value="4"/>
+<setting id="formatter.tabulation.size" value="4"/>
+</profile>
+</profiles>

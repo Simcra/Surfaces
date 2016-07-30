@@ -59,6 +59,17 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 
-# Data folder
-data/
-/nbproject/
+# Project Files
+# =========================
+
+# Resource and build files
+bin/
+rsc/
+jq.exe
+zip.exe
+
+# IDE files
+.externalToolBuilders/
+.settings/
+.buildpath
+.project

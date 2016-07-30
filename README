@@ -1,0 +1,43 @@
+Setting up the IDE:
+In order to make source code management easier I use Eclipse LDT (Lua Development Tools), you can download it for free from <a href=https://eclipse.org/ldt/>this page</a>.
+Wherever you set your default workspace location you should place the files you downloaded from this repository in a folder labelled "Surfaces"
+
+I have included build scripts and run scripts for Windows but the Linux ones are a work-in-progress.
+The run script will only work if you have the Steam version of Factorio and use the AppData configuration path.
+For copyright reasons I cannot distribute all of the files required to build the mod, you will need to download the following files, put them in the root project folder (<workspace folder>\Surfaces\), and rename if they are not named as they should be.
+
+Download URL | Filename
+<a href=http://stahlworks.com/dev/zip.exe>http://stahlworks.com/dev/zip.exe>zip</a> | zip.exe
+<a href=https://github.com/stedolan/jq/releases/download/jq-1.5/jq-win32.exe>jq (32-bit)</a> | jq.exe
+<a href=https://github.com/stedolan/jq/releases/download/jq-1.5/jq-win64.exe>jq (64-bit)</a> | jq.exe
+
+The provided build scripts can be tied into the Eclipse LDT through the following procedure:
+- Open any of the files in the Surfaces project.
+- From the Project menu, select Properties (near the bottom of the menu)
+- Select Builders -> New... -> Program
+- Under location, click Browse Workspace... -> Select build.bat (for Windows users) or build.sh (for Linux users) and click OK
+- Location should now say, ${workspace_loc:/Surfaces/build.bat} or ${workspace_loc:/Surfaces/build.sh}.
+- Set Working Directory to ${workspace_loc:/Surfaces}
+- The rest of the settings can be left default, although I would strongly recommend heading over to the Build Options tab and unchecking During auto builds under Run the builder
+
+The run scripts can be tied into the Eclipse LDT through the following procedure:
+- Open any of the files in the Surfaces project.
+- From the Run menu, under External Tools click External Tools Configuration
+- Right click Program and click New
+- Under location, click Browse Workspace... -> Select run.bat (for Windows users) or run.sh (for Linux users) and click OK
+- Location should now say, ${workspace_loc:/Surfaces/run.bat} or ${workspace_loc:/Surfaces/run.sh}.
+- Set Working Directory to ${workspace_loc:/Surfaces}
+- The rest of the settings can be left default
+
+Submitting pull requests:
+Let me be clear about this, I'm absolutely thrilled to accept and merge pull requests but there are a few things that you should be informed of prior to your first pull request.
+- Please don't submit "compressed" uncommented code, this stuff is an absolute nightmare for EVERYONE.
+- Comments and Documentation are vital to the understanding and continued maintenance of any source code. It doesn't matter if you can't spell or are horrible with grammar, comments and documentation provide critical insight into program functionality.
+- Whitespace and formatting: Personally I like to use tabs because I find it easier to work. If you want to use spaces, that's fine too just please don't reformat the whole project. That would make me very sad and create unnecessary work.
+- Constructive criticism is welcome and encouraged! I will use the discussion feature in pull requests if I feel it is necessary, please don't take anything I say (or don't say) personally, I don't mean to offend anyone for any reason.
+
+License:
+A copy of the license is included in the root folder of this Project, please take note of the following restrictions at a bare minimum:
+- You may not license this mod or any derivatives under any license other than a CC BY-NC-SA compatibile license
+- The licensed material and any derivatives (this mod) may be used for NonCommercial purposes only.
+- If you share the licensed material (this mod), even in modified form, you must attribute where you obtained the original material. (A URL to the github page is fine)
