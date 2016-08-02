@@ -356,7 +356,7 @@ _prototypes.entity = { -- Entities
 
 _prototypes.technology = { -- Technology
 
-	}
+}
 
 _prototypes.tile = { -- Tiles
 	common = {type = "tile", decorative_removal_probability = 1, collision_mask = {"ground-tile"}, needs_correction = false, ageing = 0, group = _prototypes.item_group.surfaces.name},
@@ -454,6 +454,9 @@ _prototypes.warehousing = { -- Warehousing mod
 		logistics = {name = "warehouse-logistics-research"},
 		warehouse = {name = "warehouse-research"}
 	}
+}
+_prototypes.bobpower = { -- Bob's Power mod
+
 }
 
 _prototypes.recipe = { -- Recipes

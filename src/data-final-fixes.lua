@@ -8,9 +8,9 @@ require("script.proto")
 require("script.lib.compat-data")
 
 --[[
-Pre-init mod compatibility stuff, array to be passed in format "index = data" where:
-	- index should be the mod name as described by the specific mod string
-	- data should be a boolean, may be a result of tests or otherwise passed simply as true or false
+Mod compatibility data, array to be passed in format "name = is_active" where:
+	- index is the name of the mod found in it's info.json file\
+	- is_active is a boolean, calculated through checks or provided as <code>true</code> or <code>false</code>
 ]]
 local mod_data = {
 	["bobelectronics"] = (type(bobmods) == "table" and data.raw["recipe"]["bob-rubber"] ~= nil),
@@ -18,10 +18,22 @@ local mod_data = {
 }
 compat.insert_data(mod_data)
 
--- Final fixes
+-- Other prototypes which are only loaded when optional mods are installed
+if compat.active("warehousing") == true then
+	require("prototypes.item.addons.warehousing")
+	require("prototypes.entity.addons.warehousing")
+	require("prototypes.recipe.addons.warehousing")
+end
+if compat.active("bobpower") == true then
+	--require("prototypes.item.addons.bobpower")
+	--require("prototypes.entity.addons.bobpower")
+	--require("prototypes.recipe.addons.bobpower")
+end
 if compat.active("squeak through") == true then
 	data.raw["tree"][proto.get_field({"entity", "underground_wall"}, "name")].collision_box = {{-0.499, -0.499}, {0.499, 0.499}}
 end
+
+-- Final recipe fixes
 if compat.active("bobelectronics") == true then
 	local _tinned_copper_cable = (data.raw["item"]["tinned-copper-cable"] ~= nil)
 	data.raw["recipe"][proto.get_field({"recipe", "connector", "crude"}, "name")].ingredients = {

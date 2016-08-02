@@ -165,31 +165,33 @@ Constructs a table of ResistancesProfiles from provided table
 ]]
 function struct_base.Resistances(_resistances)
 	if type(_resistances) == "table" then
-		local _resistances = {}
+		local _result = {}
 		for k, v in pairs(_resistances) do
-			if struct_base.is_ResistanceProfile(v) then
-				table.insert(_resistances, v)
+			if struct_base.is_ResistanceProfile(v) and v.type then
+				_result[v.type] = struct_base.ResistanceProfile(v.type, v.percent, v.decrease)
 			elseif type(v) == "table" and type(v[1]) == "string" then
-				table.insert(_resistances, struct_base.ResistanceProfile(v[1], v[2], v[3]))
+				_result[v[1]] = struct_base.ResistanceProfile(v[1], v[2],v[3])
 			end
 		end
-		return _resistances
+		return _result
 	end
 end
 
 --[[--
-Constructs a ResistanceProfile from provided parameters
+Constructs a ResistanceProfile from provided parameters, only one of _decrease and _percentage is required, the other may be omitted if necessary. 
 
-@param _type [Required] - a string value associated with a damage type, for example: "impact"
+@param _type [Optional] - a string value associated with a damage type, for example: "impact", or nil.
 @param _percentage [Optional] - a number value between 0 and 100, any values greater than 100 will be corrected.
 @param _decrease [Optional] - a number value, used to provide a static decrease (prior to percentage calculation) for this resistance type
 @return ResistanceProfile
 ]]
 function struct_base.ResistanceProfile(_type, _percentage, _decrease)
-	if type(_type) == "string" then
-		local _resistance = {type = _type}
-		if type(_percentage) == "number" then _resistance.percent = (_percentage > 100) and 100 or _percentage end
-		if type(_decrease) == "number" then _resistance.decrease = _decrease end
+	local _has_percentage, _has_decrease = (type(_percentage) == "number"), (type(_decrease) == "number")
+	if _has_percentage or _has_decrease then
+		local _resistance = {}
+		if type(_type) == "string" then _resistance.type = _type end			
+		if _has_percentage then _resistance.percent = (_percentage > 100) and 100 or _percentage end
+		if _has_decrease then _resistance.decrease = _decrease end
 		return _resistance
 	end
 end
@@ -202,14 +204,8 @@ Is this a valid ResistanceProfile?
 ]]
 function struct_base.is_ResistanceProfile(_resistance)
 	if type(_resistance) == "table" then
-		local _percent, _decrease, _type = _resistance.percent, _resistance.decrease, _resistance.type
-		if type(_type) == "string" and (_decrease or _percent) then
-			if type(_percent) == "number" and _percent <= 100 and (_decrease == nil or type(decrease) == "number") then
-				return true
-			elseif type(_decrease) == "number" and (_percent == nil or (type(_percent) == "number" and _percent <= 100 and _percent > 0)) then
-				return true
-			end
-		end
+		return (type(_resistance.decrease) == "number" or (type(_resistance.percent) == "number"
+			and _resistance.percent <= 100 and _resistance.percent > 0))
 	end
 	return false
 end

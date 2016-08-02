@@ -8,12 +8,13 @@ require("script.proto")
 require("script.lib.compat-data")
 
 --[[
-Pre-init mod compatibility stuff, array to be passed in format "index = data" where:
-	- index should be the mod name as described by the specific mod string
-	- data should be a boolean, may be a result of tests or otherwise passed simply as true or false
+Mod compatibility data, array to be passed in format "name = is_active" where:
+	- index is the name of the mod found in it's info.json file\
+	- is_active is a boolean, calculated through checks or provided as <code>true</code> or <code>false</code>
 ]]
 local _mod_data = {
 	["bobwarfare"] = (type(bobmods) == "table" and type(bobmods.warfare) == "table"),
+	["bobpower"] = (type(bobmods) == "table" and type(bobmods.power) == "table"),
 	["warehousing"] = (type(define_warehouse) == "function")
 }
 compat.insert_data(_mod_data)
@@ -54,10 +55,3 @@ require("prototypes.recipe.transport.transport-chest")
 require("prototypes.recipe.transport.electric-pole")
 --require("prototypes.recipe.transport.rail-transport")
 require("prototypes.recipe.transport.fluid-transport")
-
--- Other prototypes which are only loaded when optional mods are installed
-if compat.active("warehousing") == true then
-	require("prototypes.item.addons.warehousing")
-	require("prototypes.entity.addons.warehousing")
-	require("prototypes.recipe.addons.warehousing")
-end

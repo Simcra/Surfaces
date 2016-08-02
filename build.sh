@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd $(dirname "$0")
+cd $(dirname \"$0\")
 
 export VER = `cat src/info.json | grep \"version\" | sed -r 's/.*: \"([0-9]+\.[0-9]+\.[0-9]+)\".*/\1/'`
 
@@ -10,4 +10,5 @@ fi
 if [! -d "bin/Surfaces_$VER"]; then
     mkdir "bin/Surfaces_$VER"
 fi
+
 zip -r "bin/Surfaces_$VER.zip" "bin/Surfaces_$VER"

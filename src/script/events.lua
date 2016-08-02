@@ -97,14 +97,14 @@ function events.on_chunk_generated(_event)
 				pairutil.clear_ground(_position, _surface, _pairdata.radius, _pairdata.custom.tile)
 			elseif _is_underground ~= true then
 				if _type ~= "player" then
-					v.destroy()
+					api.destroy(v)
 				end
 			elseif _type == "unit-spawner" then
 				pairutil.clear_ground(_position, _surface, 11)
 			elseif _type == "turret" then
 				pairutil.clear_ground(_position, _surface, 10)
 			elseif _type ~= "resource" and _type ~= "unit" and _name ~= en_und_wall and _type ~= "player" then
-				v.destroy()
+				api.destroy(v)
 			end
 		end
 		
