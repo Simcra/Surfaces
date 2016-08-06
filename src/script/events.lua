@@ -28,6 +28,7 @@ local pause_event = {}
 -- declare local variables
 local en_und_wall = proto.get_field({"entity", "underground_wall"}, "name")
 local tn_und_wall = proto.get_field({"tile", "underground_wall"}, "name")
+local tn_und_dirt = proto.get_field({"tile", "underground_dirt"}, "name")
 local tn_sky_void = proto.get_field({"tile", "sky_void"}, "name")
 local tasks = const.eventmgr.task
 local handles = const.eventmgr.handle
@@ -109,7 +110,7 @@ function events.on_chunk_generated(_event)
 		end
 		
 		-- iterate over tile positions in the chunk and gather data into one table so that the tiles may be replaced all at once.
-		local _cur_x, _cur_y = {}
+		local _cur_x, _cur_y
 		for _y = 0, 31, 1 do
 			_cur_y = _area.left_top.y + _y
 			for _x = 0, 31, 1 do
@@ -278,6 +279,86 @@ function eventmgr.update_transport_chest_contents(_event)
 				break
 			end
 		end
+	end
+end
+
+function eventmgr.surfaces_migrations(_event)
+	for k, v in pairs(global.surfaces_to_migrate) do
+		if v.migrated then
+			if v.player then
+				api.entity.teleport(v.player.entity, v.player.position, v.player.surface) -- move the player back to his position prior to surface migrations
+			end
+			api.game.delete_surface(v.surface) -- first, we created the universe, and now, we must destroy it with fire!
+			global.surfaces_to_migrate[k] = nil -- remove this entry, we are done here.
+		elseif not(v.migrating) then
+			global.surfaces_to_migrate[k].migrating = true -- lock process chain to this worker to prevent this from being completed multiple times
+			
+			-- declaring local variables
+			local _surface, _new_surface = v.surface, v.new_surface
+			local _is_underground, _is_platform = v.underground, v.platform
+			local _chunks_generated = true
+			
+			-- first loop, check that all chunks are generated prior to processing.
+			for _chunk in api.surface.get_chunks(_surface) do
+				if not(api.surface.is_chunk_generated(_new_surface, _chunk, true)) then
+					_chunks_generated = false
+				end
+			end
+			
+			-- chunks were not generated, we need to move a player since surfaces won't generate without at least one player being present
+			if _chunks_generated ~= true then
+				local _player_one = api.game.player(1)
+				if api.valid(_player_one) then
+					local _old_surface = api.name(_player_one.character.surface)
+					if _old_surface == api.name(_surface) then 
+						_old_surface = api.name(_new_surface)	-- We are going to delete the old surface, let's not kill the player in the process :)
+					end
+					local _old_position = table.deepcopy(_player_one.character.position)
+					global.surfaces_to_migrate[k].player = {entity = _player_one, surface = _old_surface, position = _old_position}
+					surfaces.transport_player(_player_one, _new_surface, _struct.Position(0, 0), 128, 1)
+				end
+				v.migrating = nil -- we are finished processing for now, remove the lock.
+				return -- wait for next loop, giving the surface a chance to generate.
+			end			
+			
+			-- Now we can actually do some processing, hooray.
+			for _chunk in api.surface.get_chunks(_surface) do
+				local _cx, _cy, _cur_x, _cur_y = _chunk.x * 32, _chunk.y * 32
+				local _old_tiles, _tiles = {}, {}
+				for _y = 0, 31, 1 do
+					_cur_y = _cy + _y
+					for _x = 0, 31, 1 do
+						_cur_x = _cx + _x
+						local _cur_tile = api.surface.get_tile(_surface, {x = _cur_x, y = _cur_y})
+						if (_is_underground) then
+							table.insert(_old_tiles, {name = tn_und_dirt, position = {x = _cur_x, y = _cur_y}})
+						elseif (_is_platform) then
+							table.insert(_old_tiles, {name = tn_sky_void, position = {x = _cur_x, y = _cur_y}})
+						end
+						table.insert(_tiles, {name = api.name(_cur_tile), position = {x = _cur_x, y = _cur_y}})
+					end
+				end
+				api.surface.set_tiles(_new_surface, _old_tiles)
+				api.surface.set_tiles(_new_surface, _tiles)
+			end
+			
+			-- iterate over all of the entities in the old surface, copying them one by one to the new surface
+			for k, v in pairs(api.surface.find_entities(_surface)) do
+				if api.type(v) ~= "player" then
+					api.surface.create_entity(_new_surface, {
+						name = api.name(v),
+						position = api.position(v),
+						direction = api.entity.direction(v),
+						force = api.entity.force(v)
+					})
+				else
+					api.entity.teleport(v.player, api.position(v), _new_surface)
+				end
+			end
+			
+			global.surfaces_to_migrate[k].migrated = true -- we are done, wait for next cycle and finish up
+		end
+		return -- only process one surface at a time, let's not kill the game just yet...
 	end
 end
 

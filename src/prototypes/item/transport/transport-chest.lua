@@ -9,13 +9,6 @@ local steel_transport_down = proto.get({"item", "transport_chest", "steel"}, "do
 local steel_transport_up = proto.get({"item", "transport_chest", "steel"}, "up", true)
 local logistic_transport_down = proto.get({"item", "transport_chest", "logistic"}, "down", true)
 local logistic_transport_up = proto.get({"item", "transport_chest", "logistic"}, "up", true)
-wooden_transport_down.place_result = proto.get_field({"entity", "transport_chest", "wood", "down"}, "name")
-wooden_transport_up.place_result = proto.get_field({"entity", "transport_chest", "wood", "up"}, "name")
-iron_transport_down.place_result = proto.get_field({"entity", "transport_chest", "iron", "down"}, "name")
-iron_transport_up.place_result = proto.get_field({"entity", "transport_chest", "iron", "up"}, "name")
-steel_transport_down.place_result = proto.get_field({"entity", "transport_chest", "steel", "down"}, "name")
-steel_transport_up.place_result = proto.get_field({"entity", "transport_chest", "steel", "up"}, "name")
-logistic_transport_down.place_result = proto.get_field({"entity", "transport_chest", "logistic", "down"}, "name")
-logistic_transport_up.place_result = proto.get_field({"entity", "transport_chest", "logistic", "up"}, "name")
 
-data:extend({wooden_transport_down, wooden_transport_up, iron_transport_down, iron_transport_up, steel_transport_down, steel_transport_up, logistic_transport_down, logistic_transport_up})
+data:extend({wooden_transport_down, wooden_transport_up, iron_transport_down, iron_transport_up, steel_transport_down, steel_transport_up,
+	logistic_transport_down, logistic_transport_up})

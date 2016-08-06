@@ -8,13 +8,5 @@ local big_lower = proto.get({"entity", "electric_pole", "big"}, "lower", true, d
 local big_upper = proto.get({"entity", "electric_pole", "big"}, "upper", true, data.raw["electric-pole"]["big-electric-pole"])
 local substation_lower = proto.get({"entity", "electric_pole", "substation"}, "lower", true, data.raw["electric-pole"]["substation"])
 local substation_upper = proto.get({"entity", "electric_pole", "substation"}, "upper", true, data.raw["electric-pole"]["substation"])
-small_lower.minable.result = proto.get_field({"item", "electric_pole", "small", "lower"}, "name")
-small_upper.minable.result = proto.get_field({"item", "electric_pole", "small", "upper"}, "name")
-medium_lower.minable.result = proto.get_field({"item", "electric_pole", "medium", "lower"}, "name")
-medium_upper.minable.result = proto.get_field({"item", "electric_pole", "medium", "upper"}, "name")
-big_lower.minable.result = proto.get_field({"item", "electric_pole", "big", "lower"}, "name")
-big_upper.minable.result = proto.get_field({"item", "electric_pole", "big", "upper"}, "name")
-substation_lower.minable.result = proto.get_field({"item", "electric_pole", "substation", "lower"}, "name")
-substation_upper.minable.result = proto.get_field({"item", "electric_pole", "substation", "upper"}, "name")
 
 data:extend({small_upper, small_lower, medium_upper, medium_lower, big_upper, big_lower, substation_upper, substation_lower})

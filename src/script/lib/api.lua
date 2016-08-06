@@ -168,6 +168,10 @@ function api.entity.direction(_entity)
 	return (api.valid(_entity) and _entity.direction or nil)
 end
 
+function api.entity.force(_entity)
+	return (api.valid(_entity) and _entity.force or nil)
+end
+
 function api.entity.set_direction(_entity, _direction)
 	if api.valid(_entity) and struct.is_Direction(_direction) and _entity.direction then
 		_entity.direction = _direction
@@ -273,6 +277,12 @@ end
 
 function api.game.create_surface(_name, _mapgensettings)
 	return (type(_name) == "string" and struct.is_MapGenSettings(_mapgensettings)) and game.create_surface(_name, _mapgensettings) or nil
+end
+
+function api.game.delete_surface(_surface)
+	if type(_surface) == "string" or type(_surface) == "number" or api.valid(_surface) then
+		game.delete_surface(_surface)
+	end
 end
 
 function api.game.raise_event(_id, _data)
@@ -391,6 +401,8 @@ function api.surface.find_entities(_surface, _area, _entity_name, _entity_type, 
 			end
 		elseif (struct.is_Position(_area)) then
 			return _surface.find_entities_filtered({position = _area, name = _entity_name, type = _entity_type, force = _entity_force})
+		else
+			return _surface.find_entities_filtered({name = _entity_name, type = _entity_type, force = _entity_force})
 		end
 	end
 	return nil
@@ -408,11 +420,19 @@ function api.surface.get_tile_properties(_surface, _position)
 	return (api.valid(_surface) and struct.is_Position(_position)) and _surface.get_tileproperties(_position.x, _position.y) or nil
 end
 
-function api.surface.is_chunk_generated(_surface, _position)
-	return (api.valid(_surface) and struct.is_Position(_position)) and _surface.is_chunk_generated(struct.Position(math.floor(_position.x/32), math.floor(_position.y/32))) or nil
+function api.surface.is_chunk_generated(_surface, _position, _using_chunk_position)
+	if api.valid(_surface) and struct.is_Position(_position) then
+		if _using_chunk_position then
+			return _surface.is_chunk_generated(_position)
+		else
+			local _chunk_x, _chunk_y = math.floor(_position.x/32), math.floor(_position.y/32) 
+			return _surface.is_chunk_generated(struct.Position(_chunk_x, _chunk_y))
+		end
+	end
+	return nil
 end
 
-function api.surface.chunk_iterator(_surface)
+function api.surface.get_chunks(_surface)
 	return api.valid(_surface) and _surface.get_chunks() or nil
 end
 

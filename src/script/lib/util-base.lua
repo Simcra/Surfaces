@@ -27,7 +27,7 @@ function table.tostring(t, add_spacing)
 	local result = "{"
 	local equalstring = "="
 	local commastring = ","
-	if add_spacing and (add_spacing == true or add_spacing == "true") then
+	if add_spacing then
 		equalstring = " = "
 		commastring = ", "
 	end
@@ -59,7 +59,6 @@ The following is true:
 ]] 
 function table.reverse(t, store_old_index, subtable_index)
 	local rTable = {}
-	store_old_index = (store_old_index and store_old_index == true)
 	if subtable_index then
 		for k, v in pairs(t) do
 			if v[subtable_index] then

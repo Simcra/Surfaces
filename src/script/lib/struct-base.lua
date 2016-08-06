@@ -55,11 +55,11 @@ Constructs storage tank Pictures from provided Picture parameters
 @return StorageTankPictures
 ]]
 function struct_base.StorageTankPictures(_picture_sheet, _fluid_background, _window_background, _flow_sprite)
-	return {
-		picture = {sheet = struct_base.is_Picture(_picture_sheet) == true and _picture_sheet or const.pictures.blank},
-		fluid_background = struct_base.is_Picture(_fluid_background) == true and _fluid_background or const.pictures.blank,
-		window_background = struct_base.is_Picture(window_background) == true and window_background or const.pictures.blank,
-		flow_sprite = struct_base.is_Picture(flow_sprite) == true and flow_sprite or const.pictures.blank
+	local _blank = struct_base.Picture("__base__/graphics/terrain/blank.png", "extra-high", 32, 32)
+	return {picture = {sheet = struct_base.is_Picture(_picture_sheet) == true and _picture_sheet or _blank,
+		fluid_background = struct_base.is_Picture(_fluid_background) == true and _fluid_background or _blank,
+		window_background = struct_base.is_Picture(_window_background) == true and _window_background or _blank,
+		flow_sprite = struct_base.is_Picture(_flow_sprite) == true and _flow_sprite or _blank}
 	}
 end
 
@@ -101,6 +101,32 @@ function struct_base.Variant(_picture, _count, _size, _probability)
 end
 
 --[[--
+Constructs picture Variants from provided parameters
+
+@param _gfxpath [Required] - the path to the images, example: "__Surfaces__/graphics/terrain/"
+@param _name [Required] - the name of the prototype, used to construct each Variant filename, example: "wooden-floor"
+@param _count [Required] - a table of consecutive number values to determine count of each variant {[main], [inner-corner], [outer-corner], [side], [u-transition], [o-transition]}
+@param _size [Optional] - a table of consecutive number values to determine size of each variant {[main], [inner-corner], [outer-corner], [side], [u-transition], [o-transition]}
+@param _probability [Optional] - a table of number values between 0-1 to determine probability of each variant {[main], [inner-corner], [outer-corner], [side], [u-transition], [o-transition]}
+@param _extension [Optional] - the file extension of the images, defaults to ".png", make sure to include the "."
+@return Variants
+]]
+function struct_base.Variants(_gfxpath, _name, _count, _size, _probability, _extension)
+	if type(_extension) ~= "string" then _extension = ".png" end
+	if type(_count) ~= "table" then _count = {} end
+	if type(_size) ~= "table" then _size = {} end
+	if type(_probability) ~= "table" then _probability = {} end
+	local _result = {}
+	_result.main = {struct_base.Variant(_gfxpath .. _name .. "-main" .. _extension, _count[1], _size[1], _probability[1])}
+	_result.inner_corner = struct_base.Variant(_gfxpath .. _name .. "-inner-corner" .. _extension, _count[2], _size[2], _probability[2])
+	_result.outer_corner = struct_base.Variant(_gfxpath .. _name .. "-outer-corner" .. _extension, _count[3], _size[3], _probability[3])
+	_result.side = struct_base.Variant(_gfxpath .. _name .. "-side" .. _extension, _count[4], _size[4], _probability[4])
+	_result.u_transition = struct_base.Variant(_gfxpath .. _name .. "-u-transition" .. _extension, _count[5], _size[5], _probability[5])
+	_result.o_transition = struct_base.Variant(_gfxpath .. _name .. "-o-transition" .. _extension, _count[6], _size[6], _probability[6])
+	return _result
+end
+
+--[[--
 Constructs Sound data from provided parameters
 
 @param _filename [Required] - the filename for the sound file, example: "__base__/sound/car-metal-impact.ogg"
@@ -111,50 +137,6 @@ function struct_base.Sound(_filename, _volume)
 	local _sound = {filename = _filename}
 	if type(_volume) == "number" and _volume > 0 then _sound.volume = _volume end
 	return _sound
-end
-
---[[--
-Constructs a BoundingBox from provided parameters
-
-@param _x1 [Required] - a number value, represents the location of the top left corner on the x axis.
-@param _y1 [Required] - a number value, represents the location of the top left corner on the y axis.
-@param _x2 [Required] - a number value, represents the location of the bottom right corner on the x axis.
-@param _y2 [Required] - a number value, represents the location of the bottom right corner on the y axis.
-@return BoundingBox
-]]
-function struct_base.BoundingBox(_x1, _y1, _x2, _y2)
-	local _result = nil
-	if type(_x1) == "number" and type(_y1) == "number" and type(_x2) == "number" and type(_y2) == "number" then
-		_result = {left_top = struct_base.Position(_x1, _y1), right_bottom = struct_base.Position(_x2, _y2)}
-	end
-	return _result
-end
-
---[[--
-Constructs a Position from provided parameters
-
-@param _x [Required] - a number value, represents the location on the x axis.
-@param _y [Required] - a number value, represents the location on the y axis.
-@return Position
-]]
-function struct_base.Position(_x, _y)
-	local _result = nil
-	if type(_x) == "number" and type(_y) == "number" then
-		_result = {x = _x, y = _y}
-	end
-	return _result
-end
-
---[[--
-Constructs a SimpleItemStack from provided parameters
-
-@param _name [Required] - a valid item prototype name
-@param _count [Optional] - a number value representing the number of items in this stack
-@param _health [Optional] - a number value representing the durability of this item
-@return SimpleItemStack
-]]
-function struct_base.SimpleItemStack(_name, _count, _health)
-	return type(_name) == "string" and {name = _name, count = type(_count) == "number" and _count or 1, health = type(_health) == "number" and _health or 1} or nil
 end
 
 --[[--
@@ -208,6 +190,50 @@ function struct_base.is_ResistanceProfile(_resistance)
 			and _resistance.percent <= 100 and _resistance.percent > 0))
 	end
 	return false
+end
+
+--[[--
+Constructs a BoundingBox from provided parameters
+
+@param _x1 [Required] - a number value, represents the location of the top left corner on the x axis.
+@param _y1 [Required] - a number value, represents the location of the top left corner on the y axis.
+@param _x2 [Required] - a number value, represents the location of the bottom right corner on the x axis.
+@param _y2 [Required] - a number value, represents the location of the bottom right corner on the y axis.
+@return BoundingBox
+]]
+function struct_base.BoundingBox(_x1, _y1, _x2, _y2)
+	local _result = nil
+	if type(_x1) == "number" and type(_y1) == "number" and type(_x2) == "number" and type(_y2) == "number" then
+		_result = {left_top = struct_base.Position(_x1, _y1), right_bottom = struct_base.Position(_x2, _y2)}
+	end
+	return _result
+end
+
+--[[--
+Constructs a Position from provided parameters
+
+@param _x [Required] - a number value, represents the location on the x axis.
+@param _y [Required] - a number value, represents the location on the y axis.
+@return Position
+]]
+function struct_base.Position(_x, _y)
+	local _result = nil
+	if type(_x) == "number" and type(_y) == "number" then
+		_result = {x = _x, y = _y}
+	end
+	return _result
+end
+
+--[[--
+Constructs a SimpleItemStack from provided parameters
+
+@param _name [Required] - a valid item prototype name
+@param _count [Optional] - a number value representing the number of items in this stack
+@param _health [Optional] - a number value representing the durability of this item
+@return SimpleItemStack
+]]
+function struct_base.SimpleItemStack(_name, _count, _health)
+	return type(_name) == "string" and {name = _name, count = type(_count) == "number" and _count or 1, health = type(_health) == "number" and _health or 1} or nil
 end
 
 --[[--

@@ -31,7 +31,7 @@ function compat.insert_data(_data) -- only works prior to a map being loaded or 
 				moddata[string.lower(k)].active = v
 			end
 		end
-end
+	end
 end
 
 --[[--

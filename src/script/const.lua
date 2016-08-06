@@ -7,8 +7,6 @@
 
 require("config")
 require("script.lib.util-base")
-local struct = require("script.lib.struct-base")
-
 
 -- Note: This is NOT a configuration file! Data in this file CAN and most probably WILL break your savegame if modified.
 
@@ -28,12 +26,20 @@ Holds constant data that is shared between modules
 @module const
 ]]
 const = {
-	-- Every surface created by this mod will be prefixed with this tag, it must not be changed or saves will be broken.
-	prefix = "surfacesmod",
-	-- Maximum unsigned integer value, used for random seeding in mapgen.
+	--- Maximum unsigned integer value, used for random seeding in mapgensettings.
 	max_uint = 4294967295,
-	-- Surfaces data
+	--- Surfaces data, stores various constant data for surfaces, such as: prefix (<code>const.surface.prefix</code>),
+	-- relative locations (<code>const.surface.rel\_loc</code>), surface types (<code>const.surface.type</code>),
+	-- tiles to overriden during chunk corrections (<code>const.surface.override\_tiles</code>),
+	-- and the surface separator string (<code>const.surface.separator</code>) 
 	surface = {
+		-- Every surface created by this mod will be prefixed with this tag, it must not be changed or saves will be broken.
+		prefix = "surfacesmod",
+		-- Separator string, used to construct surfaces, if this is changed, surfaces will need to be migrated.
+		separator = "-",
+		-- Tiles that will be overridden during Surfaces chunk corrections
+		override_tiles = table.reverse({"out-of-map", "grass", "grass-medium", "grass-dry", "dirt", "dirt-dark", "sand", "sand-dark",
+		"water", "deepwater", "water-green", "deepwater-green"}),
 		-- Surface type classification, the surfaces module uses this information to identify surfaces from this mod. Each entry contains both an ID and a name.
 		type = {
 			underground = {
@@ -55,7 +61,8 @@ const = {
 	-- Event Manager data
 	eventmgr = {
 		-- Task definitions, used to uniquely identify each "task" in the event manager
-		task = create_id_table({"trigger_create_paired_entity", "trigger_create_paired_surface", "create_paired_entity", "finalize_paired_entity", "remove_sky_tile", "spill_entity_result"}),
+		task = create_id_table({"trigger_create_paired_entity", "trigger_create_paired_surface", "create_paired_entity", 
+			"finalize_paired_entity", "remove_sky_tile", "spill_entity_result"}),
 		-- Handle definitions, these are used to call functions from within the on_tick timer in the events module
 		handle = {
 			-- Used to teleport players between surfaces once configured waiting time has passed, see config.lua
@@ -87,34 +94,17 @@ const = {
 				id = 5,
 				tick = config.ticks_between_event.execute_first_task_in_waiting_queue,
 				func = "execute_first_task_in_waiting_queue"
+			},
+			-- Inspects the global surface migrations table for entries, processing in a serial manner, similar to the task queue
+			surface_migration = {
+				id = 6,
+				tick = 300, -- 30 seconds, let's not completely kill the game
+				func = "surfaces_migrations"
 			}
 		}
 	},
 	-- Wire definitions, used to determine which wires to connect when placing paired entities
 	wire = create_id_table({"copper", "red", "green", "circuit", "all"}),
-	-- Pictures, used to reduce the amount of duplicate code in prototype definitions
-	pictures = {
-		blank = struct.Picture("__base__/graphics/terrain/blank.png", "extra-high", 32, 32),
-		pipecovers = {
-			north = struct.Picture("__base__/graphics/entity/pipe-covers/pipe-cover-north.png", "extra-high", 44, 32),
-			east = struct.Picture("__base__/graphics/entity/pipe-covers/pipe-cover-east.png", "extra-high", 32, 32),
-			south = struct.Picture("__base__/graphics/entity/pipe-covers/pipe-cover-south.png", "extra-high", 46, 52),
-			west = struct.Picture("__base__/graphics/entity/pipe-covers/pipe-cover-west.png", "extra-high", 32, 32)
-		}
-	},
-	-- Sounds, used to reduce the amount of duplicate code in prototype definitions
-	sounds = {
-		resource_mining = {
-			struct.Sound("__core__/sound/axe-mining-ore-1.ogg", 1.0),
-			struct.Sound("__core__/sound/axe-mining-ore-2.ogg", 1.0),
-			struct.Sound("__core__/sound/axe-mining-ore-3.ogg", 1.0),
-			struct.Sound("__core__/sound/axe-mining-ore-4.ogg", 1.0),
-			struct.Sound("__core__/sound/axe-(.ogg", 1.0)
-		},
-		stone_impact = struct.Sound("__base__/sound/car-stone-impact.ogg", 1.0)
-	},
-	-- Tiles that will be overridden during Surfaces chunk corrections
-	override_tiles = table.reverse({"out-of-map", "grass", "grass-medium", "grass-dry", "dirt", "dirt-dark", "sand", "sand-dark", "water", "deepwater", "water-green", "deepwater-green"}),
 	-- Tiers available for transport chests, will also be used for other purposes in the future
 	tier = create_id_table({"crude", "basic", "standard", "improved", "advanced"})
 }

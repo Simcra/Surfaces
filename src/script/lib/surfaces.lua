@@ -21,38 +21,74 @@ Surfaces module, used for all surface related functionality
 surfaces = {}
 
 -- declaring local functions, these are defined at the bottom of the file
-local get_relative_surface, create_relative_surface, get_mapname, is_valid, is_valid_type, get_map_gen_settings, create_surface, get_type
+local get_relative_surface, create_relative_surface, get_mapname, get_mapgensettings, create_surface
 
 -- declaring local variables
 local mapgensettings = nil
+local ss_separator, ss_prefix = const.surface.separator, const.surface.prefix
 local rl_above, rl_below = const.surface.rel_loc.above, const.surface.rel_loc.below
 local st_und, st_sky = const.surface.type.underground, const.surface.type.sky
 local et_acc_shaft = proto.get_field({"entity", "access_shaft", "common"}, "type")
+local tn_und_dirt, tn_sky_void = proto.get_field({"tile", "underground_dirt"}, "name"), proto.get_field({"tile", "sky_void"}, "name")
 
 --[[--
 was this surface created by this mod?
 
 @param _surface [Required] - the surface to test
+@param _separator [Optional] - separator character, versions of this mod prior to 0.0.7 use "_", newer versions use ss_separator
 @return <code>true</code> or <code>false</code>
 ]] 
-function surfaces.is_from_this_mod(_surface)
-	return _surface and string.find(api.name(_surface), const.prefix .. "-", 0, true) ~= nil or nil
+function surfaces.is_from_this_mod(_surface, _separator)
+	if _surface then
+		if type(_separator) ~= "string" then _separator = ss_separator end
+		local _surface_name = api.name(_surface)
+		return string.find(_surface_name, ss_prefix .. _separator, 0, true) ~= nil
+	end
+	return nil
 end
 
 --[[--
 returns the layer of this surface relative to the nauvis layer. (the first underground surface is layer one and the first platform surface is also layer one)
 
 @param _surface [Required] - a valid surface, gathered from <code>game.surfaces["surface"]</code>
+@param _separator [Optional] - separator character, versions of this mod prior to 0.0.7 use "\_", newer versions use ss_separator
 @return surface layer
 ]]
-function surfaces.get_layer(_surface)
-	local _surface_name = api.name(_surface)
-	if _surface_name == "nauvis" then
-		return 0
-	else
-		local _surface_string = const.prefix .. "-" .. const.surface.type[const.surface.type_valid[get_type(_surface_name)]].name .. "-"
-		return tonumber(string.sub(_surface_name, string.find(_surface_name, _surface_string, 0, true) + string.len(_surface_string)))
+function surfaces.get_layer(_surface, _separator)
+	if _surface then
+		if type(_separator) ~= "string" then _separator = ss_separator end
+		local _surface_name = api.name(_surface)
+		if _surface_name == "nauvis" then
+			return 0
+		else
+			local _surface_string = ss_prefix .. _separator .. const.surface.type[const.surface.type_valid[surfaces.get_type(_surface_name, _separator)]].name .. _separator
+			return tonumber(string.sub(_surface_name, string.find(_surface_name, _surface_string, 0, true) + string.len(_surface_string)))
+		end
 	end
+	return nil
+end
+
+--[[--
+returns the type of this surface (the unique ID of the surface type, not the name)
+
+@param _surface [Required] - a valid surface, gathered from <code>game.surfaces["surface"]</code>
+@param _separator [Optional] - separator character, versions of this mod prior to 0.0.7 use "_", newer versions use ss_separator
+@return surface type ID
+]]
+surfaces.get_type = function(_surface, _separator)
+	if _surface then
+		if type(_separator) ~= "string" then _separator = ss_separator end
+		local _surface_name = api.name(_surface)
+		local _surface_string = ss_prefix .. _separator
+		if string.find(_surface_name, _surface_string, 0, true) then
+			for k, v in pairs(const.surface.type) do
+				if v.id ~= const.surface.type.all.id and string.find(_surface_name, _surface_string .. v.name .. _separator, 0, true) then
+					return v.id
+				end
+			end
+		end
+	end
+	return nil
 end
 
 --[[--
@@ -62,7 +98,7 @@ is this surface below the nauvis layer?
 @return <code>true</code> or <code>false</code>
 ]]
 function surfaces.is_below_nauvis(_surface)
-	return get_type(_surface) == st_und.id
+	return surfaces.get_type(_surface) == st_und.id
 end
 
 --[[--
@@ -72,7 +108,7 @@ is this surface above the nauvis layer?
 @return <code>true</code> or <code>false</code>
 ]]
 function surfaces.is_above_nauvis(_surface)
-	return get_type(_surface) == st_sky.id
+	return surfaces.get_type(_surface) == st_sky.id
 end
 
 --[[--
@@ -116,16 +152,45 @@ function surfaces.create_surface_above(_surface)
 end
 
 --[[--
-map-through function for <code>surfaces.transport\_player(_player, _surface, _position, _radius, _precision)</code>, transports the player to the access shaft provided
+triggers name-change migrations for a surface created prior to this version, if they are necessary
 
-@param _player [Required] - a valid player reference, gathered from <code>game.players["player"]</code>
+@param _surface [Required] - a valid surface, gathered from <code>game.surfaces["surface"]</code>
+@param _separator [Required] - separator character, versions of this mod prior to 0.0.7 use "_", newer versions will use ss_separator
+]]
+function surfaces.migrate_surface(_surface, _separator)
+	if api.valid(_surface) and surfaces.is_from_this_mod(_surface, _separator) and _separator ~= ss_separator then
+		
+		api.game.create_surface(_new_name, api.surface.map_gen_settings(_surface)) -- create the new surface
+		for _chunk in api.surface.get_chunks(_surface) do
+			api.surface.request_generate_chunks(_new_surface, _chunk) -- request generation of all chunks in the new surface
+		end
+		local _surface_layer = surfaces.get_layer(_surface, _separator) 
+		local _surface_type = surfaces.get_type(_surface, _separator)
+		local _surface_name = ss_prefix .. const.surface.separator ..
+			const.surface.type[const.surface.type_valid[_surface_type]].name .. const.surface.separator ..  
+		table.insert(global.surfaces_to_migrate, {
+			surface = _surface,
+			new_surface = api.game.surface(_new_name),
+			underground = surfaces.is_below_nauvis(_surface),
+			platform = surfaces.is_above_nauvis(_surface),
+			migrated = false
+		})		-- put relevant data into the surfaces migrations table for processing
+	end
+end		
+
+--[[--
+map-through function for <code>surfaces.transport\_player(\_player, \_surface, \_position, \_radius, \_precision)</code>, transports the player to the entity provided
+
+@param _player [Required] - a valid player reference, gathered from <code>game.players["player"]</code> or <code>entity.player</code>
 @param _entity [Required] - a valid entity reference
-@return surface
 ]]
 function surfaces.transport_player_to_entity(_player, _entity)
-	surfaces.transport_player(_player, _entity.surface, _entity.position, 2)
+	if api.valid(_entity) then surfaces.transport_player(_player, _entity.surface, _entity.position, 2) end
 end
 
+--[[--
+Transports the player to the nearest non-colliding position, using parameters provided
+]]
 function surfaces.transport_player(_player, _surface, _position, _radius, _precision)
 	if api.valid({_player, _surface}) and struct.is_Position(_position) then
 		local _new_position = api.surface.find_non_colliding_position(_surface, api.name(api.prototype(_player.character)), _position,
@@ -170,20 +235,16 @@ end
 The below functions are all specific to the surfaces module, they should not be called by external scripts.
 ]]
 
-get_mapname = function(_surface_type, _surface_layer)
-	return (is_valid(_surface_type, _surface_layer) and (const.prefix .. "-" .. const.surface.type[const.surface.type_valid[_surface_type]].name .. 
-		"-" .. _surface_layer) or "nauvis")
+get_mapname = function(_surface_type, _surface_layer, _separator)
+	if ((type(_surface_layer) == "number" and (_surface_layer >= 1)) and const.surface.type_valid[_surface_type] ~= nil) then
+		if type(_separator) ~= "string" then _separator = ss_separator end 
+		local _mapname = ss_prefix .. _separator .. const.surface.type[const.surface.type_valid[_surface_type]].name .. _separator .. _surface_layer
+		return _mapname
+	end
+	return nil
 end
 
-is_valid_type = function(_surface_type)
-	return (const.surface.type_valid[_surface_type] ~= nil)
-end
-
-is_valid = function(_surface_type, _surface_layer)
-	return ((_surface_layer >= 1) and is_valid_type(_surface_type)) == true
-end
-
-get_map_gen_settings = function(_surface_type)
+get_mapgensettings = function(_surface_type)
 	if mapgensettings == nil then
 		mapgensettings = {}
 		mapgensettings.nauvis = api.surface.map_gen_settings(api.game.surface("nauvis"))
@@ -198,9 +259,9 @@ get_map_gen_settings = function(_surface_type)
 end
 
 create_surface = function(_surface_type, _surface_layer)
-	if is_valid(_surface_type, _surface_layer) then
+	if ((type(_surface_layer) == "number" and (_surface_layer >= 1)) and const.surface.type_valid[_surface_type] ~= nil) then
 		local _surface_name = get_mapname(_surface_type, _surface_layer)
-		return api.game.surface(_surface_name) or api.game.create_surface(_surface_name, get_map_gen_settings(_surface_type))
+		return api.game.surface(_surface_name) or api.game.create_surface(_surface_name, get_mapgensettings(_surface_type))
 	end
 	return false	-- failed to create surface, inputs were invalid
 end
@@ -240,15 +301,6 @@ create_relative_surface = function(_surface, _relative_location)
 			return create_surface(st_sky.id, surfaces.get_layer(_surface_name) + 1)
 		end
 		return get_relative_surface(_surface, _relative_location)
-	end
-end
-
-get_type = function(_surface)
-	local _surface_name = api.name(_surface)
-	if string.find(_surface_name, const.prefix .. "-" .. st_und.name .. "-", 0, true) then
-		return st_und.id
-	elseif string.find(_surface_name, const.prefix .. "-" .. st_sky.name .. "-", 0, true) then
-		return st_sky.id
 	end
 end
 

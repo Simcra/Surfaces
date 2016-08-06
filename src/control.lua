@@ -15,7 +15,7 @@ require("script.lib.pair-data")
 -- Create shorthand references to constants and prototype data
 local rl_above, rl_below = const.surface.rel_loc.above, const.surface.rel_loc.below
 local st_und, st_sky, st_all = const.surface.type.underground.id, const.surface.type.sky.id, const.surface.type.all.id
-local t_crude, t_basic, t_standard, t_improved, t_advanced = const.tier.crude, const.tier.basic, const.tier.standard, const.tier.improved, const.tier.advanced
+local t_crude, t_basic, t_std, t_imp, t_adv = const.tier.crude, const.tier.basic, const.tier.standard, const.tier.improved, const.tier.advanced
 
 -- register entity pair classes used by paired entities in this mod.
 local entity_pair_class_data = {"access-shaft", "electric-pole", "transport-chest", "fluid-transport", "rail-transport"}
@@ -36,14 +36,14 @@ local entity_pair_data = {
 	{"sky-exit", "sky-entrance", rl_below, pc_acc_shaft, false, nil, 1, st_sky},
 	{"underground-entrance", "underground-exit", rl_below, pc_acc_shaft, true, nil, 1, st_und},
 	{"underground-exit", "underground-entrance", rl_above, pc_acc_shaft, false, nil, 1, st_und},
-	{"wooden-transport-chest-up", "wooden-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = const.tier.crude}},
-	{"wooden-transport-chest-down", "wooden-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = const.tier.crude}},
-	{"iron-transport-chest-up", "iron-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = const.tier.standard}},
-	{"iron-transport-chest-down", "iron-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = const.tier.standard}},
-	{"steel-transport-chest-up", "steel-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = const.tier.improved}},
-	{"steel-transport-chest-down", "steel-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = const.tier.improved}},
-	{"logistic-transport-chest-up", "logistic-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced}},
-	{"logistic-transport-chest-down", "logistic-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced}},
+	{"wooden-transport-chest-up", "wooden-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = t_crude}},
+	{"wooden-transport-chest-down", "wooden-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = t_crude}},
+	{"iron-transport-chest-up", "iron-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = t_std}},
+	{"iron-transport-chest-down", "iron-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = t_std}},
+	{"steel-transport-chest-up", "steel-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = t_imp}},
+	{"steel-transport-chest-down", "steel-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = t_imp}},
+	{"logistic-transport-chest-up", "logistic-receiver-chest-upper", rl_above, pc_trans_chest, true, {tier = t_adv}},
+	{"logistic-transport-chest-down", "logistic-receiver-chest-lower", rl_below, pc_trans_chest, true, {tier = t_adv}},
 	{"big-electric-pole-upper", "big-electric-pole-lower", rl_below, pc_elec_pole, true, nil, 0.5},
 	{"big-electric-pole-lower", "big-electric-pole-upper", rl_above, pc_elec_pole, true, nil, 0.5},
 	{"medium-electric-pole-upper", "medium-electric-pole-lower", rl_below, pc_elec_pole, true},
@@ -70,20 +70,20 @@ local init_globals = function()
 	global.players_using_access_shafts = global.players_using_access_shafts or {}
 	global.transport_chests = global.transport_chests or {}
 	global.fluid_transport = global.fluid_transport or {}
-	global.chunks_marked_for_correction = global.chunks_marked_for_correction or {}
+	global.surfaces_to_migrate = global.surfaces_to_migrate or {}
 end
 
 -- mod addon data, will be loaded only if the index of the entry is present in active mods
 local addon_data = {
 	warehousing = { -- Warehousing mod
-		{"transport-storehouse-up", "receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.standard, modifier = 8}, 1},
-		{"transport-storehouse-down", "receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.standard, modifier = 8}, 1},
-		{"logistic-transport-storehouse-up", "logistic-receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced, modifier = 8}, 1},
-		{"logistic-transport-storehouse-down", "logistic-receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced, modifier = 8}, 1},
-		{"transport-warehouse-up", "receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.improved, modifier = 20}, 2},
-		{"transport-warehouse-down", "receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.improved, modifier = 20}, 2},
-		{"logistic-transport-warehouse-up", "logistic-receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = const.tier.advanced, modifier = 20}, 2},
-		{"logistic-transport-warehouse-down", "logistic-receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = const.tier.advanced, modifier = 20}, 2}
+		{"transport-storehouse-up", "receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = t_std, modifier = 8}, 1},
+		{"transport-storehouse-down", "receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = t_std, modifier = 8}, 1},
+		{"logistic-transport-storehouse-up", "logistic-receiver-storehouse-upper", rl_above, pc_trans_chest, true, {tier = t_adv, modifier = 8}, 1},
+		{"logistic-transport-storehouse-down", "logistic-receiver-storehouse-lower", rl_below, pc_trans_chest, true, {tier = t_adv, modifier = 8}, 1},
+		{"transport-warehouse-up", "receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = t_imp, modifier = 20}, 2},
+		{"transport-warehouse-down", "receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = t_imp, modifier = 20}, 2},
+		{"logistic-transport-warehouse-up", "logistic-receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = t_adv, modifier = 20}, 2},
+		{"logistic-transport-warehouse-down", "logistic-receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = t_adv, modifier = 20}, 2}
 	}
 }
 events.set_addon_data(addon_data)
