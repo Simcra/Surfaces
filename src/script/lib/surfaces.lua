@@ -167,6 +167,7 @@ function surfaces.migrate_surface(_surface, _separator)
 		for _chunk in api.surface.get_chunks(_surface) do
 			api.surface.request_generate_chunks(_surface_name, _chunk) -- request generation of all chunks in the new surface
 		end
+		global.surfaces_to_migrate = global.surfaces_to_migrate or {}
 		table.insert(global.surfaces_to_migrate, {
 			surface = _surface,
 			new_surface = api.game.surface(_surface_name),

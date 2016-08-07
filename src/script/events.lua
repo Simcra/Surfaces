@@ -50,6 +50,7 @@ function events.on_tick(_event)
 				pairdata.insert_array(v)
 			end
 		end
+		remote.call("Surfaces", "migrate", "_")
 	end
 	for k, v in pairs(handles) do
 		if _event.tick % v.tick == 0 then
