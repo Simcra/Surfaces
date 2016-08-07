@@ -513,7 +513,7 @@ _prototypes.tile = { -- Tiles
 		icon = _gfxpath.icon .. "sky-void.png",
 		layer = 45,
 		collision_mask = {"ground-tile", "resource-layer", "floor-layer", "item-layer", "object-layer", "player-layer", "doodad-layer"},
-		variants = struct.Variants(_gfxpath.terrain, "sky-void", {2,1,1,1,1,1}, {1}),
+		variants = struct.Variants(_gfxpath.terrain, "sky-void", {2,0,0,0,0,0}, {1}),
 		map_color = util.RGB(145, 212, 252)
 	},
 	underground_wall = {
@@ -521,7 +521,7 @@ _prototypes.tile = { -- Tiles
 		icon = _gfxpath.icon .. "underground-wall.png",
 		layer = 46,
 		collision_mask = {"floor-layer", "item-layer", "doodad-layer"},
-		variants = struct.Variants(_gfxpath.terrain, "underground-wall", {0,1,1,1,1,1}, {0}),
+		variants = struct.Variants(_gfxpath.terrain, "underground-wall", {1,0,0,0,0,0}, {1}),
 		map_color = util.RGB(60, 52, 36)
 	},
 	floor = {
@@ -791,7 +791,6 @@ function proto.get(_path_to_field, _field, _common, _inherit)
 			_data.override_result = nil
 			_data.override_results = nil
 			_data.override = nil
-			proto.globdebugger = proto.globdebugger .. "\n " .. table.tostring(_data, true)
 			return _data
 		end
 	end
