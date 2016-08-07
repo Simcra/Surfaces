@@ -10,5 +10,5 @@ local transport_warehouse_up = proto.get({"item", "transport_chest", "warehouse"
 local logistic_transport_warehouse_down = proto.get({"item", "transport_chest", "logistic_warehouse"}, "down", true)
 local logistic_transport_warehouse_up = proto.get({"item", "transport_chest", "logistic_warehouse"}, "up", true)
 
-data:extend({transport_storehouse_down, transport_storehouse_up, logistic_transport_storehouse_down, logistic_transport_storehouse_up,
-	transport_warehouse_down, transport_warehouse_up, logistic_transport_warehouse_down, logistic_transport_warehouse_up})
+data:extend({transport_storehouse_down, transport_storehouse_up, logistic_transport_storehouse_down, logistic_transport_storehouse_up, transport_warehouse_down,
+	transport_warehouse_up, logistic_transport_warehouse_down, logistic_transport_warehouse_up})

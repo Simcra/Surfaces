@@ -6,5 +6,5 @@
   "description": "Reach up to the skies or dig deep below, expand your base vertically... If you're into that kind of thing.",
   "homepage": "https://forums.factorio.com/viewtopic.php?f=97&t=25444",
   "factorio_version": "0.13",
-  "dependencies": ["base >= 0.13.0",  "? bobelectronics >= 0.13.0", "? bobenemies >= 0.13.0", "? bobwarfare >= 0.13.0", "? Squeak Through >= 1.1.3", "? Warehousing >= 0.0.10"]
+  "dependencies": ["base >= 0.13.0",  "? bobelectronics >= 0.13.0", "? bobenemies >= 0.13.0", "? bobwarfare >= 0.13.0", "? bobpower >= 0.13.0", "? boblogistics >= 0.13.0", "? Squeak Through >= 1.1.3", "? Warehousing >= 0.0.10"]
 }

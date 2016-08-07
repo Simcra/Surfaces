@@ -84,6 +84,36 @@ local addon_data = {
 		{"transport-warehouse-down", "receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = t_imp, modifier = 20}, 2},
 		{"logistic-transport-warehouse-up", "logistic-receiver-warehouse-upper", rl_above, pc_trans_chest, true, {tier = t_adv, modifier = 20}, 2},
 		{"logistic-transport-warehouse-down", "logistic-receiver-warehouse-lower", rl_below, pc_trans_chest, true, {tier = t_adv, modifier = 20}, 2}
+	},
+	bobpower = {
+		{"big-electric-pole-2-upper", "big-electric-pole-2-lower", rl_below, pc_elec_pole, true, nil, 0.5},
+		{"big-electric-pole-2-lower", "big-electric-pole-2-upper", rl_above, pc_elec_pole, true, nil, 0.5},
+		{"medium-electric-pole-2-upper", "medium-electric-pole-2-lower", rl_below, pc_elec_pole, true},
+		{"medium-electric-pole-2-lower", "medium-electric-pole-2-upper", rl_above, pc_elec_pole, true},
+		{"substation-2-upper", "substation-2-lower", rl_below, pc_elec_pole, true, nil, 0.5},
+		{"substation-2-lower", "substation-2-upper", rl_above, pc_elec_pole, true, nil, 0.5},
+		{"big-electric-pole-3-upper", "big-electric-pole-3-lower", rl_below, pc_elec_pole, true, nil, 0.5},
+		{"big-electric-pole-3-lower", "big-electric-pole-3-upper", rl_above, pc_elec_pole, true, nil, 0.5},
+		{"medium-electric-pole-3-upper", "medium-electric-pole-3-lower", rl_below, pc_elec_pole, true},
+		{"medium-electric-pole-3-lower", "medium-electric-pole-3-upper", rl_above, pc_elec_pole, true},
+		{"substation-3-upper", "substation-3-lower", rl_below, pc_elec_pole, true, nil, 0.5},
+		{"substation-3-lower", "substation-3-upper", rl_above, pc_elec_pole, true, nil, 0.5},
+		{"big-electric-pole-4-upper", "big-electric-pole-4-lower", rl_below, pc_elec_pole, true, nil, 0.5},
+		{"big-electric-pole-4-lower", "big-electric-pole-4-upper", rl_above, pc_elec_pole, true, nil, 0.5},
+		{"medium-electric-pole-4-upper", "medium-electric-pole-4-lower", rl_below, pc_elec_pole, true},
+		{"medium-electric-pole-4-lower", "medium-electric-pole-4-upper", rl_above, pc_elec_pole, true},
+		{"substation-4-upper", "substation-4-lower", rl_below, pc_elec_pole, true, nil, 0.5},
+		{"substation-4-lower", "substation-4-upper", rl_above, pc_elec_pole, true, nil, 0.5}
+	},
+	boblogistics = {
+		{"logistic-transport-chest-2-up", "logistic-receiver-chest-2-upper", rl_above, pc_trans_chest, true, {tier = t_adv, modifier = 1.5}},
+		{"logistic-transport-chest-2-down", "logistic-receiver-chest-2-lower", rl_below, pc_trans_chest, true, {tier = t_adv, modifier = 1.5}},
+		{"fluid-transport-2-upper", "fluid-transport-2-lower", rl_below, pc_fluid_trans, true},
+		{"fluid-transport-2-lower", "fluid-transport-2-upper", rl_above, pc_fluid_trans, true},
+		{"fluid-transport-3-upper", "fluid-transport-3-lower", rl_below, pc_fluid_trans, true},
+		{"fluid-transport-3-lower", "fluid-transport-3-upper", rl_above, pc_fluid_trans, true},
+		{"fluid-transport-4-upper", "fluid-transport-4-lower", rl_below, pc_fluid_trans, true},
+		{"fluid-transport-4-lower", "fluid-transport-4-upper", rl_above, pc_fluid_trans, true}
 	}
 }
 events.set_addon_data(addon_data)

@@ -30,7 +30,7 @@ local tn_wood_floor = proto.get_field({"tile", "floor", "wood"}, "name")
 
 local override_tiles
 if override_tiles == nil then
-	override_tiles = const.override_tiles
+	override_tiles = const.surface.override_tiles
 	override_tiles[tn_und_wall] = true
 end
 

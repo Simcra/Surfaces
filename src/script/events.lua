@@ -116,7 +116,7 @@ function events.on_chunk_generated(_event)
 			for _x = 0, 31, 1 do
 				_cur_x = _area.left_top.x + _x
 				local _cur_tile = api.surface.get_tile(_surface, {x = _cur_x, y = _cur_y})
-				if (_is_underground and (const.override_tiles[_cur_tile.name] or _cur_tile.collides_with("ground-tile") ~= true)) or
+				if (_is_underground and (const.surface.override_tiles[_cur_tile.name] or _cur_tile.collides_with("ground-tile") ~= true)) or
 					(_is_underground ~= true and skytiles.get(_cur_tile.name) == nil
 				) then
 					table.insert(_tiles, {name = _tile_name, position = {x = _cur_x, y = _cur_y}})

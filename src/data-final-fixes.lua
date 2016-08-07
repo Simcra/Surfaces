@@ -29,6 +29,11 @@ if compat.active("bobpower") == true then
 	require("prototypes.entity.addons.bobpower")
 	require("prototypes.recipe.addons.bobpower")
 end
+if compat.active("boblogistics") == true then
+	require("prototypes.item.addons.boblogistics")
+	require("prototypes.entity.addons.boblogistics")
+	require("prototypes.recipe.addons.boblogistics")
+end
 if compat.active("squeak through") == true then
 	data.raw[proto.get_field({"entity", "underground_wall"}, "type")][proto.get_field({"entity", "underground_wall"}, "name")].collision_box = {
 		{-0.499, -0.499}, {0.499, 0.499}}

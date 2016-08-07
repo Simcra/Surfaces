@@ -20,6 +20,5 @@ local substation_3_upper = proto.get({"recipe", "electric_pole", "substation_3"}
 local substation_4_lower = proto.get({"recipe", "electric_pole", "substation_4"}, "lower", true)
 local substation_4_upper = proto.get({"recipe", "electric_pole", "substation_4"}, "upper", true)
 
-data:extend({medium_2_lower, medium_2_upper, medium_3_lower, medium_3_upper, medium_4_lower, medium_4_upper,
-	big_2_lower, big_2_upper, big_3_lower, big_3_upper, big_4_lower, big_4_upper,
-	substation_2_lower, substation_2_upper, substation_3_lower, substation_3_upper, substation_4_lower, substation_4_upper})
+data:extend({medium_2_lower, medium_2_upper, medium_3_lower, medium_3_upper, medium_4_lower, medium_4_upper, big_2_lower, big_2_upper, big_3_lower, big_3_upper,
+	big_4_lower, big_4_upper, substation_2_lower, substation_2_upper, substation_3_lower, substation_3_upper, substation_4_lower, substation_4_upper})
