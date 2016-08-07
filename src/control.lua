@@ -125,6 +125,7 @@ end
 
 local function on_load()
 	init_globals()
+	remote.call("Surfaces", "migrate", "_")
 end
 
 local function on_configuration_changed()
