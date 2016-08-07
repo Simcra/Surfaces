@@ -51,12 +51,6 @@ function events.on_tick(_event)
 			end
 		end
 	end
-	if global.surface_migration_separator_string then
-		for k, v in pairs(api.game.surfaces()) do
-			surfaces.migrate_surface(v, global.surface_migration_separator_string)
-		end
-		global.surface_migration_separator_string = nil
-	end
 	for k, v in pairs(handles) do
 		if _event.tick % v.tick == 0 then
 			if pause_event[tostring(v.func)] ~= false then

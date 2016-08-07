@@ -159,18 +159,17 @@ triggers name-change migrations for a surface created prior to this version, if 
 ]]
 function surfaces.migrate_surface(_surface, _separator)
 	if api.valid(_surface) and surfaces.is_from_this_mod(_surface, _separator) and _separator ~= ss_separator then
-		
-		api.game.create_surface(_new_name, api.surface.map_gen_settings(_surface)) -- create the new surface
-		for _chunk in api.surface.get_chunks(_surface) do
-			api.surface.request_generate_chunks(_new_surface, _chunk) -- request generation of all chunks in the new surface
-		end
 		local _surface_layer = surfaces.get_layer(_surface, _separator) 
 		local _surface_type = surfaces.get_type(_surface, _separator)
-		local _surface_name = ss_prefix .. const.surface.separator ..
-			const.surface.type[const.surface.type_valid[_surface_type]].name .. const.surface.separator ..  
+		local _surface_name = ss_prefix .. const.surface.separator .. const.surface.type[const.surface.type_valid[_surface_type]].name .. const.surface.separator ..
+			_surface_layer
+		api.game.create_surface(_surface_name, api.surface.map_gen_settings(_surface)) -- create the new surface
+		for _chunk in api.surface.get_chunks(_surface) do
+			api.surface.request_generate_chunks(_surface_name, _chunk) -- request generation of all chunks in the new surface
+		end
 		table.insert(global.surfaces_to_migrate, {
 			surface = _surface,
-			new_surface = api.game.surface(_new_name),
+			new_surface = api.game.surface(_surface_name),
 			underground = surfaces.is_below_nauvis(_surface),
 			platform = surfaces.is_above_nauvis(_surface),
 			migrated = false

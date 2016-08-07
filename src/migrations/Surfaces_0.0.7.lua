@@ -1,2 +1,2 @@
 game.reload_script()
-global.surface_migration_separator_string = "_"
+remote.call("Surfaces", "migrate", "_")

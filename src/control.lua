@@ -172,3 +172,11 @@ script.on_event(defines.events.on_entity_died, function(event) events.on_entity_
 script.on_event(defines.events.on_train_changed_state, function(event) events.on_train_changed_state(event) end)
 -- Every tick
 script.on_event(defines.events.on_tick, function(event) events.on_tick(event) end)
+
+remote.add_interface("Surfaces", {
+	migrate = function(_separator)
+		for k, v in pairs(api.game.surfaces()) do
+			surfaces.migrate_surface(v, _separator)
+		end
+	end
+})
