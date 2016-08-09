@@ -7,19 +7,6 @@
 require("script.proto")
 require("script.lib.compat-data")
 
---[[
-Mod compatibility data, array to be passed in format "name = is_active" where:
-	- index is the name of the mod found in it's info.json file\
-	- is_active is a boolean, calculated through checks or provided as <code>true</code> or <code>false</code>
-]]
-local _mod_data = {
-	["bobwarfare"] = (type(bobmods) == "table" and type(bobmods.warfare) == "table"),
-	["bobpower"] = (type(bobmods) == "table" and type(bobmods.power) == "table"),
-	["boblogistics"] = (type(bobmods) == "table" and type(bobmods.logistics) == "table"),
-	["warehousing"] = (type(define_warehouse) == "function")
-}
-compat.insert_data(_mod_data)
-
 -- Prototype definition
 -- Item Groups
 require("prototypes.item.item-groups")
@@ -27,18 +14,19 @@ require("prototypes.item.item-groups")
 -- Items
 require("prototypes.item.items")
 require("prototypes.item.transport.access-shaft")
-require("prototypes.item.transport.transport-chest")
-require("prototypes.item.transport.electric-pole")
--- require("prototypes.item.transport.rail-transport")
+require("prototypes.item.transport.energy-transport")
 require("prototypes.item.transport.fluid-transport")
+require("prototypes.item.transport.item-transport")
+-- require("prototypes.item.transport.rail-transport")
+
 
 -- Entities
 require("prototypes.entity.entities")
 require("prototypes.entity.transport.access-shaft")
-require("prototypes.entity.transport.transport-chest")
-require("prototypes.entity.transport.electric-pole")
--- require("prototypes.entity.transport.rail-transport")
+require("prototypes.entity.transport.energy-transport")
 require("prototypes.entity.transport.fluid-transport")
+require("prototypes.entity.transport.item-transport")
+-- require("prototypes.entity.transport.rail-transport")
 
 -- Technology
 -- require("prototypes.tech.*")
@@ -52,7 +40,7 @@ require("prototypes.tile.tiles")
 -- Recipes
 require("prototypes.recipe.recipes")
 require("prototypes.recipe.transport.access-shaft")
-require("prototypes.recipe.transport.transport-chest")
-require("prototypes.recipe.transport.electric-pole")
--- require("prototypes.recipe.transport.rail-transport")
+require("prototypes.recipe.transport.energy-transport")
 require("prototypes.recipe.transport.fluid-transport")
+require("prototypes.recipe.transport.item-transport")
+-- require("prototypes.recipe.transport.rail-transport")

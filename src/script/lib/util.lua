@@ -24,7 +24,7 @@ function util.message(player_id, text)
 end
 
 -- just a boring debug function to print text to every player's screen
-function util.debug(text)
+function util.broadcast(text)
 	for k, v in pairs(api.game.players()) do
 		util.message(k, text)
 	end

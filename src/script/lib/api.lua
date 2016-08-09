@@ -138,6 +138,24 @@ function api.entity.set_fluidbox(_entities, _new_fluidbox, _index)
 	end
 end
 
+function api.entity.energy(_entity)
+	return (api.valid(_entity) and _entity.energy or nil)
+end
+
+function api.entity.set_energy(_entities, _new_energy)
+	if type(_entities) == "table" and api.valid(_entities) then
+		if _entities.energy then
+			_entities.energy = _new_energy
+		else
+			for k, v in pairs(_entities) do
+				if v.energy then
+					v.energy = _new_energy
+				end
+			end
+		end
+	end
+end
+
 function api.entity.minable(_entity)
 	return (api.valid(_entity) and _entity.minable or false)
 end
@@ -391,13 +409,13 @@ function api.surface.count_entities(_surface, _area, _entity_name, _entity_type,
 	return nil
 end
 
-function api.surface.find_entities(_surface, _area, _entity_name, _entity_type, _entity_force)
+function api.surface.find_entities(_surface, _area, _entity_name, _entity_type, _entity_force, _limit)
 	if (api.valid(_surface)) then
 		if (struct.is_BoundingBox(_area)) then
 			if (_area.left_top.x == _area.right_bottom.x and _area.left_top.y == _area.right_bottom.y) then
-				return _surface.find_entities_filtered({position = _area.left_top, name = _entity_name, type = _entity_type, force = _entity_force})
+				return _surface.find_entities_filtered({position = _area.left_top, name = _entity_name, type = _entity_type, force = _entity_force, limit = _limit})
 			else
-				return _surface.find_entities_filtered({area = _area, name = _entity_name, type = _entity_type, force = _entity_force})
+				return _surface.find_entities_filtered({area = _area, name = _entity_name, type = _entity_type, force = _entity_force, limit = _limit})
 			end
 		elseif (struct.is_Position(_area)) then
 			return _surface.find_entities_filtered({position = _area, name = _entity_name, type = _entity_type, force = _entity_force})

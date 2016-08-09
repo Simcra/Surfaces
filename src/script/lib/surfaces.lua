@@ -164,13 +164,14 @@ function surfaces.migrate_surface(_surface, _separator)
 		local _surface_name = ss_prefix .. const.surface.separator .. const.surface.type[const.surface.type_valid[_surface_type]].name .. const.surface.separator ..
 			_surface_layer
 		api.game.create_surface(_surface_name, api.surface.map_gen_settings(_surface)) -- create the new surface
+		local _new_surface = api.game.surface(_surface_name)
 		for _chunk in api.surface.get_chunks(_surface) do
-			api.surface.request_generate_chunks(_surface_name, _chunk) -- request generation of all chunks in the new surface
+			api.surface.request_generate_chunks(_new_surface, _chunk) -- request generation of all chunks in the new surface
 		end
 		global.surfaces_to_migrate = global.surfaces_to_migrate or {}
 		table.insert(global.surfaces_to_migrate, {
 			surface = _surface,
-			new_surface = api.game.surface(_surface_name),
+			new_surface = _new_surface,
 			underground = surfaces.is_below_nauvis(_surface),
 			platform = surfaces.is_above_nauvis(_surface),
 			migrated = false
@@ -225,8 +226,9 @@ function surfaces.find_nearby_entity(_entity, _radius, _surface, _target_name, _
 	if _radius and api.valid({_surface, _entity}) then
 		local _position = api.position(_entity)
 		local _area = struct.BoundingBox(_position.x - _radius, _position.y - _radius, _position.x + _radius, _position.y + _radius)
-		for k, v in pairs(api.surface.find_entities(_surface, _area, _target_name, _target_type)) do
-			return v
+		local _entities = api.surface.find_entities(_surface, _area, _target_name, _target_type, nil, 1) or {}
+		for _, _entity in pairs(_entities) do
+			return _entity
 		end
 	end
 end

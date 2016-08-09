@@ -18,17 +18,5 @@ config = {
 			improved = 1,						-- [default: 1]			improved (steel chests)
 			advanced = 1.25						-- [default: 1.25]		advanced (logistic chests)
 		}
-	},
-	--[[
-	These are all quite experimental and alter core behaviour of this mod
-	Larger values mean checks are performed less often (improves performance at expense of functionality)
-	Though the
-	]]
-	ticks_between_event = {
-		update_players_using_access_shafts = 5,					-- [default: 5]		- Access shaft teleportation check
-		check_player_collision_with_access_shafts = 2,			-- [default: 2]		- Access shaft collision check
-		update_transport_chest_contents = 5,					-- [default: 5]		- Moves items from transport chests into paired receiver chests
-		update_fluid_transport_contents = 5,					-- [default: 5]		- Equalizes fluid in fluid transport tanks
-		execute_first_task_in_waiting_queue = 2					-- [default: 2]		- Used primarily in the creation of paired entities, lower values are better
 	}
 }

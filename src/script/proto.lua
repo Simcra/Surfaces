@@ -41,21 +41,15 @@ local _ref = {
 			storehouse = "storehouse-basic"
 		},
 		technology = {
-			logistics = {name = "warehouse-logistics-research"},
-			warehouse = {name = "warehouse-research"}
+			logistics = "warehouse-logistics-research",
+			warehouse = "warehouse-research"
 		}
 	},
 	bobpower = { -- Bob's Power mod
 		item = {
-			medium_electric_pole_2 = "medium-electric-pole-2",
-			medium_electric_pole_3 = "medium-electric-pole-3",
-			medium_electric_pole_4 = "medium-electric-pole-4",
-			big_electric_pole_2 = "big-electric-pole-2",
-			big_electric_pole_3 = "big-electric-pole-3",
-			big_electric_pole_4 = "big-electric-pole-4",
-			substation_2 = "substation-2",
-			substation_3 = "substation-3",
-			substation_4 = "substation-4"
+			accumulator_2 = "large-accumulator",
+			accumulator_3 = "large-accumulator-2",
+			accumulator_4 = "large-accumulator-3"
 		}
 	},
 	boblogistics = { -- Bob's Logistics mod
@@ -85,6 +79,20 @@ local function copy_data(_data, _recursive)
 		return _data
 	end
 	return _result
+end
+
+local function merge_data(_data, _override_data)
+	if type(_data) == "table" and type(_override_data) == "table" then
+		local _result = copy_data(_data, true)
+		for k, v in pairs(_override_data) do
+			local _new_data = v
+			if type(_result[k]) == "table" and type(v) == "table" then
+				_new_data = merge_data(_result[k], v)
+			end 
+			_result[k] = _new_data
+		end
+		return _result
+	end
 end
 
 _prototypes.item_group = { -- Item Groups
@@ -130,79 +138,39 @@ _prototypes.item = { -- Items
 		advanced = {name = "advanced-connector", icon = "__base__/graphics/icons/processing-unit.png", order = _sorting_component .. "-b[connector]-e[advanced]"}
 	},
 	servo = {
-		common = {flags = {"goes-to-main-inventory"}, stack_size = 50, subgroup = _prototypes.item_subgroup.surfaces.component.name,
+		common = {flags = {"goes-to-main-inventory"}, subgroup = _prototypes.item_subgroup.surfaces.component.name,
 			order = _sorting_component .. "-a[servo]-z"},
 		crude = {name = "crude-servo", icon = "__base__/graphics/icons/engine-unit.png", order = _sorting_component .. "-a[servo]-a[crude]"},
 		standard = {name = "standard-servo", icon = "__base__/graphics/icons/engine-unit.png", order = _sorting_component .. "-a[servo]-b[standard]"},
 		improved = {name = "improved-servo", icon = "__base__/graphics/icons/electric-engine-unit.png", order = _sorting_component .. "-a[servo]-c[improved]"}
 	},
-	electric_pole = {
+	energy_transport = {
 		common = {flags = {"goes-to-quickbar"}, subgroup = _prototypes.item_subgroup.surfaces.transport.power.name, order = _sorting_transport .. "-b[power]-z",
 			override = true},
-		small = {
-			common = {order = _sorting_transport .. "-b[power]-a[small]", fuel_value = "4MJ"},
-			lower = {name = "small-electric-pole-lower", icon = _gfxpath.icon .. "small-electric-pole-lower.png"},
-			upper = {name = "small-electric-pole-upper", icon = _gfxpath.icon .. "small-electric-pole-upper.png"}
+		standard = {
+			common = {order = _sorting_transport .. "-b[power]-a[standard]-a"},
+			lower = {name = "energy-transport-lower", icon = _gfxpath.icon .. "energy-transport-lower.png"},
+			upper = {name = "energy-transport-upper", icon = _gfxpath.icon .. "energy-transport-upper.png"}
 		},
-		medium = {
-			common = {order = _sorting_transport .. "-b[power]-b[medium]"},
-			upper = {name = "medium-electric-pole-upper", icon = _gfxpath.icon .. "medium-electric-pole-upper.png"},
-			lower = {name = "medium-electric-pole-lower", icon = _gfxpath.icon .. "medium-electric-pole-lower.png"}
+		standard_2 = {
+			common = {order = _sorting_transport .. "-b[power]-a[standard]-b"},
+			lower = {name = "energy-transport-2-lower", icon = _gfxpath.icon .. "energy-transport-lower.png"},
+			upper = {name = "energy-transport-2-upper", icon = _gfxpath.icon .. "energy-transport-upper.png"}
 		},
-		medium_2 = {
-			common = {order = _sorting_transport .. "-b[power]-b[medium-2]"},
-			upper = {name = "medium-electric-pole-2-upper", icon = _gfxpath.icon .. "medium-electric-pole-upper.png"},
-			lower = {name = "medium-electric-pole-2-lower", icon = _gfxpath.icon .. "medium-electric-pole-lower.png"}
+		standard_3 = {
+			common = {order = _sorting_transport .. "-b[power]-a[standard]-c"},
+			lower = {name = "energy-transport-3-lower", icon = _gfxpath.icon .. "energy-transport-lower.png"},
+			upper = {name = "energy-transport-3-upper", icon = _gfxpath.icon .. "energy-transport-upper.png"}
 		},
-		medium_3 = {
-			common = {order = _sorting_transport .. "-b[power]-b[medium-3]"},
-			upper = {name = "medium-electric-pole-3-upper", icon = _gfxpath.icon .. "medium-electric-pole-upper.png"},
-			lower = {name = "medium-electric-pole-3-lower", icon = _gfxpath.icon .. "medium-electric-pole-lower.png"}
+		standard_4 = {
+			common = {order = _sorting_transport .. "-b[power]-a[standard]-d"},
+			lower = {name = "energy-transport-4-lower", icon = _gfxpath.icon .. "energy-transport-lower.png"},
+			upper = {name = "energy-transport-4-upper", icon = _gfxpath.icon .. "energy-transport-upper.png"}
 		},
-		medium_4 = {
-			common = {order = _sorting_transport .. "-b[power]-b[medium-4]"},
-			upper = {name = "medium-electric-pole-4-upper", icon = _gfxpath.icon .. "medium-electric-pole-upper.png"},
-			lower = {name = "medium-electric-pole-4-lower", icon = _gfxpath.icon .. "medium-electric-pole-lower.png"}
-		},
-		big = {
-			common = {order = _sorting_transport .. "-b[power]-c[big]"},
-			upper = {name = "big-electric-pole-upper", icon = _gfxpath.icon .. "big-electric-pole-upper.png"},
-			lower = {name = "big-electric-pole-lower", icon = _gfxpath.icon .. "big-electric-pole-lower.png"}
-		},
-		big_2 = {
-			common = {order = _sorting_transport .. "-b[power]-c[big-2]"},
-			upper = {name = "big-electric-pole-2-upper", icon = _gfxpath.icon .. "big-electric-pole-upper.png"},
-			lower = {name = "big-electric-pole-2-lower", icon = _gfxpath.icon .. "big-electric-pole-lower.png"}
-		},
-		big_3 = {
-			common = {order = _sorting_transport .. "-b[power]-c[big-3]"},
-			upper = {name = "big-electric-pole-3-upper", icon = _gfxpath.icon .. "big-electric-pole-upper.png"},
-			lower = {name = "big-electric-pole-3-lower", icon = _gfxpath.icon .. "big-electric-pole-lower.png"}
-		},
-		big_4 = {
-			common = {order = _sorting_transport .. "-b[power]-c[big-4]"},
-			upper = {name = "big-electric-pole-4-upper", icon = _gfxpath.icon .. "big-electric-pole-upper.png"},
-			lower = {name = "big-electric-pole-4-lower", icon = _gfxpath.icon .. "big-electric-pole-lower.png"}
-		},
-		substation = {
-			common = {order = _sorting_transport .. "-b[power]-d[substation]"},
-			upper = {name = "substation-upper", icon = _gfxpath.icon .. "substation-upper.png"},
-			lower = {name = "substation-lower", icon = _gfxpath.icon .. "substation-lower.png"}
-		},
-		substation_2 = {
-			common = {order = _sorting_transport .. "-b[power]-d[substation-2]"},
-			upper = {name = "substation-2-upper", icon = _gfxpath.icon .. "substation-upper.png"},
-			lower = {name = "substation-2-lower", icon = _gfxpath.icon .. "substation-lower.png"}
-		},
-		substation_3 = {
-			common = {order = _sorting_transport .. "-b[power]-d[substation-3]"},
-			upper = {name = "substation-3-upper", icon = _gfxpath.icon .. "substation-upper.png"},
-			lower = {name = "substation-3-lower", icon = _gfxpath.icon .. "substation-lower.png"}
-		},
-		substation_4 = {
-			common = {order = _sorting_transport .. "-b[power]-d[substation-4]"},
-			upper = {name = "substation-4-upper", icon = _gfxpath.icon .. "substation-upper.png"},
-			lower = {name = "substation-4-lower", icon = _gfxpath.icon .. "substation-lower.png"}
+		advanced = {
+			common = {order = _sorting_transport .. "-b[power]-b[advanced]"},
+			lower = {name = "adv-energy-transport-lower", icon = _gfxpath.icon .. "adv-energy-transport-lower.png"},
+			upper = {name = "adv-energy-transport-upper", icon = _gfxpath.icon .. "adv-energy-transport-upper.png"}
 		}
 	},
 	access_shaft = {
@@ -225,22 +193,22 @@ _prototypes.item = { -- Items
 		common = {flags = {"goes-to-quickbar"}, order = _sorting_transport .. "-d[other]-a[fluid-transport]-z", 
 			subgroup = _prototypes.item_subgroup.surfaces.transport.other.name, override = true},
 		standard = {
-			common = {order = _sorting_transport .. "-d[other]-a[fluid-transport]-a[standard]"},
+			common = {order = _sorting_transport .. "-d[fluid-transport]-a[standard]-a"},
 			upper = {name = "fluid-transport-upper", icon = _gfxpath.icon .. "fluid-transport-upper.png"},
 			lower = {name = "fluid-transport-lower", icon = _gfxpath.icon .. "fluid-transport-lower.png"}
 		},
 		standard_2 = {
-			common = {order = _sorting_transport .. "-d[other]-a[fluid-transport]-a[standard-2]"},
+			common = {order = _sorting_transport .. "-d[fluid-transport]-a[standard]-b"},
 			upper = {name = "fluid-transport-2-upper", icon = _gfxpath.icon .. "fluid-transport-upper.png"},
 			lower = {name = "fluid-transport-2-lower", icon = _gfxpath.icon .. "fluid-transport-lower.png"}		
 		},
 		standard_3 = {
-			common = {order = _sorting_transport .. "-d[other]-a[fluid-transport]-a[standard-3]"},
+			common = {order = _sorting_transport .. "-d[fluid-transport]-a[standard]-c"},
 			upper = {name = "fluid-transport-3-upper", icon = _gfxpath.icon .. "fluid-transport-upper.png"},
 			lower = {name = "fluid-transport-3-lower", icon = _gfxpath.icon .. "fluid-transport-lower.png"}		
 		},
 		standard_4 = {
-			common = {order = _sorting_transport .. "-d[other]-a[fluid-transport]-a[standard-4]"},
+			common = {order = _sorting_transport .. "-d[fluid-transport]-a[standard]-d"},
 			upper = {name = "fluid-transport-4-upper", icon = _gfxpath.icon .. "fluid-transport-upper.png"},
 			lower = {name = "fluid-transport-4-lower", icon = _gfxpath.icon .. "fluid-transport-lower.png"}		
 		}
@@ -264,32 +232,32 @@ _prototypes.item = { -- Items
 			down = {name = "steel-transport-chest-down", icon = _gfxpath.icon .. "steel-transport-chest-down.png"}
 		},
 		logistic = {
-			common = {order = _sorting_transport .. "-c[chest]-d[logistic]"},
+			common = {order = _sorting_transport .. "-c[chest]-d[logistic]-a"},
 			up = {name = "logistic-transport-chest-up", icon = _gfxpath.icon .. "logistic-transport-chest-up.png"},
 			down = {name = "logistic-transport-chest-down", icon = _gfxpath.icon .. "logistic-transport-chest-down.png"}
 		},
 		logistic_2 = {
-			common = {order = _sorting_transport .. "-c[chest]-d[logistic-2]"},
+			common = {order = _sorting_transport .. "-c[chest]-d[logistic]-b"},
 			up = {name = "logistic-transport-chest-2-up", icon = _gfxpath.icon .. "logistic-transport-chest-2-up.png"},
 			down = {name = "logistic-transport-chest-2-down", icon = _gfxpath.icon .. "logistic-transport-chest-2-down.png"}
 		},
 		storehouse = {
-			common = {order = _sorting_transport .. "-c[chest]-e[warehousing]-a[storehouse]"},
+			common = {order = _sorting_transport .. "-c[chest]-e[warehousing]-a[storehouse]-a"},
 			up = {name = "transport-storehouse-up", icon = _gfxpath.icon .. "transport-storehouse-up.png"},
 			down = {name = "transport-storehouse-down", icon = _gfxpath.icon .. "transport-storehouse-down.png"}
 		},
 		logistic_storehouse = {
-			common = {order = _sorting_transport .. "-c[chest]-e[warehousing]-a[storehouse-logistic]"},
+			common = {order = _sorting_transport .. "-c[chest]-e[warehousing]-a[storehouse]-b"},
 			up = {name = "logistic-transport-storehouse-up", icon = _gfxpath.icon .. "logistic-transport-storehouse-up.png"},
 			down = {name = "logistic-transport-storehouse-down", icon = _gfxpath.icon .. "logistic-transport-storehouse-down.png"}
 		},
 		warehouse = {
-			common = {order = _sorting_transport .. "-c[chest]-e[warehousing]-b[warehouse]"},
+			common = {order = _sorting_transport .. "-c[chest]-e[warehousing]-b[warehouse]-a"},
 			up = {name = "transport-warehouse-up", icon = _gfxpath.icon .. "transport-warehouse-up.png"},
 			down = {name = "transport-warehouse-down", icon = _gfxpath.icon .. "transport-warehouse-down.png"}
 		},
 		logistic_warehouse = {
-			common = {order = _sorting_transport .. "-c[chest]-e[warehousing]-b[warehouse-logistic]"},
+			common = {order = _sorting_transport .. "-c[chest]-e[warehousing]-b[warehouse]-b"},
 			up = {name = "logistic-transport-warehouse-up", icon = _gfxpath.icon .. "logistic-transport-warehouse-up.png"},
 			down = {name = "logistic-transport-warehouse-down", icon = _gfxpath.icon .. "logistic-transport-warehouse-down.png"}
 		}
@@ -340,108 +308,74 @@ _prototypes.entity = {
 			override = true
 		},
 		underground_entrance = {name = _prototypes.item.access_shaft.underground_entrance.name, icon = _prototypes.item.access_shaft.underground_entrance.icon,
-			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.underground_exit.name .. ".png", "medium", 96, 96)
+			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.underground_entrance.name .. ".png", "medium", 96, 96)
 		},
 		underground_exit = {name = _prototypes.item.access_shaft.underground_exit.name, icon = _prototypes.item.access_shaft.underground_exit.icon,
 			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.underground_exit.name .. ".png", "medium", 96, 96)
 		},
 		sky_entrance = {name = _prototypes.item.access_shaft.sky_entrance.name, icon = _prototypes.item.access_shaft.sky_entrance.icon,
-			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.underground_exit.name .. ".png", "medium", 96, 96)
+			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.sky_entrance.name .. ".png", "medium", 96, 96)
 		},
 		sky_exit = {name = _prototypes.item.access_shaft.sky_exit.name, icon = _prototypes.item.access_shaft.sky_exit.icon,
-			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.underground_exit.name .. ".png", "medium", 96, 96)
+			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.sky_exit.name .. ".png", "medium", 96, 96)
+		}
+	},
+	energy_transport = {
+		common = {order = _prototypes.item.energy_transport.common.order, subgroup = _prototypes.item.energy_transport.common.subgroup, 
+			energy_source = {usage_priority = "solar"},	override = true},
+		standard = {
+			common = {order = _prototypes.item.energy_transport.standard.common.order, energy_source = {buffer_capacity = "5MJ", input_flow_limit = "2.5MW",
+				output_flow_limit = "2.5MW"}},
+			lower = {name = _prototypes.item.energy_transport.standard.lower.name, icon = _prototypes.item.energy_transport.standard.lower.icon},
+			upper = {name = _prototypes.item.energy_transport.standard.upper.name, icon = _prototypes.item.energy_transport.standard.upper.icon}
+		},
+		standard_2 = {
+			common = {order = _prototypes.item.energy_transport.standard_2.common.order, energy_source = {buffer_capacity = "10MJ", input_flow_limit = "5MW",
+				output_flow_limit = "5MW"}},
+			lower = {name = _prototypes.item.energy_transport.standard_2.lower.name, icon = _prototypes.item.energy_transport.standard_2.lower.icon},
+			upper = {name = _prototypes.item.energy_transport.standard_2.upper.name, icon = _prototypes.item.energy_transport.standard_2.upper.icon}
+		},
+		standard_3 = {
+			common = {order = _prototypes.item.energy_transport.standard_3.common.order, energy_source = {buffer_capacity = "15MJ", input_flow_limit = "7.5MW",
+				output_flow_limit = "7.5MW"}},
+			lower = {name = _prototypes.item.energy_transport.standard_3.lower.name, icon = _prototypes.item.energy_transport.standard_3.lower.icon},
+			upper = {name = _prototypes.item.energy_transport.standard_3.upper.name, icon = _prototypes.item.energy_transport.standard_3.upper.icon}
+		},
+		standard_4 = {
+			common = {order = _prototypes.item.energy_transport.standard_4.common.order, energy_source = {buffer_capacity = "22.5MJ", input_flow_limit = "11.25MW",
+				output_flow_limit = "11.25MW"}},
+			lower = {name = _prototypes.item.energy_transport.standard_4.lower.name, icon = _prototypes.item.energy_transport.standard_4.lower.icon},
+			upper = {name = _prototypes.item.energy_transport.standard_4.upper.name, icon = _prototypes.item.energy_transport.standard_4.upper.icon}
+		},
+		advanced = {
+			common = {order = _prototypes.item.energy_transport.advanced.common.order, energy_source = {buffer_capacity = "30MJ", input_flow_limit = "15MW",
+				output_flow_limit = "15MW"}},
+			lower = {name = _prototypes.item.energy_transport.advanced.lower.name, icon = _prototypes.item.energy_transport.advanced.lower.icon},
+			upper = {name = _prototypes.item.energy_transport.advanced.upper.name, icon = _prototypes.item.energy_transport.advanced.upper.icon}
 		}
 	},
 	fluid_transport = {
-		common = {type = "storage-tank", order = _prototypes.item.fluid_transport.common.order, override = true},
+		common = {order = _prototypes.item.fluid_transport.common.order, subgroup = _prototypes.item.fluid_transport.common.subgroup, override = true},
 		standard = {
-			common = {order = _prototypes.item.fluid_transport.standard.order},
+			common = {order = _prototypes.item.fluid_transport.standard.common.order},
 			upper = {name = _prototypes.item.fluid_transport.standard.upper.name, icon = _prototypes.item.fluid_transport.standard.upper.icon},
 			lower = {name = _prototypes.item.fluid_transport.standard.lower.name, icon = _prototypes.item.fluid_transport.standard.lower.icon}
 		},
 		standard_2 = {
-			common = {order = _prototypes.item.fluid_transport.standard_2.order},
+			common = {order = _prototypes.item.fluid_transport.standard_2.common.order},
 			upper = {name = _prototypes.item.fluid_transport.standard_2.upper.name, icon = _prototypes.item.fluid_transport.standard_2.upper.icon},
 			lower = {name = _prototypes.item.fluid_transport.standard_2.lower.name, icon = _prototypes.item.fluid_transport.standard_2.lower.icon}
 		},
 		standard_3 = {
-			common = {order = _prototypes.item.fluid_transport.standard_3.order},
+			common = {order = _prototypes.item.fluid_transport.standard_3.common.order},
 			upper = {name = _prototypes.item.fluid_transport.standard_3.upper.name, icon = _prototypes.item.fluid_transport.standard_3.upper.icon},
 			lower = {name = _prototypes.item.fluid_transport.standard_3.lower.name, icon = _prototypes.item.fluid_transport.standard_3.lower.icon}
 		},
 		standard_4 = {
-			common = {order = _prototypes.item.fluid_transport.standard_4.order},
+			common = {order = _prototypes.item.fluid_transport.standard_4.common.order},
 			upper = {name = _prototypes.item.fluid_transport.standard_4.upper.name, icon = _prototypes.item.fluid_transport.standard_4.upper.icon},
 			lower = {name = _prototypes.item.fluid_transport.standard_4.lower.name, icon = _prototypes.item.fluid_transport.standard_4.lower.icon}
 		}
-	},
-	electric_pole = {
-		common = {order = _prototypes.item.electric_pole.common.order, subgroup = _prototypes.item.electric_pole.common.subgroup, override = true},
-		small = {
-			common = {order = _prototypes.item.electric_pole.small.common.order},
-			upper = {name = _prototypes.item.electric_pole.small.upper.name, icon = _prototypes.item.electric_pole.small.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.small.lower.name, icon = _prototypes.item.electric_pole.small.lower.icon}
-		},
-		medium = {
-			common = {order = _prototypes.item.electric_pole.medium.common.order},
-			upper = {name = _prototypes.item.electric_pole.medium.upper.name, icon = _prototypes.item.electric_pole.medium.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.medium.lower.name, icon = _prototypes.item.electric_pole.medium.lower.icon}
-		},
-		medium_2 = {
-			common = {order = _prototypes.item.electric_pole.medium_2.common.order},
-			upper = {name = _prototypes.item.electric_pole.medium_2.upper.name, icon = _prototypes.item.electric_pole.medium_2.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.medium_2.lower.name, icon = _prototypes.item.electric_pole.medium_2.lower.icon}
-		},
-		medium_3 = {
-			common = {order = _prototypes.item.electric_pole.medium_3.common.order},
-			upper = {name = _prototypes.item.electric_pole.medium_3.upper.name, icon = _prototypes.item.electric_pole.medium_3.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.medium_3.lower.name, icon = _prototypes.item.electric_pole.medium_3.lower.icon}
-		},
-		medium_4 = {
-			common = {order = _prototypes.item.electric_pole.medium_4.common.order},
-			upper = {name = _prototypes.item.electric_pole.medium_4.upper.name, icon = _prototypes.item.electric_pole.medium_4.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.medium_4.lower.name, icon = _prototypes.item.electric_pole.medium_4.lower.icon}
-		},
-		big = {
-			common = {order = _prototypes.item.electric_pole.big.common.order},
-			upper = {name = _prototypes.item.electric_pole.big.upper.name, icon = _prototypes.item.electric_pole.big.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.big.lower.name, icon = _prototypes.item.electric_pole.big.lower.icon}
-		},
-		big_2 = {
-			common = {order = _prototypes.item.electric_pole.big_2.common.order},
-			upper = {name = _prototypes.item.electric_pole.big_2.upper.name, icon = _prototypes.item.electric_pole.big_2.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.big_2.lower.name, icon = _prototypes.item.electric_pole.big_2.lower.icon}
-		},
-		big_3 = {
-			common = {order = _prototypes.item.electric_pole.big_3.common.order},
-			upper = {name = _prototypes.item.electric_pole.big_3.upper.name, icon = _prototypes.item.electric_pole.big_3.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.big_3.lower.name, icon = _prototypes.item.electric_pole.big_3.lower.icon}
-		},
-		big_4 = {
-			common = {order = _prototypes.item.electric_pole.big_4.common.order},
-			upper = {name = _prototypes.item.electric_pole.big_4.upper.name, icon = _prototypes.item.electric_pole.big_4.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.big_4.lower.name, icon = _prototypes.item.electric_pole.big_4.lower.icon}
-		},
-		substation = {
-			common = {order = _prototypes.item.electric_pole.substation.common.order},
-			upper = {name = _prototypes.item.electric_pole.substation.upper.name, icon = _prototypes.item.electric_pole.substation.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.substation.lower.name, icon = _prototypes.item.electric_pole.substation.lower.icon}
-		},
-		substation_2 = {
-			common = {order = _prototypes.item.electric_pole.substation_2.common.order},
-			upper = {name = _prototypes.item.electric_pole.substation_2.upper.name, icon = _prototypes.item.electric_pole.substation_2.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.substation_2.lower.name, icon = _prototypes.item.electric_pole.substation_2.lower.icon}
-		},
-		substation_3 = {
-			common = {order = _prototypes.item.electric_pole.substation_3.common.order},
-			upper = {name = _prototypes.item.electric_pole.substation_3.upper.name, icon = _prototypes.item.electric_pole.substation_3.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.substation_3.lower.name, icon = _prototypes.item.electric_pole.substation_3.lower.icon}
-		},
-		substation_4 = {
-			common = {order = _prototypes.item.electric_pole.substation_4.common.order},
-			upper = {name = _prototypes.item.electric_pole.substation_4.upper.name, icon = _prototypes.item.electric_pole.substation_4.upper.icon},
-			lower = {name = _prototypes.item.electric_pole.substation_4.lower.name, icon = _prototypes.item.electric_pole.substation_4.lower.icon}
-		},
 	},
 	rail_transport = {
 		common = {order = _prototypes.item.rail_transport.common.order, subgroup = _prototypes.item.rail_transport.common.subgroup, override = true},
@@ -612,73 +546,33 @@ _prototypes.recipe = { -- Recipes
 		underground_entrance = {name = _prototypes.item.access_shaft.underground_entrance.name},
 		underground_exit = {name = _prototypes.item.access_shaft.underground_exit.name}
 	},
-	electric_pole = {
+	energy_transport = {
 		common = {subgroup = _prototypes.item_subgroup.surfaces.transport.power.name},
-		big = {
-			common = {ingredients = {{"big-electric-pole", 2}, {_prototypes.item.connector.standard.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.big.upper.name},
-			lower = {name = _prototypes.item.electric_pole.big.lower.name}
+		standard = {
+			common = {ingredients = {{"accumulator", 2}, {_prototypes.item.connector.standard.name, 2}}},
+			upper = {name = _prototypes.item.energy_transport.standard.upper.name},
+			lower = {name = _prototypes.item.energy_transport.standard.lower.name}
 		},
-		big_2 = {
-			common = {ingredients = {{_ref.bobpower.item.big_electric_pole_2, 2}, {_prototypes.item.connector.standard.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.big_2.upper.name},
-			lower = {name = _prototypes.item.electric_pole.big_2.lower.name}
+		standard_2 = {
+			common = {ingredients = {{_ref.bobpower.item.accumulator_2, 2}, {_prototypes.item.connector.improved.name, 2}}},
+			upper = {name = _prototypes.item.energy_transport.standard_2.upper.name},
+			lower = {name = _prototypes.item.energy_transport.standard_2.lower.name}
 		},
-		big_3 = {
-			common = {ingredients = {{_ref.bobpower.item.big_electric_pole_3, 2}, {_prototypes.item.connector.standard.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.big_3.upper.name},
-			lower = {name = _prototypes.item.electric_pole.big_3.lower.name}
+		standard_3 = {
+			common = {ingredients = {{_ref.bobpower.item.accumulator_3, 2}, {_prototypes.item.connector.advanced.name, 2}}},
+			upper = {name = _prototypes.item.energy_transport.standard_3.upper.name},
+			lower = {name = _prototypes.item.energy_transport.standard_3.lower.name}
 		},
-		big_4 = {
-			common = {ingredients = {{_ref.bobpower.item.big_electric_pole_4, 2}, {_prototypes.item.connector.improved.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.big_4.upper.name},
-			lower = {name = _prototypes.item.electric_pole.big_4.lower.name}
+		standard_4 = {
+			common = {ingredients = {{_ref.bobpower.item.accumulator_4, 2}, {_prototypes.item.connector.advanced.name, 4}}},
+			upper = {name = _prototypes.item.energy_transport.standard_4.upper.name},
+			lower = {name = _prototypes.item.energy_transport.standard_4.lower.name}
 		},
-		medium = {
-			common = {ingredients = {{"medium-electric-pole", 2}, {_prototypes.item.connector.basic.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.medium.upper.name},
-			lower = {name = _prototypes.item.electric_pole.medium.lower.name}
+		advanced = {
+			common = {ingredients = {{"accumulator", 20}, {_prototypes.item.connector.advanced.name, 8}}},
+			upper = {name = _prototypes.item.energy_transport.standard.upper.name},
+			lower = {name = _prototypes.item.energy_transport.standard.lower.name}
 		},
-		medium_2 = {
-			common = {ingredients = {{_ref.bobpower.item.medium_electric_pole_2, 2}, {_prototypes.item.connector.basic.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.medium_2.upper.name},
-			lower = {name = _prototypes.item.electric_pole.medium_2.lower.name}
-		},
-		medium_3 = {
-			common = {ingredients = {{_ref.bobpower.item.medium_electric_pole_3, 2}, {_prototypes.item.connector.standard.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.medium_3.upper.name},
-			lower = {name = _prototypes.item.electric_pole.medium_3.lower.name}
-		},
-		medium_4 = {
-			common = {ingredients = {{_ref.bobpower.item.medium_electric_pole_4, 2}, {_prototypes.item.connector.standard.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.medium_4.upper.name},
-			lower = {name = _prototypes.item.electric_pole.medium_4.lower.name}
-		},
-		small = {
-			common = {ingredients = {{"small-electric-pole", 2}, {_prototypes.item.connector.crude.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.small.upper.name},
-			lower = {name = _prototypes.item.electric_pole.small.lower.name}
-		},
-		substation = {
-			common = {ingredients = {{"substation", 2}, {_prototypes.item.connector.improved.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.substation.upper.name},
-			lower = {name = _prototypes.item.electric_pole.substation.lower.name}
-		},
-		substation_2 = {
-			common = {ingredients = {{_ref.bobpower.item.substation_2, 2}, {_prototypes.item.connector.improved.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.substation_2.upper.name},
-			lower = {name = _prototypes.item.electric_pole.substation_2.lower.name}
-		},
-		substation_3 = {
-			common = {ingredients = {{_ref.bobpower.item.substation_3, 2}, {_prototypes.item.connector.improved.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.substation_3.upper.name},
-			lower = {name = _prototypes.item.electric_pole.substation_3.lower.name}
-		},
-		substation_4 = {
-			common = {ingredients = {{_ref.bobpower.item.substation_4, 2}, {_prototypes.item.connector.advanced.name, 2}}},
-			upper = {name = _prototypes.item.electric_pole.substation_4.upper.name},
-			lower = {name = _prototypes.item.electric_pole.substation_4.lower.name}
-		}
 	},
 	fluid_transport = {
 		common = {subgroup = _prototypes.item_subgroup.surfaces.transport.other.name},
@@ -778,7 +672,7 @@ function proto.get(_path_to_field, _field, _common, _inherit)
 					_path = _path[string.lower(v)]
 					if _common and type(_path["common"]) == "table" then
 						for k, v in pairs(_path["common"]) do
-							_data[k] = copy_data(v, true)
+							_data[k] = (type(_data[k]) == "table") and merge_data(_data[k], v) or copy_data(v, true)
 						end
 					end
 				else
@@ -793,7 +687,7 @@ function proto.get(_path_to_field, _field, _common, _inherit)
 			end
 			if type(_path[string.lower(_field)]) == "table" then
 				for k, v in pairs(_path[string.lower(_field)]) do
-					_data[k] = copy_data(v, true)
+					_data[k] = (type(_data[k]) == "table") and merge_data(_data[k], v) or copy_data(v, true)
 				end
 			end
 			if _data.override or (_type == "recipe" and _data.result ~= "string") or

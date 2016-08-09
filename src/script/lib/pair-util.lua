@@ -127,12 +127,13 @@ function pairutil.finalize_paired_entity(_entity, _paired_entity, _player_index)
 		local _pair_data = pairdata.get(_entity)
 		_paired_entity = _paired_entity or pairutil.find_paired_entity(_entity)
 		if _paired_entity then
-			if _pair_data.class == pairclass.get("electric-pole") then
-				api.entity.connect_neighbour(_entity, _paired_entity, const.wire.all)
+			if _pair_data.class == pairclass.get("energy-transport") then
+				table.insert(global.energy_transport, {a = _entity, b = _paired_entity})
+				api.entity.connect_neighbour(_entity, _paired_entity, const.wire.circuit)
 			elseif _pair_data.class == pairclass.get("fluid-transport") then
 				table.insert(global.fluid_transport, {a = _entity, b = _paired_entity})
-			elseif _pair_data.class == pairclass.get("transport-chest") then
-				table.insert(global.transport_chests, {input = _entity, output = _paired_entity, tier = _pair_data.custom.tier, modifier = _pair_data.modifier})
+			elseif _pair_data.class == pairclass.get("item-transport") then
+				table.insert(global.item_transport, {input = _entity, output = _paired_entity, tier = _pair_data.custom.tier, modifier = _pair_data.modifier})
 			elseif _pair_data.class == pairclass.get("rail-transport") then
 				api.entity.set_direction(_paired_entity, api.entity.direction(_entity))
 			end

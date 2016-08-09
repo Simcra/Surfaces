@@ -13,7 +13,8 @@ require("script.const")
 Structures module, used to construct and validate data for use with the LuaAPI and surfaces mod.
 Functions defined by this module may only be used after the data loading phase.
 
-@module struct @extends script.lib.struct-base
+@module struct
+@extends script.lib.struct-base
 ]]
 struct = {}
 struct = require("script.lib.struct-base")

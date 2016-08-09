@@ -103,7 +103,7 @@ function pairdata.insert(_entity_name, _paired_entity_name, _relative_location, 
 		if _pairdata.custom.tile then
 			skytiles.insert(_pairdata.custom.tile)
 		end
-		if _pair_class == pairclass.get("transport-chest") and (_custom_data == nil or _custom_data.tier == nil or const.tier_valid[_custom_data.tier] == nil) then
+		if _pair_class == pairclass.get("item-transport") and (_custom_data == nil or _custom_data.tier == nil or const.tier_valid[_custom_data.tier] == nil) then
 			_pairdata.custom.tier = const.tier.crude
 		end
 		paired_entity_data[_entity_name] = _pairdata
@@ -161,7 +161,7 @@ passes a table of pairclass entries to the <code>pairclass.insert(_name)</code> 
 
 @param _classes [Required] - a table of strings to be passed to <code>pairclass.insert(_name)</code>
 ]]
-function pairclass.insert_array(_classes)															-- _classes is a table of strings, for example: {"access-shaft", "electric-pole"}
+function pairclass.insert_array(_classes)															-- _classes is a table of strings, for example: {"access-shaft", "energy-transport"}
 	for k, v in pairs(_classes) do
 		pause_index = true
 		pairclass.insert(v)																			-- each pair class will be inserted and assigned a unique identifier
@@ -177,7 +177,7 @@ gets the string index of the pair class from a valid pair class ID
 function pairclass.reverse(_id) 																	--
 	if type(_id) == "number" and paired_entity_classes_reverse[_id] then
 		return paired_entity_classes_reverse[_id]
-end
+	end
 end
 
 --[[--
