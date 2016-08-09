@@ -81,22 +81,22 @@ local addon_data = {
 		{"logistic-transport-warehouse-down", "logistic-receiver-warehouse-lower", rl_below, pc_item_trans, true, {tier = t_adv, modifier = 20}, 2}
 	},
 	bobpower = {
-		{"energy-transport-2-upper", "energy-transport-2-lower", rl_below, pc_energy_trans, true},
-		{"energy-transport-2-lower", "energy-transport-2-upper", rl_above, pc_energy_trans, true},
-		{"energy-transport-3-upper", "energy-transport-3-lower", rl_below, pc_energy_trans, true},
-		{"energy-transport-3-lower", "energy-transport-3-upper", rl_above, pc_energy_trans, true},
-		{"energy-transport-4-upper", "energy-transport-4-lower", rl_below, pc_energy_trans, true},
-		{"energy-transport-4-lower", "energy-transport-4-upper", rl_above, pc_energy_trans, true}
+		{"energy-transport-2-upper", "energy-transport-2-lower", rl_below, pc_energy_trans, true, nil, 0.5},
+		{"energy-transport-2-lower", "energy-transport-2-upper", rl_above, pc_energy_trans, true, nil, 0.5},
+		{"energy-transport-3-upper", "energy-transport-3-lower", rl_below, pc_energy_trans, true, nil, 0.5},
+		{"energy-transport-3-lower", "energy-transport-3-upper", rl_above, pc_energy_trans, true, nil, 0.5},
+		{"energy-transport-4-upper", "energy-transport-4-lower", rl_below, pc_energy_trans, true, nil, 0.5},
+		{"energy-transport-4-lower", "energy-transport-4-upper", rl_above, pc_energy_trans, true, nil, 0.5}
 	},
 	boblogistics = {
 		{"logistic-transport-chest-2-up", "logistic-receiver-chest-2-upper", rl_above, pc_item_trans, true, {tier = t_adv, modifier = 1.5}},
 		{"logistic-transport-chest-2-down", "logistic-receiver-chest-2-lower", rl_below, pc_item_trans, true, {tier = t_adv, modifier = 1.5}},
-		{"fluid-transport-2-upper", "fluid-transport-2-lower", rl_below, pc_fluid_trans, true},
-		{"fluid-transport-2-lower", "fluid-transport-2-upper", rl_above, pc_fluid_trans, true},
-		{"fluid-transport-3-upper", "fluid-transport-3-lower", rl_below, pc_fluid_trans, true},
-		{"fluid-transport-3-lower", "fluid-transport-3-upper", rl_above, pc_fluid_trans, true},
-		{"fluid-transport-4-upper", "fluid-transport-4-lower", rl_below, pc_fluid_trans, true},
-		{"fluid-transport-4-lower", "fluid-transport-4-upper", rl_above, pc_fluid_trans, true}
+		{"fluid-transport-2-upper", "fluid-transport-2-lower", rl_below, pc_fluid_trans, true, nil, 1},
+		{"fluid-transport-2-lower", "fluid-transport-2-upper", rl_above, pc_fluid_trans, true, nil, 1},
+		{"fluid-transport-3-upper", "fluid-transport-3-lower", rl_below, pc_fluid_trans, true, nil, 1},
+		{"fluid-transport-3-lower", "fluid-transport-3-upper", rl_above, pc_fluid_trans, true, nil, 1},
+		{"fluid-transport-4-upper", "fluid-transport-4-lower", rl_below, pc_fluid_trans, true, nil, 1},
+		{"fluid-transport-4-lower", "fluid-transport-4-upper", rl_above, pc_fluid_trans, true, nil, 1}
 	}
 }
 events.set_addon_data(addon_data)

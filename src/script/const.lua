@@ -74,7 +74,7 @@ const = {
 			-- Used to check each player for a nearby access shaft, prior to teleportation.
 			access_shaft_update = {
 				id = 2,
-				tick = 2,
+				tick = 5,
 				func = "check_player_collision_with_access_shafts"
 			},
 			-- Used to update transport chest contents, moves items from transport chests to receiver chests
@@ -86,13 +86,13 @@ const = {
 			-- Used to update intersurface fluid tank contents
 			fluid_transport_update = {
 				id = 4,
-				tick = 3,
+				tick = 10,
 				func = "update_fluid_transport_contents"
 			},
 			-- Used to update intersurface accumulator contents
 			energy_transport_update = {
 				id = 4,
-				tick = 3,
+				tick = 10,
 				func = "update_energy_transport_contents"
 			},
 			-- Used to execute the first task in the Task Manager queue
