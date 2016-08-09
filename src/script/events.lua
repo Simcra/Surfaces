@@ -102,7 +102,7 @@ function events.on_chunk_generated(_event)
 				if _type ~= "player" then
 					api.destroy(v)
 				else
-					pairutil.clear_ground(v.position, v.surface)
+					pairutil.clear_ground(v.position, v.surface, 1)
 				end
 			elseif _type == "unit-spawner" then
 				pairutil.clear_ground(_position, _surface, 11)
