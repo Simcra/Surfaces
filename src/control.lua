@@ -113,7 +113,7 @@ end
 local function on_configuration_changed(_config_data)
 	init_globals()
 	local mod_changes = _config_data["mod_changes"]
-	if mod_changes and mod_changes["Surfaces"] then
+	if mod_changes and mod_changes["Surfaces"] and mod_changes["Surfaces"]["old_version"] then
 		local ver = _config_data["mod_changes"]["Surfaces"]["old_version"]
 		local ver_parts = string.gmatch(ver, "%d+")
 		local ver_rel, ver_mjr, ver_mnr = tonumber(ver_parts()), tonumber(ver_parts()), tonumber(ver_parts())
