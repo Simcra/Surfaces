@@ -136,6 +136,14 @@ function pairutil.finalize_paired_entity(_entity, _paired_entity, _player_index)
 				table.insert(global.item_transport, {input = _entity, output = _paired_entity, tier = _pair_data.custom.tier, modifier = _pair_data.modifier})
 			elseif _pair_data.class == pairclass.get("rail-transport") then
 				api.entity.set_direction(_paired_entity, api.entity.direction(_entity))
+			elseif _pair_data.class == pairclass.get("access-shaft") then
+				--Prevent people from opening or driving the access-shaft (since it's really a vehicle)
+				_entity.operable = false
+				--Add some fuel into the access-shaft vehicle to prevent the "no-fuel" icon from flashing
+				_entity.get_inventory(defines.inventory.fuel).insert({name = "coal", count = 100})
+				
+				_paired_entity.operable = false
+				_paired_entity.get_inventory(defines.inventory.fuel).insert({name = "coal", count = 100})
 			end
 		else
 			if _player_index and api.game.player(_player_index) then

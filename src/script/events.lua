@@ -173,7 +173,20 @@ function events.on_canceled_deconstruction(_event)
 end
 
 function events.on_player_driving_changed_state(_event)
+	local _player = game.players[_event.player_index]
 	
+	if _player.vehicle ~= nil then
+		if pairdata.exists(_player.vehicle) then
+			local _pairdata = pairdata.get(_player.vehicle)
+			
+			if _pairdata.class == pairclass.get("access-shaft") then
+				local _paired_access_shaft = pairutil.find_paired_entity(_player.vehicle)
+				if api.valid(_paired_access_shaft) then
+					global.players_using_access_shafts[_player.name] = {time_waiting = 0, entity = _player, destination = _paired_access_shaft}
+				end
+			end
+		end
+	end
 end
 
 function events.on_put_item(_event)
@@ -232,7 +245,7 @@ end
 function eventmgr.update_players_using_access_shafts(_event)
 	global.players_using_access_shafts = global.players_using_access_shafts or {}
 	for k, v in pairs(global.players_using_access_shafts) do
-		if v.entity.walking_state.walking == true or v.destination == nil then
+		if v.entity.walking_state.walking == true or v.entity.vehicle == nil or v.destination == nil then
 			global.players_using_access_shafts[k] = nil
 		else
 			if v.time_waiting >= config.teleportation_time_waiting then
@@ -246,9 +259,11 @@ function eventmgr.update_players_using_access_shafts(_event)
 	end
 end
 
--- This function checks whether any players are near an access shaft and adds them to the global table for players using access shafts if they are within range of one and not moving
+--[[ This function checks whether any players are near an access shaft and adds them to the global table for players using access shafts if they are within range of one and not moving
+
+DEPRECATED - Access shafts are now vehicles, handled by on_player_driving_changed_state event. ]]--
 function eventmgr.check_player_collision_with_access_shafts(_event)
-	for _, _player in pairs(api.game.players()) do
+	--[[for _, _player in pairs(api.game.players()) do
 		if _player.walking_state.walking ~= true and global.players_using_access_shafts[_player.name] == nil then
 			local _access_shaft = surfaces.find_nearby_access_shaft(_player, config.teleportation_check_range, _player.surface)
 			if api.valid(_access_shaft) then
@@ -258,7 +273,7 @@ function eventmgr.check_player_collision_with_access_shafts(_event)
 				end
 			end
 		end
-	end
+	end]]--
 end
 
 -- This function updates the contents of each transport and receiver chest in the map, providing that they are both valid and if they are not, they will be destroyed

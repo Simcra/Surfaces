@@ -294,7 +294,7 @@ _prototypes.entity = {
 	},
 	access_shaft = {
 		common = {
-			type = "simple-entity", 
+			type = "car", 
 			flags = {},
 			collision_mask = {"object-layer", "player-layer"},
 			order = _prototypes.item.access_shaft.common.order,
@@ -305,19 +305,85 @@ _prototypes.entity = {
 			minable = {hardness = 1, mining_time = 8},
 			render_layer = "object",
 			map_color = util.RGB(127, 88, 43, 50),
+			acceleration_per_energy = 1,
+			breaking_speed = 0,
+			energy_per_hit_point = 1,
+			effectivity = 0.01,
+			burner = {
+				effectivity = 0.01,
+				fuel_inventory_size = 1
+			},
+			braking_power = "1W",
+			consumption = "0W",
+			friction = 0,
+			rotation_speed = 0,
+			weight = 100,
+			inventory_size = 0,
 			override = true
 		},
 		underground_entrance = {name = _prototypes.item.access_shaft.underground_entrance.name, icon = _prototypes.item.access_shaft.underground_entrance.icon,
-			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.underground_entrance.name .. ".png", "medium", 96, 96)
+			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.underground_entrance.name .. ".png", "medium", 96, 96),
+			animation = {
+				layers = {
+					{
+						filename = _gfxpath.entity .. _prototypes.item.access_shaft.underground_entrance.name .. ".png",
+						width = 96,
+						height = 96,
+						frame_count = 1,
+						direction_count = 1,
+						animation_speed = 0,
+						max_advance = 0
+					}
+				}
+			}
 		},
 		underground_exit = {name = _prototypes.item.access_shaft.underground_exit.name, icon = _prototypes.item.access_shaft.underground_exit.icon,
-			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.underground_exit.name .. ".png", "medium", 96, 96)
+			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.underground_exit.name .. ".png", "medium", 96, 96),
+			animation = {
+				layers = {
+					{
+						filename = _gfxpath.entity .. _prototypes.item.access_shaft.underground_exit.name .. ".png",
+						width = 96,
+						height = 96,
+						frame_count = 1,
+						direction_count = 1,
+						animation_speed = 0,
+						max_advance = 0
+					}
+				}
+			}
 		},
 		sky_entrance = {name = _prototypes.item.access_shaft.sky_entrance.name, icon = _prototypes.item.access_shaft.sky_entrance.icon,
-			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.sky_entrance.name .. ".png", "medium", 96, 96)
+			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.sky_entrance.name .. ".png", "medium", 96, 96),
+			animation = {
+				layers = {
+					{
+						filename = _gfxpath.entity .. _prototypes.item.access_shaft.sky_entrance.name .. ".png",
+						width = 96,
+						height = 96,
+						frame_count = 1,
+						direction_count = 1,
+						animation_speed = 0,
+						max_advance = 0
+					}
+				}
+			}
 		},
 		sky_exit = {name = _prototypes.item.access_shaft.sky_exit.name, icon = _prototypes.item.access_shaft.sky_exit.icon,
-			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.sky_exit.name .. ".png", "medium", 96, 96)
+			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.sky_exit.name .. ".png", "medium", 96, 96),
+			animation = {
+				layers = {
+					{
+						filename = _gfxpath.entity .. _prototypes.item.access_shaft.sky_exit.name .. ".png",
+						width = 96,
+						height = 96,
+						frame_count = 1,
+						direction_count = 1,
+						animation_speed = 0,
+						max_advance = 0
+					}
+				}
+			}
 		}
 	},
 	energy_transport = {
