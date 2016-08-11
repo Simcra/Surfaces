@@ -68,33 +68,6 @@ _ref.warehousing.entity = _ref.warehousing.item -- entity names and item names a
 _ref.bobpower.entity = _ref.bobpower.item -- entity names and item names are identical, no point defining duplicate data
 _ref.boblogistics.entity = _ref.boblogistics.item -- entity names and item names are identical, no point defining duplicate data
 
-local function copy_data(_data, _recursive)
-	local _result
-	if type(_data) == "table" and _recursive then
-		_result = {}
-		for k, v in pairs(_data) do
-			_result[k] = copy_data(v, _recursive)
-		end
-	else
-		return _data
-	end
-	return _result
-end
-
-local function merge_data(_data, _override_data)
-	if type(_data) == "table" and type(_override_data) == "table" then
-		local _result = copy_data(_data, true)
-		for k, v in pairs(_override_data) do
-			local _new_data = v
-			if type(_result[k]) == "table" and type(v) == "table" then
-				_new_data = merge_data(_result[k], v)
-			end 
-			_result[k] = _new_data
-		end
-		return _result
-	end
-end
-
 _prototypes.item_group = { -- Item Groups
 	common = {type = "item-group"},
 	surfaces = {name = "surfaces", icon = _gfxpath.group .. "surfaces.png", inventory_order = "surfaces", order = "surfaces"}
@@ -176,10 +149,10 @@ _prototypes.item = { -- Items
 	access_shaft = {
 		common = {flags = {"goes-to-quickbar"}, stack_size = 1, order = _sorting_transport .. "-a[player]", fuel_value = "12MJ",
 			subgroup = _prototypes.item_subgroup.surfaces.transport.player.name, override = true},
-		sky_entrance = {name = "sky-entrance", icon = _gfxpath.icon .. "sky-entrance.png"},
-		sky_exit = {name = "sky-exit", icon = _gfxpath.icon .. "sky-exit.png"},
-		underground_entrance = {name = "underground-entrance", icon = _gfxpath.icon .. "underground-entrance.png"},
-		underground_exit = {name = "underground-exit", icon = _gfxpath.icon .. "underground-exit.png"}
+		sky_entrance = {name = "platform-access-shaft-lower", icon = _gfxpath.icon .. "platform-access-shaft-lower.png"},
+		sky_exit = {name = "platform-access-shaft-upper", icon = _gfxpath.icon .. "platform-access-shaft-upper.png"},
+		underground_entrance = {name = "cavern-access-shaft-upper", icon = _gfxpath.icon .. "cavern-access-shaft-upper.png"},
+		underground_exit = {name = "cavern-access-shaft-lower", icon = _gfxpath.icon .. "cavern-access-shaft-lower.png"}
 	},
 	rail_transport = {
 		common = {flags = {"goes-to-quickbar"}, stack_size = 10, order = _sorting_transport .. "-d[other]-b[rail-transport]-z",
@@ -309,86 +282,35 @@ _prototypes.entity = {
 			breaking_speed = 0,
 			energy_per_hit_point = 1,
 			effectivity = 0.01,
-			burner = {
-				effectivity = 0.01,
-				fuel_inventory_size = 1
-			},
+			burner = {effectivity = 0.01, fuel_inventory_size = 1},
 			braking_power = "1W",
 			consumption = "0W",
 			friction = 0,
 			rotation_speed = 0,
 			weight = 100,
 			inventory_size = 0,
-			override = true
+			animation = {layers = {{width = 96, height = 96, frame_count = 1, direction_count = 1, animation_speed = 0, max_advance = 0}}},
+			override = true,
 		},
 		underground_entrance = {name = _prototypes.item.access_shaft.underground_entrance.name, icon = _prototypes.item.access_shaft.underground_entrance.icon,
 			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.underground_entrance.name .. ".png", "medium", 96, 96),
-			animation = {
-				layers = {
-					{
-						filename = _gfxpath.entity .. _prototypes.item.access_shaft.underground_entrance.name .. ".png",
-						width = 96,
-						height = 96,
-						frame_count = 1,
-						direction_count = 1,
-						animation_speed = 0,
-						max_advance = 0
-					}
-				}
-			}
+			animation = {layers = {{filename = _gfxpath.entity .. _prototypes.item.access_shaft.underground_entrance.name .. ".png"}}}
 		},
 		underground_exit = {name = _prototypes.item.access_shaft.underground_exit.name, icon = _prototypes.item.access_shaft.underground_exit.icon,
 			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.underground_exit.name .. ".png", "medium", 96, 96),
-			animation = {
-				layers = {
-					{
-						filename = _gfxpath.entity .. _prototypes.item.access_shaft.underground_exit.name .. ".png",
-						width = 96,
-						height = 96,
-						frame_count = 1,
-						direction_count = 1,
-						animation_speed = 0,
-						max_advance = 0
-					}
-				}
-			}
+			animation = {layers = {{filename = _gfxpath.entity .. _prototypes.item.access_shaft.underground_exit.name .. ".png"}}}
 		},
 		sky_entrance = {name = _prototypes.item.access_shaft.sky_entrance.name, icon = _prototypes.item.access_shaft.sky_entrance.icon,
 			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.sky_entrance.name .. ".png", "medium", 96, 96),
-			animation = {
-				layers = {
-					{
-						filename = _gfxpath.entity .. _prototypes.item.access_shaft.sky_entrance.name .. ".png",
-						width = 96,
-						height = 96,
-						frame_count = 1,
-						direction_count = 1,
-						animation_speed = 0,
-						max_advance = 0
-					}
-				}
-			}
+			animation = {layers = {{filename = _gfxpath.entity .. _prototypes.item.access_shaft.sky_entrance.name .. ".png"}}}
 		},
 		sky_exit = {name = _prototypes.item.access_shaft.sky_exit.name, icon = _prototypes.item.access_shaft.sky_exit.icon,
 			pictures = struct.Picture(_gfxpath.entity .. _prototypes.item.access_shaft.sky_exit.name .. ".png", "medium", 96, 96),
-			animation = {
-				layers = {
-					{
-						filename = _gfxpath.entity .. _prototypes.item.access_shaft.sky_exit.name .. ".png",
-						width = 96,
-						height = 96,
-						frame_count = 1,
-						direction_count = 1,
-						animation_speed = 0,
-						max_advance = 0
-					}
-				}
-			}
+			animation = {layers = {{filename = _gfxpath.entity .. _prototypes.item.access_shaft.sky_exit.name .. ".png"}}}
 		}
 	},
 	energy_transport = {
-		common = {order = _prototypes.item.energy_transport.common.order, subgroup = _prototypes.item.energy_transport.common.subgroup, 
-			energy_source = {usage_priority = "solar"},	override = true},
+		common = {order = _prototypes.item.energy_transport.common.order, subgroup = _prototypes.item.energy_transport.common.subgroup, override = true},
 		standard = {
 			common = {order = _prototypes.item.energy_transport.standard.common.order, energy_source = {buffer_capacity = "5MJ", input_flow_limit = "2.5MW",
 				output_flow_limit = "2.5MW"}},
@@ -544,13 +466,14 @@ _prototypes.technology = { -- Technology
 }
 
 _prototypes.tile = { -- Tiles
-	common = {type = "tile", decorative_removal_probability = 1, collision_mask = {"ground-tile"}, needs_correction = false, 
+	common = {type = "tile", decorative_removal_probability = 1, needs_correction = false, 
 		ageing = 0, group = _prototypes.item_group.surfaces.name
 	},
 	underground_dirt = {
 		name = "underground-dirt",
 		icon = _gfxpath.icon .. "underground-dirt.png",
 		layer = 45,
+		collision_mask = {"ground-tile"},
 		variants = struct.Variants(_gfxpath.terrain, "underground-dirt", {4,0,0,0,0,0}, {1}),
 		walking_speed_modifier = 0.8,
 		map_color = util.RGB(107, 44, 4)
@@ -573,7 +496,7 @@ _prototypes.tile = { -- Tiles
 	},
 	floor = {
 		common = {minable = {hardness = 0.2, mining_time = 0.5}, walking_speed_modifier = 1, subgroup = _prototypes.item_subgroup.surfaces.tile.name,
-			override = true},
+			collision_mask = {"ground-tile"}, override = true},
 		wood = {
 			name = _prototypes.item.floor.wood.name,
 			layer = 59,
@@ -625,7 +548,7 @@ _prototypes.recipe = { -- Recipes
 			lower = {name = _prototypes.item.energy_transport.standard_2.lower.name}
 		},
 		standard_3 = {
-			common = {ingredients = {{_ref.bobpower.item.accumulator_3, 2}, {_prototypes.item.connector.advanced.name, 2}}},
+			common = {ingredients = {{_ref.bobpower.item.accumulator_3, 2}, {_prototypes.item.connector.improved.name, 2}}},
 			upper = {name = _prototypes.item.energy_transport.standard_3.upper.name},
 			lower = {name = _prototypes.item.energy_transport.standard_3.lower.name}
 		},
@@ -636,14 +559,14 @@ _prototypes.recipe = { -- Recipes
 		},
 		advanced = {
 			common = {ingredients = {{"accumulator", 20}, {_prototypes.item.connector.advanced.name, 8}}},
-			upper = {name = _prototypes.item.energy_transport.standard.upper.name},
-			lower = {name = _prototypes.item.energy_transport.standard.lower.name}
+			upper = {name = _prototypes.item.energy_transport.advanced.upper.name},
+			lower = {name = _prototypes.item.energy_transport.advanced.lower.name}
 		},
 	},
 	fluid_transport = {
 		common = {subgroup = _prototypes.item_subgroup.surfaces.transport.other.name},
 		standard = {
-			common = {ingredients = {{"storage-tank", 2}, {_prototypes.item.connector.standard.name, 2}}},
+			common = {ingredients = {{"storage-tank", 2}, {_prototypes.item.connector.basic.name, 2}}},
 			upper = {name = _prototypes.item.fluid_transport.standard.upper.name},
 			lower = {name = _prototypes.item.fluid_transport.standard.lower.name}
 		},
@@ -728,32 +651,25 @@ _prototypes.recipe = { -- Recipes
 
 function proto.get(_path_to_field, _field, _common, _inherit)
 	if game == nil then -- Only allow this function to be used before game is loaded
-		local _data = (type(_inherit) == "table") and table.deepcopy(_inherit) or {}
-		local _path = _prototypes
+		local _data, _path = (type(_inherit) == "table") and table.copy(_inherit, true) or {}, _prototypes
 		if type(_path_to_field) ~= "table" or type(_field) ~= "string" then
-			error("Unable to fetch prototype definition, path to field is not a table or field is not a string value. (called: proto.get("..tostring(_path_to_field)..", "..tostring(_field)..", "..tostring(_common)..", "..tostring(_inherit).."))")
+			error("Unable to fetch prototype definition, path to field is not a table or field is not a string value. [proto.get("..tostring(_path_to_field)..", "..tostring(_field)..", "..tostring(_common)..", "..tostring(_inherit)..")]")
 		else
 			for k, v in pairs(_path_to_field) do
 				if type(v) == "string" and _path[string.lower(v)] then
 					_path = _path[string.lower(v)]
 					if _common and type(_path["common"]) == "table" then
 						for k, v in pairs(_path["common"]) do
-							_data[k] = (type(_data[k]) == "table") and merge_data(_data[k], v) or copy_data(v, true)
+							_data[k] = (type(_data[k]) == "table") and table.merge(_data[k], v) or table.copy(v, true)
 						end
 					end
 				else
-					local _path_string = "_prototypes"
-					for k, v in pairs(_path_to_field) do
-						_path_string = _path_string .. "." .. string.lower(tostring(v))
-					end
-					_path_string = _path_string .. "." .. _field
-					error("Unable to fetch prototype definition, path to field leads through one or more undefined table values. (called: proto.get("..table.tostring(_path_to_field, true)..", "..tostring(_field)..", "..tostring(_common)..", "..tostring(_inherit).."))")
-					return nil
+					error("Unable to fetch prototype definition, path to field leads through invalid or undefined table space. [proto.get("..table.tostring(_path_to_field, true)..", "..tostring(_field)..", "..tostring(_common)..", "..tostring(_inherit)..")]")
 				end
 			end
 			if type(_path[string.lower(_field)]) == "table" then
 				for k, v in pairs(_path[string.lower(_field)]) do
-					_data[k] = (type(_data[k]) == "table") and merge_data(_data[k], v) or copy_data(v, true)
+					_data[k] = (type(_data[k]) == "table") and table.merge(_data[k], v) or table.copy(v, true)
 				end
 			end
 			if _data.override or (_type == "recipe" and _data.result ~= "string") or
@@ -771,6 +687,9 @@ function proto.get(_path_to_field, _field, _common, _inherit)
 				elseif _type == "item" then
 					if _data.place_as_tile then _data.place_as_tile.result = _data.override_result or _data.name 
 					else _data.place_result = _data.override_result or _data.name end
+				elseif _type == "tile" and _data.minable then
+					_data.minable.results = _data.override_results or _data.minable.results or nil
+					if not(_data.minable.results) then _data.minable.result = _data.override_result or _data.minable.result or _data.name end
 				end
 			end
 			_data.override_result = nil
@@ -792,7 +711,7 @@ function proto.get_field(_path_to_field, _field)
 			end
 		end
 		if _path[string.lower(_field)] then
-			return copy_data(_path[string.lower(_field)], true)
+			return table.copy(_path[string.lower(_field)], true)
 		end
 	end
 end

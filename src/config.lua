@@ -6,9 +6,6 @@
 ]]
 
 config = {
-	teleportation_check_range = 0.5,			-- [default: 0.5]		distance (in tiles) that players must be from the center of an access shaft for it to transport them
-	teleportation_time_waiting = 20,			-- [default: 20]		time (in ticks, 60 ticks = 1 second) that players must stand still before teleportation will occur
-
 	item_transport = {
 		base_count = 4,							-- [default: 4]			base count of items moved during one transport cycle
 		multiplier = {							-- multipliers for each different tier of transport chest

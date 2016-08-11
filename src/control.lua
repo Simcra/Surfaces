@@ -32,10 +32,10 @@ local pc_rail_trans = pairclass.get("rail-transport")
 see <code>pairdata.insert(_entity_name, _paired_entity_name, _relative_location, _pair_class, _placeable_on_nauvis, _custom_data, _clear_tile_radius, _placeable_surface_type)</code> for more information.
 ]]
 local entity_pair_data = {
-	{"sky-entrance", "sky-exit", rl_above, pc_acc_shaft, true, nil, 1, st_sky},
-	{"sky-exit", "sky-entrance", rl_below, pc_acc_shaft, false, nil, 1, st_sky},
-	{"underground-entrance", "underground-exit", rl_below, pc_acc_shaft, true, nil, 1, st_und},
-	{"underground-exit", "underground-entrance", rl_above, pc_acc_shaft, false, nil, 1, st_und},
+	{"platform-access-shaft-lower", "platform-access-shaft-upper", rl_above, pc_acc_shaft, true, nil, 1, st_sky},
+	{"platform-access-shaft-upper", "platform-access-shaft-lower", rl_below, pc_acc_shaft, false, nil, 1, st_sky},
+	{"cavern-access-shaft-upper", "cavern-access-shaft-lower", rl_below, pc_acc_shaft, true, nil, 1, st_und},
+	{"cavern-access-shaft-lower", "cavern-access-shaft-upper", rl_above, pc_acc_shaft, false, nil, 1, st_und},
 	{"wooden-transport-chest-up", "wooden-receiver-chest-upper", rl_above, pc_item_trans, true, {tier = t_crude}},
 	{"wooden-transport-chest-down", "wooden-receiver-chest-lower", rl_below, pc_item_trans, true, {tier = t_crude}},
 	{"iron-transport-chest-up", "iron-receiver-chest-upper", rl_above, pc_item_trans, true, {tier = t_std}},
@@ -61,7 +61,6 @@ skytiles.insert_array(whitelist_sky_tiles)
 local init_globals = function()
 	global.task_queue = global.task_queue or {}
 	global.mod_surfaces = global.mod_surfaces or {}
-	global.players_using_access_shafts = global.players_using_access_shafts or {}
 	global.item_transport = global.item_transport or {}
 	global.fluid_transport = global.fluid_transport or {}
 	global.energy_transport = global.energy_transport or {}
@@ -70,24 +69,6 @@ end
 
 -- mod addon data, will be loaded only if the index of the entry is present in active mods
 local addon_data = {
-	warehousing = { -- Warehousing mod
-		{"transport-storehouse-up", "receiver-storehouse-upper", rl_above, pc_item_trans, true, {tier = t_std, modifier = 8}, 1},
-		{"transport-storehouse-down", "receiver-storehouse-lower", rl_below, pc_item_trans, true, {tier = t_std, modifier = 8}, 1},
-		{"logistic-transport-storehouse-up", "logistic-receiver-storehouse-upper", rl_above, pc_item_trans, true, {tier = t_adv, modifier = 8}, 1},
-		{"logistic-transport-storehouse-down", "logistic-receiver-storehouse-lower", rl_below, pc_item_trans, true, {tier = t_adv, modifier = 8}, 1},
-		{"transport-warehouse-up", "receiver-warehouse-upper", rl_above, pc_item_trans, true, {tier = t_imp, modifier = 20}, 2},
-		{"transport-warehouse-down", "receiver-warehouse-lower", rl_below, pc_item_trans, true, {tier = t_imp, modifier = 20}, 2},
-		{"logistic-transport-warehouse-up", "logistic-receiver-warehouse-upper", rl_above, pc_item_trans, true, {tier = t_adv, modifier = 20}, 2},
-		{"logistic-transport-warehouse-down", "logistic-receiver-warehouse-lower", rl_below, pc_item_trans, true, {tier = t_adv, modifier = 20}, 2}
-	},
-	bobpower = {
-		{"energy-transport-2-upper", "energy-transport-2-lower", rl_below, pc_energy_trans, true, nil, 0.5},
-		{"energy-transport-2-lower", "energy-transport-2-upper", rl_above, pc_energy_trans, true, nil, 0.5},
-		{"energy-transport-3-upper", "energy-transport-3-lower", rl_below, pc_energy_trans, true, nil, 0.5},
-		{"energy-transport-3-lower", "energy-transport-3-upper", rl_above, pc_energy_trans, true, nil, 0.5},
-		{"energy-transport-4-upper", "energy-transport-4-lower", rl_below, pc_energy_trans, true, nil, 0.5},
-		{"energy-transport-4-lower", "energy-transport-4-upper", rl_above, pc_energy_trans, true, nil, 0.5}
-	},
 	boblogistics = {
 		{"logistic-transport-chest-2-up", "logistic-receiver-chest-2-upper", rl_above, pc_item_trans, true, {tier = t_adv, modifier = 1.5}},
 		{"logistic-transport-chest-2-down", "logistic-receiver-chest-2-lower", rl_below, pc_item_trans, true, {tier = t_adv, modifier = 1.5}},
@@ -97,6 +78,24 @@ local addon_data = {
 		{"fluid-transport-3-lower", "fluid-transport-3-upper", rl_above, pc_fluid_trans, true, nil, 1},
 		{"fluid-transport-4-upper", "fluid-transport-4-lower", rl_below, pc_fluid_trans, true, nil, 1},
 		{"fluid-transport-4-lower", "fluid-transport-4-upper", rl_above, pc_fluid_trans, true, nil, 1}
+	},
+	bobpower = {
+		{"energy-transport-2-upper", "energy-transport-2-lower", rl_below, pc_energy_trans, true, nil, 0.5},
+		{"energy-transport-2-lower", "energy-transport-2-upper", rl_above, pc_energy_trans, true, nil, 0.5},
+		{"energy-transport-3-upper", "energy-transport-3-lower", rl_below, pc_energy_trans, true, nil, 0.5},
+		{"energy-transport-3-lower", "energy-transport-3-upper", rl_above, pc_energy_trans, true, nil, 0.5},
+		{"energy-transport-4-upper", "energy-transport-4-lower", rl_below, pc_energy_trans, true, nil, 0.5},
+		{"energy-transport-4-lower", "energy-transport-4-upper", rl_above, pc_energy_trans, true, nil, 0.5}
+	},
+	warehousing = { -- Warehousing mod
+		{"transport-storehouse-up", "receiver-storehouse-upper", rl_above, pc_item_trans, true, {tier = t_std, modifier = 8}, 1},
+		{"transport-storehouse-down", "receiver-storehouse-lower", rl_below, pc_item_trans, true, {tier = t_std, modifier = 8}, 1},
+		{"logistic-transport-storehouse-up", "logistic-receiver-storehouse-upper", rl_above, pc_item_trans, true, {tier = t_adv, modifier = 8}, 1},
+		{"logistic-transport-storehouse-down", "logistic-receiver-storehouse-lower", rl_below, pc_item_trans, true, {tier = t_adv, modifier = 8}, 1},
+		{"transport-warehouse-up", "receiver-warehouse-upper", rl_above, pc_item_trans, true, {tier = t_imp, modifier = 20}, 2},
+		{"transport-warehouse-down", "receiver-warehouse-lower", rl_below, pc_item_trans, true, {tier = t_imp, modifier = 20}, 2},
+		{"logistic-transport-warehouse-up", "logistic-receiver-warehouse-upper", rl_above, pc_item_trans, true, {tier = t_adv, modifier = 20}, 2},
+		{"logistic-transport-warehouse-down", "logistic-receiver-warehouse-lower", rl_below, pc_item_trans, true, {tier = t_adv, modifier = 20}, 2}
 	}
 }
 events.set_addon_data(addon_data)
@@ -118,7 +117,7 @@ local function on_configuration_changed(_config_data)
 		local ver_parts = string.gmatch(ver, "%d+")
 		local ver_rel, ver_mjr, ver_mnr = tonumber(ver_parts()), tonumber(ver_parts()), tonumber(ver_parts())
 		if ver_rel == 0 and ver_mjr == 0 and ver_mnr <= 6 then
-			util.broadcast("Please be patient and wait until surface migrations have been completed")
+			util.broadcast("This map was saved with Surfaces version 0.0.6 or prior and requires migration, please wait until migration has been completed.")
 			remote.call("Surfaces", "migrate", "_")
 		end
 	end
@@ -161,6 +160,10 @@ script.on_event(defines.events.on_picked_up_item, function(event) events.on_pick
 script.on_event(defines.events.on_sector_scanned, function(event) events.on_sector_scanned(event) end)
 -- When an entity dies
 script.on_event(defines.events.on_entity_died, function(event) events.on_entity_died(event) end)
+-- After a robot mines a tile
+script.on_event(defines.events.on_robot_mined_tile, function(event) events.on_robot_mined_tile(event) end)
+-- After a player mines a tile
+script.on_event(defines.events.on_player_mined_tile, function(event) events.on_player_mined_tile(event) end)
 -- When a train changes state, see http://lua-api.factorio.com/latest/defines.html#trainstate for states
 script.on_event(defines.events.on_train_changed_state, function(event) events.on_train_changed_state(event) end)
 -- Every tick

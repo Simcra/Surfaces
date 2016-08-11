@@ -1,0 +1,23 @@
+{
+  "item":
+  [
+    [ "sky-entrance", "platform-access-shaft-lower" ],
+    [ "sky-exit", "platform-access-shaft-upper" ],
+    [ "underground-entrance", "cavern-access-shaft-upper" ],
+    [ "underground-exit", "cavern-access-shaft-lower" ]
+  ],
+  "recipe":
+  [
+    [ "sky-entrance", "platform-access-shaft-lower" ],
+    [ "sky-exit", "platform-access-shaft-upper" ],
+    [ "underground-entrance", "cavern-access-shaft-upper" ],
+    [ "underground-exit", "cavern-access-shaft-lower" ]
+  ],
+  "entity":
+  [
+    [ "sky-entrance", "platform-access-shaft-lower" ],
+    [ "sky-exit", "platform-access-shaft-upper" ],
+    [ "underground-entrance", "cavern-access-shaft-upper" ],
+    [ "underground-exit", "cavern-access-shaft-lower" ]
+  ]
+}

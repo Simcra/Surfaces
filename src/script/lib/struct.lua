@@ -8,79 +8,33 @@
 require("config")
 require("script.lib.util-base")
 require("script.const")
+local struct_base = require("script.lib.struct-base")
 
 --[[--
 Structures module, used to construct and validate data for use with the LuaAPI and surfaces mod.
 Functions defined by this module may only be used after the data loading phase.
 
 @module struct
-@extends script.lib.struct-base
 ]]
 struct = {}
-struct = require("script.lib.struct-base")
 
 --- valid MapGenSize arguments, see the Lua-API concepts page for more information
 local MapGenSize = {valid = table.reverse({"none", "very-low", "very-small", "very-poor", "low", "small", "poor", "normal", "medium", "regular", "high", "big", "good", "very-high", "very-big", "very-good"}), default = "normal"}
 
---[[--
-Returns a table of positions inside the area specified by provided parameters
-
-@param _x1 [Required] - a number value, represents the location of the top left corner on the x axis.
-@param _y1 [Required] - a number value, represents the location of the top left corner on the y axis.
-@param _x2 [Required] - a number value, represents the location of the bottom right corner on the x axis.
-@param _y2 [Required] - a number value, represents the location of the bottom right corner on the y axis.
-@return Positions
-]]
-function struct.Positions_from_Coordinates(_x1, _y1, _x2, _y2)
-	local _result = {}
-	for _y = _y1, _y2, 1 do										-- start from the top row going down
-		for _x = _x1, _x2, 1 do									-- start from the left going right
-			table.insert(_result, struct.Position(_x, _y))		-- insert the current position
-	end
-	end
-	return _result												-- return the table of positions
-end
-
---[[--
-Returns a table of positions inside the specified bounding box, map-through function for <code>struct.Positions_from_Coordinates(_x1, _y1, _x2, _y2)</code>
-
-@param _boundingbox [Required] - a valid BoundingBox
-@return Positions
-]]
-function struct.Positions(_boundingbox)
-	if struct.is_BoundingBox(_boundingbox) then
-		local _x1, _y1 = _boundingbox.left_top.x, _boundingbox.left_top.y
-		local _x2, _y2 = _boundingbox.right_bottom.x, _boundingbox.right_bottom.y
-		return struct.Positions_from_Coordinates(_x1,_y1,_x2,_y2)
-	end
-	return nil
-end
-
---[[--
-Merges multiple Positions tables into one and then returns the result
-
-@param _data [Required] - a table of Positions
-@return Positions
-]]
-function struct.Positions_merge(_data) -- _data is a table of Positions
-	if type(_data) == "table" then
-		local _counter = 0
-		local _result = {}
-		for k, v in pairs(_data) do
-			if struct.is_Positions(v) == true then
-				_counter = _counter + 1
-				if _counter == 1 then
-					_result = table.deepcopy(v)
-				else
-					for _, position in pairs(v) do
-						table.insert(_result, position)
-					end
-				end
-			end
-		end
-		return _result
-end
-end
+--- map-through for <code>struct\_base.Position(\_x, \_y)</code>
+function struct.Position(_x, _y) return struct_base.Position(_x, _y) end
+--- map-through for <code>struct\_base.BoundingBox(\_x1, \_y1, \_x2, \_y2)</code>
+function struct.BoundingBox(_x1, _y1, _x2, _y2) return struct_base.BoundingBox(_x1,_y1,_x2,_y2) end
+--- map-through for <code>struct\_base.BoundingBox\_from\_Position(\_x, \_y, \_radius\_x, \_radius\_y)</code>
+function struct.BoundingBox_from_Position(_x, _y, _radius_x, _radius_y) return struct_base.BoundingBox_from_Position(_x,_y,_radius_x,_radius_y) end
+--- map-through for <code>struct\_base.SimpleItemStack(\_name, \_count, \_health)</code>
+function struct.SimpleItemStack(_name, _count, _health) return struct_base.SimpleItemStack(_name, _count, _health) end
+--- map-through for <code>struct\_base.is\_Position(\_position)</code>
+function struct.is_Position(_position) return struct_base.is_Position(_position) end
+--- map-through for <code>struct\_base.is\_BoundingBox(\_boundingbox)</code>
+function struct.is_BoundingBox(_boundingbox) return struct_base.is_BoundingBox(_boundingbox) end
+--- map-through for <code>struct\_base.is\_SimpleItemStack(\_itemstack)</code>
+function struct.is_SimpleItemStack(_itemstack) return struct_base.is_SimpleItemStack(_itemstack) end
 
 --[[--
 Constructs MapGenSettings using pre-existing MapGenSettings as a template, overriding with the fields provided
@@ -127,9 +81,7 @@ function struct.AutoplaceControls_copy(_autoplace_controls, _frequency, _size, _
 	if struct.is_AutoplaceControls(_autoplace_controls) then
 		local _result = {}
 		for k, v in pairs(_autoplace_controls) do
-			_result[k] = struct.AutoplaceControl(
-				struct.is_MapGenSize(_frequency) and _frequency or v.frequency,
-				struct.is_MapGenSize(_size) and _size or v.size,
+			_result[k] = struct.AutoplaceControl(struct.is_MapGenSize(_frequency) and _frequency or v.frequency, struct.is_MapGenSize(_size) and _size or v.size,
 				struct.is_MapGenSize(_richness) and _richness or v.richness)
 		end
 		return _result
@@ -173,48 +125,8 @@ Constructs AutoplaceControl from provided parameters
 @return AutoplaceControl
 ]]
 function struct.AutoplaceControl(_frequency, _size, _richness)
-	return {
-		frequency = struct.is_MapGenSize(_frequency) and _frequency or MapGenSize.default,
-		size = struct.is_MapGenSize(_size) and _size or MapGenSize.default,
-		richness = struct.is_MapGenSize(_richness) and _richness or MapGenSize.default
-	}
-end
-
---[[--
-is this a valid table of Positions?
-
-@param _positions [Required] - a table of Positions
-@return <code>true</code> or <code>false</code>
-]]
-function struct.is_Positions(_positions)
-	if type(_positions) ~= "table" then
-		return false
-	end
-	for k, v in pairs(_positions) do
-		if struct.is_Position(v) ~= true then
-			return false
-		end
-	end
-	return true
-end
-
---[[--
-is this a valid table of Tiles?
-
-@param _tiles [Required] - a table of Tile names and Positions
-@return <code>true</code> or <code>false</code>
-]]
-function struct.is_Tiles(_tiles)
-	local _count = 0
-	if _tiles then
-		for k, v in pairs(_tiles) do
-			_count = _count + 1
-			if type(v.name) ~= "string" or struct.is_Position(v.position) ~= true then
-				return false
-			end
-		end
-	end
-	return (_count > 0)
+	return {frequency = struct.is_MapGenSize(_frequency) and _frequency or MapGenSize.default, size = struct.is_MapGenSize(_size) and _size or MapGenSize.default,
+		richness = struct.is_MapGenSize(_richness) and _richness or MapGenSize.default}
 end
 
 --[[--
@@ -224,14 +136,9 @@ is this a valid Direction?
 @return <code>true</code> or <code>false</code>
 ]]
 function struct.is_Direction(_direction)
-	return (_direction == defines.direction.north or
-		_direction == defines.direction.northeast or
-		_direction == defines.direction.east or
-		_direction == defines.direction.southeast or
-		_direction == defines.direction.south or
-		_direction == defines.direction.southwest or
-		_direction == defines.direction.west or
-		_direction == defines.direction.northwest)
+	return (_direction == defines.direction.north or _direction == defines.direction.northeast or _direction == defines.direction.east or 
+		_direction == defines.direction.southeast or _direction == defines.direction.south or _direction == defines.direction.southwest or 
+		_direction == defines.direction.west or _direction == defines.direction.northwest)
 end
 
 --[[--
@@ -317,23 +224,14 @@ function struct.TaskData(_id, _fields)
 				local _entity = table.deepcopy(_fields[1])
 				local _paired_entity = table.deepcopy(_fields[2])
 				local _radius = table.deepcopy(_fields[3])
-				return {
-					entity = _entity,
-					paired_entity = _paired_entity,
-					position = _entity.position,
-					surface = _entity.surface,
-					paired_surface = _paired_entity and _paired_entity.surface or nil,
-					radius = _radius}
+				return {entity = _entity, paired_entity = _paired_entity, position = _entity.position, surface = _entity.surface, 
+					paired_surface = _paired_entity and _paired_entity.surface or nil, radius = _radius}
 			end
 		elseif _id == _tasks.spill_entity_result then
 			if api.valid(_fields[1]) and type(_fields[2]) == "table" then
 				local _entity = table.deepcopy(_fields[1])
 				local _products = table.deepcopy(_fields[2])
-				return {
-					entity = _entity,
-					surface = _entity.surface,
-					position = _entity.position,
-					products = _products}
+				return {entity = _entity, surface = _entity.surface, position = _entity.position, products = _products}
 			end
 		end
 	end

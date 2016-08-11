@@ -210,6 +210,24 @@ function struct_base.BoundingBox(_x1, _y1, _x2, _y2)
 end
 
 --[[--
+Constructs a BoundingBox from provided parameters
+
+@param _x [Required] - a number value, represents the location of the center of the BoundingBox on the x axis.
+@param _y [Required] - a number value, represents the location of the center of the BoundingBox on the y axis.
+@param _radius_x [Required] - a number value, represents the radius on the x axis (or if <code>\_radius\_y</code> is not specified, the radius on both the x and y axis)
+@param _radius_y [Optional] - a number value, represents the radius on the y axis
+@return BoundingBox
+]]
+function struct_base.BoundingBox_from_Position(_x, _y, _radius_x, _radius_y)
+	local _result = nil
+	if type(_x) == "number" and type(_y) == "number" and type(_radius_x) == "number" then
+		_radius_y = (type(_radius_y) == "number") and _radius_y or _radius_x
+		_result = struct_base.BoundingBox(_x - _radius_x, _y - _radius_y, _x + _radius_x, _y + _radius_y)
+	end
+	return _result
+end		
+
+--[[--
 Constructs a Position from provided parameters
 
 @param _x [Required] - a number value, represents the location on the x axis.

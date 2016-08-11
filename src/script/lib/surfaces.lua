@@ -38,7 +38,7 @@ was this surface created by this mod?
 @param _separator [Optional] - separator character, versions of this mod prior to 0.0.7 use "_", newer versions use ss_separator
 @return <code>true</code> or <code>false</code>
 ]] 
-function surfaces.is_from_this_mod(_surface, _separator)
+function surfaces.is_mod_surface(_surface, _separator)
 	if _surface then
 		if type(_separator) ~= "string" then _separator = ss_separator end
 		local _surface_name = api.name(_surface)
@@ -75,7 +75,7 @@ returns the type of this surface (the unique ID of the surface type, not the nam
 @param _separator [Optional] - separator character, versions of this mod prior to 0.0.7 use "_", newer versions use ss_separator
 @return surface type ID
 ]]
-surfaces.get_type = function(_surface, _separator)
+function surfaces.get_type(_surface, _separator)
 	if _surface then
 		if type(_separator) ~= "string" then _separator = ss_separator end
 		local _surface_name = api.name(_surface)
@@ -158,24 +158,20 @@ triggers name-change migrations for a surface created prior to this version, if 
 @param _separator [Required] - separator character, versions of this mod prior to 0.0.7 use "_", newer versions will use ss_separator
 ]]
 function surfaces.migrate_surface(_surface, _separator)
-	if api.valid(_surface) and surfaces.is_from_this_mod(_surface, _separator) and _separator ~= ss_separator then
+	if api.valid(_surface) and surfaces.is_mod_surface(_surface, _separator) and _separator ~= ss_separator then
 		local _surface_layer = surfaces.get_layer(_surface, _separator) 
 		local _surface_type = surfaces.get_type(_surface, _separator)
-		local _surface_name = ss_prefix .. const.surface.separator .. const.surface.type[const.surface.type_valid[_surface_type]].name .. const.surface.separator ..
-			_surface_layer
+		local _surface_name = ss_prefix .. const.surface.separator .. const.surface.type[const.surface.type_valid[_surface_type]].name .. const.surface.separator .. _surface_layer
+		
 		api.game.create_surface(_surface_name, api.surface.map_gen_settings(_surface)) -- create the new surface
 		local _new_surface = api.game.surface(_surface_name)
 		for _chunk in api.surface.get_chunks(_surface) do
 			api.surface.request_generate_chunks(_new_surface, _chunk) -- request generation of all chunks in the new surface
 		end
 		global.surfaces_to_migrate = global.surfaces_to_migrate or {}
-		table.insert(global.surfaces_to_migrate, {
-			surface = _surface,
-			new_surface = _new_surface,
-			underground = surfaces.is_below_nauvis(_surface),
-			platform = surfaces.is_above_nauvis(_surface),
-			migrated = false
-		})		-- put relevant data into the surfaces migrations table for processing
+		global.surfaces_to_migrate[api.name(_surface)] = {surface = _surface, new_surface = _new_surface, underground = surfaces.is_below_nauvis(_surface),
+			platform = surfaces.is_above_nauvis(_surface), migrated = false}
+		global.surfaces_to_migrate[_surface_name] = true -- used for determining whether surface is being migrated or not in on_chunk_generated event
 	end
 end		
 
@@ -194,24 +190,19 @@ Transports the player to the nearest non-colliding position, using parameters pr
 ]]
 function surfaces.transport_player(_player, _surface, _position, _radius, _precision)
 	if api.valid({_player, _surface}) and struct.is_Position(_position) then
-		local _new_position = api.surface.find_non_colliding_position(_surface, api.name(api.prototype(_player.character)), _position,
-			(type(_radius) == "number" and _radius >= 0) and _radius or 0, (type(_precision) == "number" and _precision > 0) and _precision or 1
-		)
+		local _new_position = api.surface.find_non_colliding_position(_surface, api.name(api.prototype(api.player.character(_player))), _position,
+			(type(_radius) == "number" and _radius >= 0) and _radius or 0, (type(_precision) == "number" and _precision > 0) and _precision or 1)
 		if _new_position ~= nil then
 			api.entity.teleport(_player, _new_position, _surface)
 		end
 	end
 end
 
-function surfaces.find_nearby_access_shaft(_entity, _radius, _surface)
-	return surfaces.find_nearby_paired_entity(_entity, _radius, _surface, pairclass.get("access-shaft"), et_acc_shaft)
-end
-
 function surfaces.find_nearby_paired_entity(_entity, _radius, _surface, _pairclass, _target_type)
 	if _radius and api.valid({_entity, _surface}) then
 		local _position = api.position(_entity)
 		local _area = struct.BoundingBox(_position.x - _radius, _position.y - _radius, _position.x + _radius, _position.y + _radius)
-		for k, v in pairs(api.surface.find_entities(_surface, _area, nil, _target_type or nil)) do
+		for k, v in pairs(api.surface.find_entities(_surface, _area, nil, _target_type or nil, nil, 1)) do
 			if pairdata.exists(v) then
 				local _pairdata = pairdata.get(v)
 				if _pairdata.class == _pairclass then
@@ -229,6 +220,25 @@ function surfaces.find_nearby_entity(_entity, _radius, _surface, _target_name, _
 		local _entities = api.surface.find_entities(_surface, _area, _target_name, _target_type, nil, 1) or {}
 		for _, _entity in pairs(_entities) do
 			return _entity
+		end
+	end
+end
+
+--[[--
+Is this tile valid in this surface?
+
+@param _tile [Required] - the tile to test
+@return <code>true</code> or <code>false</code>
+]] 
+function surfaces.is_tile_placement_valid(_tile, _surface, _override_tiles)
+	if api.valid({_tile, _surface}) then
+		_override_tiles = type(_override_tiles) == "table" and _override_tiles or const.surface.override_tiles
+		local _tile_name = api.name(_tile)
+		local _is_underground, _is_platform = surfaces.is_below_nauvis(_surface), surfaces.is_above_nauvis(_surface)
+		if not(_override_tiles[_tile_name]) and ((_is_underground) or (_is_platform and (skytiles.get(_tile_name) or _tile.collides_with("ground-tile")))) then
+			return true
+		else
+			return false
 		end
 	end
 end
@@ -269,7 +279,7 @@ create_surface = function(_surface_type, _surface_layer)
 end
 
 get_relative_surface = function(_surface, _relative_location)
-	if _surface and (surfaces.is_from_this_mod(_surface) or api.name(_surface) == "nauvis") then
+	if _surface and (surfaces.is_mod_surface(_surface) or api.name(_surface) == "nauvis") then
 		local _surface_name = api.name(_surface)	-- gather and store the name of the surface
 		if type(_surface) == "string" then
 			_surface = api.game.surface(_surface_name) -- if provided input was a string and not the surface, attempt to get the surface from game surfaces table
@@ -295,7 +305,7 @@ get_relative_surface = function(_surface, _relative_location)
 end
 
 create_relative_surface = function(_surface, _relative_location)
-	if _surface and (surfaces.is_from_this_mod(_surface) or api.name(_surface) == "nauvis") then
+	if _surface and (surfaces.is_mod_surface(_surface) or api.name(_surface) == "nauvis") then
 		local _surface_name = api.name(_surface)
 		if _relative_location == rl_below and (surfaces.is_below_nauvis(_surface_name) or _surface_name == "nauvis") then
 			return create_surface(st_und.id, surfaces.get_layer(_surface_name) + 1)

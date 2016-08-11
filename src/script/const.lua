@@ -65,45 +65,33 @@ const = {
 			"finalize_paired_entity", "remove_sky_tile", "spill_entity_result"}),
 		-- Handle definitions, these are used to call functions from within the on_tick timer in the events module
 		handle = {
-			-- Used to teleport players between surfaces once configured waiting time has passed, see config.lua
-			access_shaft_teleportation = {
-				id = 1,
-				tick = 5,
-				func = "update_players_using_access_shafts"
-			},
-			-- Used to check each player for a nearby access shaft, prior to teleportation.
-			access_shaft_update = {
-				id = 2,
-				tick = 5,
-				func = "check_player_collision_with_access_shafts"
-			},
 			-- Used to update transport chest contents, moves items from transport chests to receiver chests
 			item_transport_update = {
-				id = 3,
+				id = 1,
 				tick = 5,
 				func = "update_transport_chest_contents"
 			},
 			-- Used to update intersurface fluid tank contents
 			fluid_transport_update = {
-				id = 4,
+				id = 2,
 				tick = 10,
 				func = "update_fluid_transport_contents"
 			},
 			-- Used to update intersurface accumulator contents
 			energy_transport_update = {
-				id = 4,
+				id = 3,
 				tick = 10,
 				func = "update_energy_transport_contents"
 			},
 			-- Used to execute the first task in the Task Manager queue
 			taskmgr_update = {
-				id = 6,
+				id = 4,
 				tick = 2,
 				func = "execute_first_task_in_waiting_queue"
 			},
 			-- Inspects the global surface migrations table for entries, processing in a serial manner, similar to the task queue
 			surface_migrations_update = {
-				id = 7,
+				id = 5,
 				tick = 30,
 				func = "surfaces_migrations"
 			}

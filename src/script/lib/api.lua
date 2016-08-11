@@ -367,6 +367,9 @@ api.logistic_network = {}
 LuaPlayer [<a href=http://lua-api.factorio.com/latest/LuaPlayer.html>http://lua-api.factorio.com/latest/LuaPlayer.html</a>]
 ]]
 api.player = {}
+function api.player.character(_player)
+	return api.valid(_player) and _player.character or nil
+end 
 
 --[[--
 LuaRecipe [<a href=http://lua-api.factorio.com/latest/LuaRecipe.html>http://lua-api.factorio.com/latest/LuaRecipe.html</a>]
@@ -394,16 +397,18 @@ function api.surface.create_entity(_surface, _entity_data) -- entity_data is nam
 	return (api.valid(_surface) and _entity_data and _entity_data.name and struct.is_Position(_entity_data.position)) and _surface.create_entity(_entity_data) or nil
 end
 
-function api.surface.count_entities(_surface, _area, _entity_name, _entity_type, _entity_force)
+function api.surface.count_entities(_surface, _area, _entity_name, _entity_type, _entity_force, _limit)
 	if (api.valid(_surface)) then
 		if (struct.is_BoundingBox(_area)) then
 			if (_area.left_top.x == _area.right_bottom.x and _area.left_top.y == _area.right_bottom.y) then
-				return _surface.find_entities_filtered({position = _area.left_top, name = _entity_name, type = _entity_type, force = _entity_force})
+				return _surface.count_entities_filtered({position = _area.left_top, name = _entity_name, type = _entity_type, force = _entity_force, limit = _limit})
 			else
-				return _surface.find_entities_filtered({area = _area, name = _entity_name, type = _entity_type, force = _entity_force})
+				return _surface.count_entities_filtered({area = _area, name = _entity_name, type = _entity_type, force = _entity_force, limit = _limit})
 			end
 		elseif (struct.is_Position(_area)) then
-			return _surface.find_entities_filtered({position = _area, name = _entity_name, type = _entity_type, force = _entity_force})
+			return _surface.count_entities_filtered({position = _area, name = _entity_name, type = _entity_type, force = _entity_force, limit = _limit})
+		else
+			return _surface.count_entities_filtered({name = _entity_name, type = _entity_type, force = _entity_force, limit = _limit})
 		end
 	end
 	return nil
@@ -418,9 +423,9 @@ function api.surface.find_entities(_surface, _area, _entity_name, _entity_type, 
 				return _surface.find_entities_filtered({area = _area, name = _entity_name, type = _entity_type, force = _entity_force, limit = _limit})
 			end
 		elseif (struct.is_Position(_area)) then
-			return _surface.find_entities_filtered({position = _area, name = _entity_name, type = _entity_type, force = _entity_force})
+			return _surface.find_entities_filtered({position = _area, name = _entity_name, type = _entity_type, force = _entity_force, limit = _limit})
 		else
-			return _surface.find_entities_filtered({name = _entity_name, type = _entity_type, force = _entity_force})
+			return _surface.find_entities_filtered({name = _entity_name, type = _entity_type, force = _entity_force, limit = _limit})
 		end
 	end
 	return nil
@@ -471,7 +476,7 @@ function api.surface.pollute(_surface, _position, _amount)
 end
 
 function api.surface.set_tiles(_surface, _tiles)
-	if api.valid(_surface) and struct.is_Tiles(_tiles) then
+	if api.valid(_surface) then
 		_surface.set_tiles(_tiles)
 	end
 end

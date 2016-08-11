@@ -12,6 +12,47 @@ function math.round(number, decimal_places)
 end
 
 --[[
+returns a copy of a table
+
+@param _table [Required] - The table to copy
+@param _recursive [Optional] - a boolean value, should we recursively copy each table inside this table?
+@return table
+]]
+function table.copy(_table, _recursive)
+	local _result
+	if type(_table) == "table" then
+		_result = {}
+		for k, v in pairs(_table) do
+			_result[k] = _recursive and table.copy(v, _recursive) or v
+		end
+	else
+		return _table
+	end
+	return _result
+end
+
+--[[
+merges two tables and returns the result
+
+@param _table [Required] - The first table
+@param _new_table [Optional] - The second table, values in this table will overwrite values in the first table if they exist in both places
+@return table
+]]
+function table.merge(_table, _new_table)
+	if type(_table) == "table" and type(_new_table) == "table" then
+		local _result = table.copy(_table, true)
+		for k, v in pairs(_new_table) do
+			local _new_data = v
+			if type(_result[k]) == "table" and type(v) == "table" then
+				_new_data = table.merge(_result[k], v)
+			end
+			_result[k] = _new_data
+		end
+		return _result
+	end
+end
+
+--[[
 Used mostly for debugging tables, however, may potentially have other uses.
 Returns a string representation of the table, traversing recursively, see example below:
 
