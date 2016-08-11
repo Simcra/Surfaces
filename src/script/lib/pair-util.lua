@@ -160,6 +160,12 @@ function pairutil.destroy_paired_entity(_entity)
 	local _paired_entity = pairutil.find_paired_entity(_entity)
 	local _pair_data = pairdata.get(_entity) or pairdata.reverse(_entity)
 	table.insert(global.task_queue, struct.TaskSpecification(const.eventmgr.task.remove_sky_tile, {_entity, _paired_entity, _pair_data.radius}))
+	
+	if _pair_data.class == pairclass.get("access-shaft") then
+		_entity.get_inventory(defines.inventory.fuel).clear()
+		_paired_entity.get_inventory(defines.inventory.fuel).clear()
+	end
+	
 	api.destroy(_paired_entity)
 end
 
