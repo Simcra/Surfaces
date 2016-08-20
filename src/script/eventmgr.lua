@@ -28,8 +28,8 @@ local event_uid, event_uid_valid
 function eventmgr.exec(_event)
 	for k, v in pairs(handles) do
 		if _event.tick % v.tick == 0 then
-			if func_pause[tostring(v.func)] ~= false then
-				func_pause[tostring(v.func)] = false
+			if func_pause[tostring(v.func)] then
+				func_pause[tostring(v.func)] = nil
 			else
 				func[tostring(v.func)](_event)
 			end

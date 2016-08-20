@@ -94,15 +94,28 @@ function table.reverse(_table, _store_old_index, _index_field)
 	return _result
 end
 
-local _proxies = setmetatable({}, {__mode = "k"})
 function table.readonly(_table)
 	if type(_table) == "table" then
-		local _proxy = _proxies[_table] or setmetatable({}, {
-			__index = function(_, k) return table.readonly(_table[k]) end,
-			__newindex = function() return false end})
-		_proxies[_table] = _proxy
+		for k, v in pairs(_table) do
+			if type(v) == "table" then
+				_table[k] = table.readonly(v)
+			end
+		end
+		local _proxy = {}
+		local _meta = {__index = _table, __newindex = function(_table, _key, _value) return false end}
+		setmetatable(_proxy, _meta)
 		return _proxy
 	else
 		return _table
+	end
+end
+
+local lua_pairs = pairs
+function pairs(_table)
+	local _metatable = getmetatable(_table)
+	if _metatable and type(_metatable.__index) == "table" then
+		return lua_pairs(_metatable.__index)  
+	else
+		return lua_pairs(_table)
 	end
 end
