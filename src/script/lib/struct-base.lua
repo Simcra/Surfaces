@@ -103,21 +103,22 @@ end
 --[[--
 Constructs picture Variants from provided parameters
 
-@param _gfxpath [Required] - the path to the images, example: "__Surfaces__/graphics/terrain/"
+@param _gfxpath [Required] - the path to the images, for example: \_\_Surfaces\_\_/graphics/terrain/
 @param _name [Required] - the name of the prototype, used to construct each Variant filename, example: "wooden-floor"
 @param _count [Required] - a table of consecutive number values to determine count of each variant {[main], [inner-corner], [outer-corner], [side], [u-transition], [o-transition]}
 @param _size [Optional] - a table of consecutive number values to determine size of each variant {[main], [inner-corner], [outer-corner], [side], [u-transition], [o-transition]}
 @param _probability [Optional] - a table of number values between 0-1 to determine probability of each variant {[main], [inner-corner], [outer-corner], [side], [u-transition], [o-transition]}
 @param _extension [Optional] - the file extension of the images, defaults to ".png", make sure to include the "."
+@param _main [Optional] - a table of picture Variants to use as the main variant 
 @return Variants
 ]]
-function struct_base.Variants(_gfxpath, _name, _count, _size, _probability, _extension)
+function struct_base.Variants(_gfxpath, _name, _count, _size, _probability, _extension, _main)
 	if type(_extension) ~= "string" then _extension = ".png" end
 	if type(_count) ~= "table" then _count = {} end
 	if type(_size) ~= "table" then _size = {} end
 	if type(_probability) ~= "table" then _probability = {} end
 	local _result = {}
-	_result.main = {struct_base.Variant(_gfxpath .. _name .. "-main" .. _extension, _count[1], _size[1], _probability[1])}
+	_result.main = type(_main) == "table" and _main or {struct_base.Variant(_gfxpath .. _name .. "-main" .. _extension, _count[1], _size[1], _probability[1])}
 	_result.inner_corner = struct_base.Variant(_gfxpath .. _name .. "-inner-corner" .. _extension, _count[2], _size[2], _probability[2])
 	_result.outer_corner = struct_base.Variant(_gfxpath .. _name .. "-outer-corner" .. _extension, _count[3], _size[3], _probability[3])
 	_result.side = struct_base.Variant(_gfxpath .. _name .. "-side" .. _extension, _count[4], _size[4], _probability[4])

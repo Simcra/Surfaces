@@ -7,12 +7,14 @@
 
 require("config")
 require("script.const")
+require("script.eventmgr")
 require("script.lib.api")
-require("script.lib.pair-util")
 require("script.lib.pair-data")
 require("script.lib.struct")
 require("script.lib.surfaces")
 require("script.lib.util")
+require("script.pair-util")
+local taskmgr = require("script.taskmgr-data")
 
 --[[--
 Contains all event manager functions and maps through to functions from other modules where necessary.
@@ -21,18 +23,15 @@ Contains all event manager functions and maps through to functions from other mo
 ]]
 events = {}
 
-local eventmgr = {}
 local addon_data, loaded_addon_data = nil, false
-local pause_event = {}
 
 -- declare local variables
-local en_und_wall = proto.get_field({"entity", "underground_wall"}, "name")
-local et_und_wall = proto.get_field({"entity", "underground_wall"}, "type")
-local tn_und_wall = proto.get_field({"tile", "underground_wall"}, "name")
-local tn_und_dirt = proto.get_field({"tile", "underground_dirt"}, "name")
-local tn_sky_void = proto.get_field({"tile", "sky_void"}, "name")
-local tasks = const.eventmgr.task
-local handles = const.eventmgr.handle
+local en_und_wall = proto.entity.underground_wall.name
+local et_und_wall = proto.entity.underground_wall.type
+local tn_und_wall = proto.tile.underground_wall.name
+local tn_und_dirt = proto.tile.underground_dirt.name
+local tn_sky_void = proto.tile.sky_void.name
+local tasks = const.taskmgr.task
 
 function events.set_addon_data(_data)
 	if type(_data) == "table" then
@@ -52,28 +51,13 @@ function events.on_tick(_event)
 			end
 		end
 	end
-	for k, v in pairs(handles) do
-		if _event.tick % v.tick == 0 then
-			if pause_event[tostring(v.func)] ~= false then
-				pause_event[tostring(v.func)] = false
-			else
-				eventmgr[tostring(v.func)](_event)
-			end
-		end
-	end
+	eventmgr.exec(_event)
 end
 
 -- This function is called whenever an entity is built by the player
 function events.on_built_entity(_event)
 	if pairdata.exists(_event.created_entity) then
-		table.insert(global.task_queue, struct.TaskSpecification(tasks.trigger_create_paired_entity, {_event.created_entity, _event.player_index}))
-	end
-end
-
--- This function is called whenever an entity is built by a construction robot
-function events.on_robot_built_entity(_event)
-	if pairdata.exists(_event.created_entity) then
-		table.insert(global.task_queue, struct.TaskSpecification(tasks.trigger_create_paired_entity, {_event.created_entity}))
+		taskmgr.insert(tasks.trigger_create_paired_entity, {_event.created_entity, _event.player_index})
 	end
 end
 
@@ -84,98 +68,30 @@ function events.on_chunk_generated(_event)
 		local _is_underground = surfaces.is_below_nauvis(_surface.name)
 		local _tile_name = ((_is_underground == true) and tn_und_wall or tn_sky_void)
 		
+		global.frozen_surfaces = global.frozen_surfaces or {}
 		-- freeze daytime for this surface at midnight if it is an underground surface
-		if _is_underground and global.mod_surfaces[_surface.name] == nil then
+		if _is_underground and not(global.frozen_surfaces[_surface.name]) then
 			_surface.daytime = 0.5
 			_surface.freeze_daytime(true)
-			global.mod_surfaces[_surface.name] = true
+			global.frozen_surfaces[_surface.name] = true
 		end
 		
-		-- destroy entities which should not spawn on this surface, gathering information for clearing the ground prior to replacing tiles
-		for k, v in pairs(api.surface.find_entities(_surface, _area)) do
-			local _name, _type, _position = api.name(v), api.type(v), api.position(v)
-			if pairdata.exists(_name) then -- if pair data exists for this entity
-				local _pairdata = pairdata.get(_name) or pairdata.reverse(_name) -- gather pair data for this entity
-				pairutil.clear_ground(_position, _surface, _pairdata.radius, _pairdata.custom.tile)
-			elseif _is_underground ~= true then
-				if _type ~= "player" then
-					api.destroy(v)
-				else
-					if global.surfaces_to_migrate[api.name(_surface)] then
-						pairutil.clear_ground(v.position, v.surface, 1)
-					else
-						surfaces.transport_player(v.player, api.game.surface("nauvis"), v.position, 128)
-					end
-				end
-			elseif _type == "unit-spawner" then
-				pairutil.clear_ground(_position, _surface, 11)
-			elseif _type == "turret" then
-				pairutil.clear_ground(_position, _surface, 10)
-			elseif _type ~= "resource" and _type ~= "unit" and _name ~= en_und_wall and _type ~= "player" then
-				api.destroy(v)
-			end
-		end
-		
-		-- iterate over tile positions in the chunk and gather data into one table so that the tiles may be replaced all at once.
-		local _cur_x, _cur_y
-		for _y = 0, 31, 1 do
-			_cur_y = _area.left_top.y + _y
-			for _x = 0, 31, 1 do
-				_cur_x = _area.left_top.x + _x
-				local _cur_pos = struct.Position(_cur_x, _cur_y)
-				local _cur_tile = api.surface.get_tile(_surface, _cur_pos)
-				if not(surfaces.is_tile_placement_valid(_cur_tile,_surface)) then
-					table.insert(_tiles, {name = _tile_name, position = {x = _cur_x, y = _cur_y}})
-				end
-			end
-		end
-		api.surface.set_tiles(_surface, _tiles) -- replace the normally generated tiles with underground walls or sky tiles
-		
-		-- create underground wall entities
-		if _is_underground then
-			for k, v in pairs(_tiles) do
-				api.surface.create_entity(_surface, {name = en_und_wall, position = v.position, force = api.game.force("player")})
-			end
-		end
+		local _data = {surface = _surface, area = _area, underground = _is_underground, tile = _tile_name}
+		local _delay = (const.chunkgen.delay + math.round(const.chunkgen.rand * math.random()))
+		eventmgr.raise_event(global.event_uid.post_chunk_generated, _data, _delay)
 	end
 end
 
--- This function is called just before an entity is deconstructed by the player
-function events.on_preplayer_mined_item(_event)
+function events.on_entity_died(_event)
 	if api.name(_event.entity) == en_und_wall then
 		pairutil.clear_ground(_event.entity.position, _event.entity.surface, 0, nil, true)
 	elseif pairdata.exists(_event.entity) then
 		pairutil.destroy_paired_entity(_event.entity)
 	end
-end
-
--- This function is called just before an entity is deconstructed by a construction robot
-function events.on_robot_pre_mined(_event)
-	if api.name(_event.entity) == en_und_wall then
-		pairutil.clear_ground(_event.entity.position, _event.entity.surface, 0, nil, true)
-	elseif pairdata.exists(_event.entity) then
-		pairutil.destroy_paired_entity(_event.entity)
-	end
-end
-
-function events.on_player_mined_item(_event)
-
-end
-
-function events.on_robot_mined(_event)
-
-end
-
-function events.on_marked_for_deconstruction(_event)
-	
-end
-
-function events.on_canceled_deconstruction(_event)
-
 end
 
 function events.on_player_driving_changed_state(_event)
-	local _player = game.players[_event.player_index]
+	local _player = api.game.player(_event.player_index)
 	local _vehicle = _player.vehicle
 	if _vehicle ~= nil then
 		if pairdata.exists(_vehicle) then
@@ -190,38 +106,54 @@ function events.on_player_driving_changed_state(_event)
 	end
 end
 
-function events.on_put_item(_event)
-
+function events.on_player_mined_tile(_event)
+	local _surface = api.game.player(_event.player_index).surface
+	if surfaces.is_mod_surface(_surface) then
+		for k, v in pairs(_event.positions) do
+			pairutil.fix_tiles(v, _surface)
+		end
+	end
 end
 
-function events.on_player_rotated_entity(_event)
-
-end
-
-function events.on_trigger_created_entity(_event)
-
-end
-
-function events.on_picked_up_item(_event)
-
-end
-
-function events.on_sector_scanned(_event)
-	
-end
-
-function events.on_entity_died(_event)
+-- This function is called just before an entity is deconstructed by the player
+function events.on_preplayer_mined_item(_event)
 	if api.name(_event.entity) == en_und_wall then
 		pairutil.clear_ground(_event.entity.position, _event.entity.surface, 0, nil, true)
+		pairutil.fix_tiles(_event.entity.position, _event.entity.surface, 1)
+	elseif pairdata.exists(_event.entity) then
+		pairutil.destroy_paired_entity(_event.entity)
+	end
+end
+
+-- This function is called whenever an entity is built by a construction robot
+function events.on_robot_built_entity(_event)
+	if pairdata.exists(_event.created_entity) then
+		taskmgr.insert(tasks.trigger_create_paired_entity, {_event.created_entity})
+	end
+end
+
+function events.on_robot_mined_tile(_event)
+	local _surface = _event.robot.surface
+	if surfaces.is_mod_surface(_surface) then
+		for k, v in pairs(_event.positions) do
+			pairutil.fix_tiles(v, _surface)
+		end
+	end
+end
+
+-- This function is called just before an entity is deconstructed by a construction robot
+function events.on_robot_pre_mined(_event)
+	if api.name(_event.entity) == en_und_wall then
+		pairutil.clear_ground(_event.entity.position, _event.entity.surface, 0, nil, true)
+		pairutil.fix_tiles(_event.entity.position, _event.entity.surface, 1)
 	elseif pairdata.exists(_event.entity) then
 		pairutil.destroy_paired_entity(_event.entity)
 	end
 end
 
 -- This function is called whenever a train changes state (from moving to stopping, or stopping to stopped, etc).
+--[[temporarily commented out until surface teleport can be used on non-player entities
 function events.on_train_changed_state(_event)
-	--temporarily commented out until surface teleport can be used on non-player entities
-	--[[
 	if api.train.state(_event.train) == defines.trainstate.wait_station then
 		local front_rail = _event.train.front_rail
 		if front_rail ~= nil then
@@ -239,246 +171,58 @@ function events.on_train_changed_state(_event)
 			end
 		end
 	end
-	--]]
-end
+end]]
 
-function events.on_robot_mined_tile(_event)
-	local _surface = _event.robot.surface
-	if surfaces.is_mod_surface(_surface) then
-		for k, v in pairs(_event.positions) do
-			pairutil.fix_tiles(v, _surface)
-		end
-	end
-end
-
-function events.on_player_mined_tile(_event)
-	local _surface = api.game.player(_event.player_index).surface
-	if surfaces.is_mod_surface(_surface) then
-		for k, v in pairs(_event.positions) do
-			pairutil.fix_tiles(v, _surface)
-		end
-	end
-end
-
--- This function updates the contents of each transport and receiver chest in the map, providing that they are both valid and if they are not, they will be destroyed
-function eventmgr.update_transport_chest_contents(_event)
-	global.item_transport = global.item_transport or {}
-	for k, v in pairs(global.item_transport) do
-		if not(api.valid({v.input, v.output})) then
-			api.destroy({v.input, v.output})
-			global.item_transport[k] = nil
-		else
-			local _max_items = config.item_transport.base_count * config.item_transport.multiplier[const.tier_valid[v.tier]]
-			if v.modifier then
-				_max_items = _max_items * v.modifier
-			end
-			local _input = api.entity.get_inventory(v.input, defines.inventory.chest)
-			local _output = api.entity.get_inventory(v.output, defines.inventory.chest)
-			for _key, _value in pairs(api.inventory.get_contents(_input)) do
-				local _amount = _value > _max_items and _max_items or _value
-				local _itemstack = struct.SimpleItemStack(_key, _amount)
-				if api.inventory.can_insert(_output, _itemstack) then
-					local remove_itemstack = struct.SimpleItemStack(_key, api.inventory.insert(_output, _itemstack))
-					api.inventory.remove(_input, remove_itemstack)
-				end
-				break
-			end
-		end
-	end
-end
-
-function eventmgr.surfaces_migrations(_event)
-	global.surfaces_to_migrate = global.surfaces_to_migrate or {}
-	for k, v in pairs(global.surfaces_to_migrate) do
-		if type(v) == "table" then
-			if v.migrated then
-				if v.player then
-					api.entity.teleport(v.player.entity, v.player.origin, v.player.surface) -- move the player back to his position prior to surface migrations
-				end
-				api.game.delete_surface(v.surface) -- first, we created the universe, and now, we must destroy it with fire!
-				util.broadcast("Migration complete: " .. api.name(v.new_surface))
-				global.surfaces_to_migrate[api.name(v.new_surface)] = nil
-				global.surfaces_to_migrate[k] = nil -- remove this entry, we are done here.
-			elseif not(v.migrating) then
-				global.surfaces_to_migrate[k].migrating = true -- lock process chain to this worker to prevent this from being completed multiple times
-				-- declaring local variables
-				local _surface, _new_surface = v.surface, v.new_surface
-				local _is_underground, _is_platform = v.underground, v.platform
-				local _chunks_generated = true
-				-- first loop, check that all chunks are generated prior to processing.
-				for _chunk in api.surface.get_chunks(_surface) do
-					if not(api.surface.is_chunk_generated(_new_surface, _chunk, true)) then
-						if v.player then
-							global.surfaces_to_migrate[k].player.next = struct.Position((_chunk.x * 32) + 15, (_chunk.y * 32) + 15)
-						end
-						api.surface.request_generate_chunks(_new_surface, _chunk)
-						_chunks_generated = false
-					end
-				end
-				-- chunks were not generated, we need to move a player since surfaces won't generate without at least one player being present
-				if _chunks_generated ~= true then
-					if v.player then surfaces.transport_player(v.player.entity, _new_surface, v.player.next, 15, 1)
-					else
-						local _player_one = api.game.player(1)
-						if api.valid(_player_one) then
-							local _old_surface = _player_one.character.surface
-							-- We are going to delete the old surface, let's not kill the player in the process :)
-							if _old_surface == _surface then
-								_old_surface = _new_surface
-							end
-							local _old_position = table.deepcopy(_player_one.character.position)
-							global.surfaces_to_migrate[k].player = {entity = _player_one, surface = _old_surface, origin = _old_position, next = struct.Position(0,0)}
-						end
-						util.broadcast("Migrating surface: " .. api.name(_surface)) -- Let's alert all players that we are migrating
-						-- and alert player 1 that he should go AFK
-						util.message(1, "You will be teleported around the new surface for chunk generation purposes. Please be patient and do not force close Factorio, this has been known to take up to 30 minutes on large maps.") 
-					end
-					global.surfaces_to_migrate[k].migrating = nil -- we are finished processing for now, remove the lock.
-					return -- wait for next loop, giving the surface a chance to generate.
-				end			
-				
-				-- Now we can actually do some processing, hooray.
-				local _tile_name = _is_underground and tn_und_dirt or (_is_platform and tn_sky_void)
-				for _chunk in api.surface.get_chunks(_surface) do
-					local _cx, _cy, _cur_x, _cur_y = _chunk.x * 32, _chunk.y * 32
-					local _old_tiles, _tiles = {}, {}
-					for _y = 0, 31, 1 do
-						_cur_y = _cy + _y
-						for _x = 0, 31, 1 do
-							_cur_x = _cx + _x
-							local _cur_pos = struct.Position(_cur_x, _cur_y)
-							local _cur_tile = api.surface.get_tile(_surface, _cur_pos)
-							local _cur_tile_name = api.name(_cur_tile)
-							table.insert(_old_tiles, {name = _tile_name, position = _cur_pos})
-							table.insert(_tiles, {name = _cur_tile_name, position = _cur_pos})
-						end
-					end
-					for k, v in pairs(api.surface.find_entities(_new_surface, struct.BoundingBox(_cx, _cy, _cx + 32, _cy + 32), "player", "player")) do
-						surfaces.transport_player(v.player, api.game.surface("nauvis"), struct.Position(0, 0), 1024, 1)
-					end
-					for k, v in pairs(api.surface.find_entities(_new_surface, struct.BoundingBox(_cx, _cy, _cx + 32, _cy + 32), et_und_wall, en_und_wall)) do
-						api.destroy(v)
-					end
-					api.surface.set_tiles(_new_surface, _old_tiles)
-					api.surface.set_tiles(_new_surface, _tiles)
-				end
-				
-				-- iterate over all of the entities in the old surface, copying them one by one to the new surface
-				for k, v in pairs(api.surface.find_entities(_surface)) do
-					if api.type(v) ~= "player" then
-						api.surface.create_entity(_new_surface, {name = api.name(v), position = api.position(v), direction = api.entity.direction(v),
-							force = api.entity.force(v)})
-					else
-						api.entity.teleport(v.player, api.position(v), _new_surface)
-					end
-				end
-				global.surfaces_to_migrate[k].migrated = true -- we are done, wait for next cycle and finish up
-			end
-			return -- only process one surface at a time.
-		end
-	end
-end
-
--- This function updates the contents of each intersurface fluid tank in the map, providing that they are both valid and if they are not, they will be destroyed
-function eventmgr.update_fluid_transport_contents(_event)
-	global.fluid_transport = global.fluid_transport or {}
-	for k, v in pairs(global.fluid_transport) do
-		if not(api.valid({v.a, v.b})) then
-			api.destroy({v.a, v.b})
-			global.fluid_transport[k] = nil
-		else
-			local fluidbox_a, fluidbox_b = api.entity.fluidbox(v.a), api.entity.fluidbox(v.b)
-			if fluidbox_a ~= nil or fluidbox_b ~= nil then
-				if fluidbox_a == nil then
-					fluidbox_b.amount = fluidbox_b.amount/2
-					api.entity.set_fluidbox({v.a, v.b}, fluidbox_b)
-				elseif fluidbox_b == nil then
-					fluidbox_a.amount = fluidbox_a.amount/2
-					api.entity.set_fluidbox({v.a, v.b}, fluidbox_a)
-				elseif fluidbox_a.type == fluidbox_b.type then
-					local fluidbox_new = fluidbox_a
-					fluidbox_new.amount = (fluidbox_a.amount + fluidbox_b.amount)/2
-					api.entity.set_fluidbox({v.a, v.b}, fluidbox_new)
-				end
-			end
-		end
-	end
-end
-
--- This function updates the contents of each intersurface accumulator in the map, providing that they are both valid and if they are not, they will be destroyed
-function eventmgr.update_energy_transport_contents(_event)
-	global.energy_transport = global.energy_transport or {}
-	for k, v in pairs(global.energy_transport) do
-		if not(api.valid({v.a, v.b})) then
-			api.destroy({v.a, v.b})
-			global.energy_transport[k] = nil
-		else
-			local energy_a, energy_b = api.entity.energy(v.a), api.entity.energy(v.b)
-			if energy_a ~= nil or energy_b ~= nil then
-				if energy_a == nil then
-					api.entity.set_energy({v.a, v.b}, energy_b/2)
-				elseif energy_b == nil then
-					api.entity.set_energy({v.a, v.b}, energy_a/2)
+function events.post_chunk_generated(_event)
+	local _surface, _area, _is_underground, _tile_name, _tiles = _event.surface, _event.area, _event.underground, _event.tile, {}
+	-- destroy entities which should not spawn on this surface, gathering information for clearing the ground prior to replacing tiles
+	for k, v in pairs(api.surface.find_entities(_surface, _area)) do
+		local _name, _type, _position = api.name(v), api.type(v), api.position(v)
+		if pairdata.exists(_name) then -- if pair data exists for this entity
+			local _pairdata = pairdata.get(_name) or pairdata.reverse(_name) -- gather pair data for this entity
+			pairutil.clear_ground(_position, _surface, _pairdata.radius, _pairdata.custom.tile)
+		elseif _is_underground ~= true then
+			if _type ~= "player" then
+				api.destroy(v)
+			else
+				if global.migrate_surfaces[api.name(_surface)] then
+					pairutil.clear_ground(v.position, v.surface, 1)
 				else
-					api.entity.set_energy({v.a, v.b}, (energy_a + energy_b)/2)
+					surfaces.transport_player(v.player, api.game.surface("nauvis"), v.position, 128)
 				end
+			end
+		elseif _type == "unit-spawner" then
+			pairutil.clear_ground(_position, _surface, 11)
+		elseif _type == "turret" then
+			pairutil.clear_ground(_position, _surface, 10)
+		elseif _type ~= "resource" and _type ~= "unit" and _name ~= en_und_wall and _type ~= "player" then
+			api.destroy(v)
+		end
+	end
+	
+	-- iterate over tile positions in the chunk and gather data into one table so that the tiles may be replaced all at once.
+	for _y = 0, 31, 1 do
+		local _cur_y = _area.left_top.y + _y
+		for _x = 0, 31, 1 do
+			local _cur_x = _area.left_top.x + _x
+			local _cur_pos = struct.Position(_cur_x, _cur_y)
+			local _cur_tile = api.surface.get_tile(_surface, _cur_pos)
+			if not(surfaces.is_tile_placement_valid(_cur_tile,_surface)) then
+				table.insert(_tiles, {name = _tile_name, position = _cur_pos})
 			end
 		end
 	end
-end
-
--- This function is used to avoid annoying desync errors when playing in multiplayer, it acts as a system to queue tasks such as creating entities and surfaces that need to happen on the same tick on all clients
-function eventmgr.execute_first_task_in_waiting_queue(_event)
-	global.task_queue = global.task_queue or {}
-	for k, v in pairs(global.task_queue) do
-		if v.task == tasks.trigger_create_paired_entity then										-- Validates the entity prior to creation of it's pair, gathering the relative location for the paired entity
-			local destination_surface = pairutil.validate_paired_entity(v.data.entity, v.data.player_index)
-			if destination_surface then
-				table.insert(global.task_queue, struct.TaskSpecification(
-					tasks.trigger_create_paired_surface,
-					{v.data.entity, destination_surface, v.data.player_index}))						-- Insert the next task for this process-chain at the back of the queue
-			end
-		elseif v.task == tasks.trigger_create_paired_surface then									-- Validates the paired surface, creating it if it does not yet exist
-			local surface = pairutil.create_paired_surface(v.data.entity, v.data.pair_location)
-			if surface == nil then																	-- If the surface has not yet been created
-				table.insert(global.task_queue, v)													-- Insert a duplicate of this task at the back of the queue (avoids being discarded from the queue)
-			elseif surface ~= false then															-- Ensures that data passed is valid and if not, the task is simply removed from the queue
-				api.surface.request_generate_chunks(surface, v.data.entity.position, 0)				-- Fixes a small bug with chunk generation
-				table.insert(global.task_queue, struct.TaskSpecification(
-					tasks.create_paired_entity,
-					{v.data.entity, surface, v.data.player_index}))									-- Insert the next task for this process-chain at the back of the queue
-			end
-		elseif v.task == tasks.create_paired_entity then											-- Creates the paired entity
-			local pair = pairutil.create_paired_entity(v.data.entity, v.data.paired_surface)
-			if pair == nil or pair == false then													-- If the pair fails to be created for some unknown reason
-				table.insert(global.task_queue, v)													-- Insert a duplicate of this task at the back of the queue (avoids being discarded from the queue)
-			else																					-- Otherwise
-				table.insert(global.task_queue, struct.TaskSpecification(
-					tasks.finalize_paired_entity,
-					{v.data.entity, pair, v.data.player_index}))									-- Insert the next task for this process-chain at the back of the queue
-			end
-		elseif v.task == tasks.finalize_paired_entity then											-- Performs final processing for the paired entity (example: intersurface electric poles are connected to one another)
-			pairutil.finalize_paired_entity(v.data.entity, v.data.paired_entity, v.data.player_index)
-		elseif v.task == tasks.remove_sky_tile then													-- Remove tiles created by paired entities in sky surfaces, called after destruction of paired entities
-			if not(api.valid(v.data.entity)) and not(api.valid(v.data.paired_entity)) then			-- Check if the two entities have been destroyed yet.
-				pairutil.remove_tiles(v.data.position, v.data.surface, v.data.radius)				-- If they have, call remove tiles function with appropriate data for both.
-				pairutil.remove_tiles(v.data.position, v.data.paired_surface, v.data.radius)
-			else
-				table.insert(global.task_queue, v)
-			end
-		elseif v.task == tasks.spill_entity_result then												-- Spill an itemstack on the ground, used to drop entity results on the ground where an invalid entity was placed
-			if api.valid(v.data.entity) == false then
-				for key, value in pairs(v.data.products) do
-					if struct.is_SimpleItemStack(value) then
-						api.surface.spill_items(v.data.surface, v.data.position, value)
-					end
-				end
-			else
-				table.insert(global.task_queue, v)
+	api.surface.set_tiles(_surface, _tiles) -- replace the normally generated tiles with underground walls or sky tiles
+	
+	-- create underground wall entities
+	if _is_underground then
+		for k, v in pairs(_tiles) do
+			local _count_resources = api.surface.count_entities(_surface, struct.BoundingBox_from_Position(v.position.x,v.position.y, 2), nil, "resource")
+			local _count_walls = api.surface.count_entities(_surface, v.position, en_und_wall, et_und_wall)
+			if _count_resources > 0 and _count_walls == 0 then
+				api.surface.create_entity(_surface, {name = en_und_wall, position = v.position, force = api.game.force("neutral")})
 			end
 		end
-		table.remove(global.task_queue, k)															-- Remove the current task from the queue, it has finished executing
-		break																						-- Exit loop, we have finished processing the first task in the queue
 	end
 end
 

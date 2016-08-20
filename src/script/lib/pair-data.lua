@@ -7,7 +7,6 @@
 
 require("script.const")
 require("script.lib.api")
-require("script.proto")
 require("script.lib.util")
 
 --- provides access to paired entity data

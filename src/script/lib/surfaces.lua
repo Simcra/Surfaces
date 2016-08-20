@@ -6,12 +6,12 @@
 ]]
 
 require("config")
+require("prototypes.prototype")
 require("script.const")
 require("script.lib.api")
 require("script.lib.pair-data")
 require("script.lib.struct")
 require("script.lib.util")
-require("script.proto")
 
 --[[--
 Surfaces module, used for all surface related functionality
@@ -26,10 +26,12 @@ local get_relative_surface, create_relative_surface, get_mapname, get_mapgensett
 -- declaring local variables
 local mapgensettings = nil
 local ss_separator, ss_prefix = const.surface.separator, const.surface.prefix
-local rl_above, rl_below = const.surface.rel_loc.above, const.surface.rel_loc.below
-local st_und, st_sky = const.surface.type.underground, const.surface.type.sky
-local et_acc_shaft = proto.get_field({"entity", "access_shaft", "common"}, "type")
-local tn_und_dirt, tn_sky_void = proto.get_field({"tile", "underground_dirt"}, "name"), proto.get_field({"tile", "sky_void"}, "name")
+local rl, rl_valid = const.surface.rel_loc, const.surface.rel_loc_valid
+local rl_above, rl_below = rl.above, rl.below
+local st, st_valid = const.surface.type, const.surface.type_valid
+local st_und, st_sky, st_all = st.underground, st.sky, st.all
+local et_acc_shaft = proto.entity.access_shaft.common.type
+local tn_und_dirt, tn_sky_void = proto.tile.underground_dirt.name, proto.tile.sky_void.name
 
 --[[--
 was this surface created by this mod?
@@ -57,12 +59,12 @@ returns the layer of this surface relative to the nauvis layer. (the first under
 function surfaces.get_layer(_surface, _separator)
 	if _surface then
 		if type(_separator) ~= "string" then _separator = ss_separator end
-		local _surface_name = api.name(_surface)
-		if _surface_name == "nauvis" then
+		local _name = api.name(_surface)
+		if _name == "nauvis" then
 			return 0
 		else
-			local _surface_string = ss_prefix .. _separator .. const.surface.type[const.surface.type_valid[surfaces.get_type(_surface_name, _separator)]].name .. _separator
-			return tonumber(string.sub(_surface_name, string.find(_surface_name, _surface_string, 0, true) + string.len(_surface_string)))
+			local _search_string = ss_prefix .. _separator .. st[st_valid[surfaces.get_type(_name, _separator)]].name .. _separator
+			return tonumber(string.sub(_name, string.find(_name, _search_string, 0, true) + string.len(_search_string)))
 		end
 	end
 	return nil
@@ -78,11 +80,11 @@ returns the type of this surface (the unique ID of the surface type, not the nam
 function surfaces.get_type(_surface, _separator)
 	if _surface then
 		if type(_separator) ~= "string" then _separator = ss_separator end
-		local _surface_name = api.name(_surface)
-		local _surface_string = ss_prefix .. _separator
-		if string.find(_surface_name, _surface_string, 0, true) then
-			for k, v in pairs(const.surface.type) do
-				if v.id ~= const.surface.type.all.id and string.find(_surface_name, _surface_string .. v.name .. _separator, 0, true) then
+		local _name = api.name(_surface)
+		local _search_string = ss_prefix .. _separator
+		if string.find(_name, _search_string, 0, true) then
+			for k, v in pairs(st) do
+				if v.id ~= st_all.id and string.find(_name, _search_string .. v.name .. _separator, 0, true) then
 					return v.id
 				end
 			end
@@ -159,19 +161,19 @@ triggers name-change migrations for a surface created prior to this version, if 
 ]]
 function surfaces.migrate_surface(_surface, _separator)
 	if api.valid(_surface) and surfaces.is_mod_surface(_surface, _separator) and _separator ~= ss_separator then
-		local _surface_layer = surfaces.get_layer(_surface, _separator) 
-		local _surface_type = surfaces.get_type(_surface, _separator)
-		local _surface_name = ss_prefix .. const.surface.separator .. const.surface.type[const.surface.type_valid[_surface_type]].name .. const.surface.separator .. _surface_layer
+		local _layer = surfaces.get_layer(_surface, _separator) 
+		local _type = surfaces.get_type(_surface, _separator)
+		local _name = ss_prefix .. ss_separator .. st[st_valid[_type]].name .. const.surface.separator .. _layer
 		
-		api.game.create_surface(_surface_name, api.surface.map_gen_settings(_surface)) -- create the new surface
-		local _new_surface = api.game.surface(_surface_name)
+		api.game.create_surface(_name, api.surface.map_gen_settings(_surface)) -- create the new surface
+		local _new_surface = api.game.surface(_name)
 		for _chunk in api.surface.get_chunks(_surface) do
 			api.surface.request_generate_chunks(_new_surface, _chunk) -- request generation of all chunks in the new surface
 		end
-		global.surfaces_to_migrate = global.surfaces_to_migrate or {}
-		global.surfaces_to_migrate[api.name(_surface)] = {surface = _surface, new_surface = _new_surface, underground = surfaces.is_below_nauvis(_surface),
+		global.migrate_surfaces = global.migrate_surfaces or {}
+		global.migrate_surfaces[api.name(_surface)] = {surface = _surface, new_surface = _new_surface, underground = surfaces.is_below_nauvis(_surface),
 			platform = surfaces.is_above_nauvis(_surface), migrated = false}
-		global.surfaces_to_migrate[_surface_name] = true -- used for determining whether surface is being migrated or not in on_chunk_generated event
+		global.migrate_surfaces[_name] = true -- used for determining whether surface is being migrated or not in on_chunk_generated event
 	end
 end		
 
@@ -248,9 +250,9 @@ The below functions are all specific to the surfaces module, they should not be 
 ]]
 
 get_mapname = function(_surface_type, _surface_layer, _separator)
-	if ((type(_surface_layer) == "number" and (_surface_layer >= 1)) and const.surface.type_valid[_surface_type] ~= nil) then
+	if ((type(_surface_layer) == "number" and (_surface_layer >= 1)) and st_valid[_surface_type] ~= nil) then
 		if type(_separator) ~= "string" then _separator = ss_separator end 
-		local _mapname = ss_prefix .. _separator .. const.surface.type[const.surface.type_valid[_surface_type]].name .. _separator .. _surface_layer
+		local _mapname = ss_prefix .. _separator .. st[st_valid[_surface_type]].name .. _separator .. _surface_layer
 		return _mapname
 	end
 	return nil
@@ -270,11 +272,13 @@ get_mapgensettings = function(_surface_type)
 	end
 end
 
-create_surface = function(_surface_type, _surface_layer)
-	if ((type(_surface_layer) == "number" and (_surface_layer >= 1)) and const.surface.type_valid[_surface_type] ~= nil) then
-		local _surface_name = get_mapname(_surface_type, _surface_layer)
-		return api.game.surface(_surface_name) or api.game.create_surface(_surface_name, get_mapgensettings(_surface_type))
+create_surface = function(_type, _layer)
+	if ((type(_layer) == "number" and (_layer >= 1)) and st_valid[_type] ~= nil) then
+		util.debug("[create_surface()] - type: " .. tostring(st_valid[_type]) .. ", layer: " .. tostring(_layer)) 
+		local _name = get_mapname(_type, _layer)
+		return api.game.surface(_name) or api.game.create_surface(_name, get_mapgensettings(_type))
 	end
+	util.debug("[create_surface()] - failed! type: " .. tostring(_type) .. ", layer: " .. tostring(_layer)) 
 	return false	-- failed to create surface, inputs were invalid
 end
 

@@ -5,10 +5,10 @@
 	This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 ]]
 
-function math.round(number, decimal_places)
-	decimal_places = decimal_places or 0
-	local multiplier = 10^decimal_places
-	return math.floor(number * multiplier + 0.5) / multiplier
+function math.round(_number, _decimal_places)
+	_decimal_places = _decimal_places or 0 -- round to nearest integer if decimal places is not specified
+	local _multiplier = 10^_decimal_places
+	return math.floor(_number * _multiplier + 0.5) / _multiplier
 end
 
 --[[
@@ -18,17 +18,16 @@ returns a copy of a table
 @param _recursive [Optional] - a boolean value, should we recursively copy each table inside this table?
 @return table
 ]]
-function table.copy(_table, _recursive)
-	local _result
+function table.copy(_table)
 	if type(_table) == "table" then
-		_result = {}
+		local _result = {}
 		for k, v in pairs(_table) do
-			_result[k] = _recursive and table.copy(v, _recursive) or v
+			_result[k] = table.copy(v)
 		end
+		return _result
 	else
 		return _table
 	end
-	return _result
 end
 
 --[[
@@ -64,27 +63,16 @@ The following is true:
 	string_a == "{parameterA=2,parameterB={innerParameterA=A,innerParameterB=B},parameterC=42}",
 	string_b == "{parameterA = 2, parameterB = {innerParameterA = A, innerParameterB = B}, parameterC = 42}"
 ]]
-function table.tostring(t, add_spacing)
-	local result = "{"
-	local equalstring = "="
-	local commastring = ","
-	if add_spacing then
-		equalstring = " = "
-		commastring = ", "
+function table.tostring(_table, _add_spacing)
+	local _result = "{"
+	local _equal, _comma = (_add_spacing and " = " or "="), (_add_spacing and " , " or ",")
+	for k, v in pairs(_table) do
+		_result = _result .. tostring(k) .. _equal .. (type(v) == "table" and table.tostring(v, _add_spacing) or (type(v) == "string" and v or tostring(v))) .. _comma
 	end
-	for k, v in pairs(t) do
-		if type(v) == "table" then
-			result = result .. tostring(k) .. equalstring .. table.tostring(v, add_spacing) .. commastring
-		elseif type(v) == "string" then
-			result = result .. tostring(k) .. equalstring .. v .. commastring
-		else
-			result = result .. tostring(k) .. equalstring .. tostring(v) .. commastring
-		end
+	if string.len(_result) > 1 then
+		_result = string.sub(_result, 1, string.len(_result) - 2)		-- removes the last comma
 	end
-	if string.len(result) > 1 then
-		result = string.sub(result, 1, string.len(result) - 2)		-- remove the last comma
-	end
-	return result .. "}"
+	return _result .. "}"
 end
 
 --[[
@@ -98,18 +86,23 @@ The following is true:
 	rt_2["12"] == 2, rt_2["34"] == nil,
 	rt_3["12"] == nil, rt_3["34"] == 3
 ]] 
-function table.reverse(t, store_old_index, subtable_index)
-	local rTable = {}
-	if subtable_index then
-		for k, v in pairs(t) do
-			if v[subtable_index] then
-				rTable[v[subtable_index]] = store_old_index and k or true
-			end
-		end
-	else
-		for k, v in pairs(t) do
-			rTable[v] = store_old_index and k or true
-		end
+function table.reverse(_table, _store_old_index, _index_field)
+	local _result = {}
+	for k, v in pairs(_table) do
+		_result[((_index_field and v[_index_field]) and v[_index_field] or (not(_index_field) and v or nil))] = _store_old_index and k or true
 	end
-	return rTable
+	return _result
+end
+
+local _proxies = setmetatable({}, {__mode = "k"})
+function table.readonly(_table)
+	if type(_table) == "table" then
+		local _proxy = _proxies[_table] or setmetatable({}, {
+			__index = function(_, k) return table.readonly(_table[k]) end,
+			__newindex = function() return false end})
+		_proxies[_table] = _proxy
+		return _proxy
+	else
+		return _table
+	end
 end

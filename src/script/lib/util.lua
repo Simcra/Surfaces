@@ -15,7 +15,7 @@ Miscellaneous utilities
 ]]
 util = {}
 
--- prints text to a player's screen
+-- prints text to one player's screen
 function util.message(player_id, text)
 	local player = api.game.player(player_id)
 	if player and (type(text) == "string" or type(text) == "table") then
@@ -23,10 +23,17 @@ function util.message(player_id, text)
 	end
 end
 
--- just a boring debug function to print text to every player's screen
+-- prints text to every player's screen
 function util.broadcast(text)
 	for k, v in pairs(api.game.players()) do
 		util.message(k, text)
+	end
+end
+
+-- used to print debug text to every player's screen
+function util.debug(text)
+	if const.debug == true then
+		util.broadcast(text)
 	end
 end
 

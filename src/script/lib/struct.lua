@@ -6,9 +6,9 @@
 ]]
 
 require("config")
-require("script.lib.util-base")
 require("script.const")
 local struct_base = require("script.lib.struct-base")
+require("script.lib.util-base")
 
 --[[--
 Structures module, used to construct and validate data for use with the LuaAPI and surfaces mod.
@@ -187,64 +187,6 @@ is this a valid AutoplaceControl?
 ]]
 function struct.is_AutoplaceControl(_autoplace_control)
 	return (_autoplace_control and struct.is_MapGenSize(_autoplace_control.frequency) and struct.is_MapGenSize(_autoplace_control.size) and struct.is_MapGenSize(_autoplace_control.richness))
-end
-
---[[--
-construct a TaskSpecification from provided data
-
-@param _id [Required] - the ID of the task, for example: <code>const.eventmgr.task.create_paired_entity</code>
-@param _data [Required] - the data to be passed to the task, this is passed through <code>struct.TaskData(_id, _fields)</code>
-@return TaskSpecification
-]]
-function struct.TaskSpecification(_id, _data)
-	local _taskdata = struct.TaskData(_id, _data)
-	return _taskdata and {task = _id, data = _taskdata} or nil
-end
-
---[[--
-constructs TaskData from provided data, data should be provided in a shorthand table without specified indexes, for example: {"a string", 4, {"a table with a string"}}
-
-@param _id [Required] - the ID of the task, for example: <code>const.eventmgr.task.create_paired_entity</code>
-@param _fields [Required] - the data to be formatted for usage, accepts a table of integer indexed entries
-@return TaskData
-]]
-function struct.TaskData(_id, _fields)
-	if _fields and struct.is_TaskID(_id) then
-		local _tasks = const.eventmgr.task
-		if _id == _tasks.trigger_create_paired_entity then
-			return api.valid({_fields[1]}) and {entity = _fields[1], player_index = _fields[2]} or nil
-		elseif _id == _tasks.trigger_create_paired_surface then
-			return (api.valid({_fields[1], _fields[2]}) and table.reverse(const.surface.rel_loc)[_fields[2]]) and {entity = _fields[1], pair_location = _fields[2], player_index = _fields[3]} or nil
-		elseif _id == _tasks.create_paired_entity then
-			return (api.valid({_fields[1], _fields[2]})) and {entity = _fields[1], paired_surface = _fields[2], player_index = _fields[3]} or nil
-		elseif _id == _tasks.finalize_paired_entity then
-			return (api.valid({_fields[1], _fields[2]})) and {entity = _fields[1], paired_entity = _fields[2], player_index = _fields[3]} or nil
-		elseif _id == _tasks.remove_sky_tile then
-			if api.valid({_fields[1], _fields[2]}) and type(_fields[3]) == "number" then
-				local _entity = table.deepcopy(_fields[1])
-				local _paired_entity = table.deepcopy(_fields[2])
-				local _radius = table.deepcopy(_fields[3])
-				return {entity = _entity, paired_entity = _paired_entity, position = _entity.position, surface = _entity.surface, 
-					paired_surface = _paired_entity and _paired_entity.surface or nil, radius = _radius}
-			end
-		elseif _id == _tasks.spill_entity_result then
-			if api.valid(_fields[1]) and type(_fields[2]) == "table" then
-				local _entity = table.deepcopy(_fields[1])
-				local _products = table.deepcopy(_fields[2])
-				return {entity = _entity, surface = _entity.surface, position = _entity.position, products = _products}
-			end
-		end
-	end
-end
-
---[[--
-is this a valid Task ID?
-
-@param _id [Required] - the Task ID to test
-@return <code>true</code> or <code>false</code>
-]]
-function struct.is_TaskID(_id)
-	return (type(_id) == "number" and const.eventmgr.task_valid[_id])
 end
 
 return struct

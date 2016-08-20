@@ -5,12 +5,25 @@
 	This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 ]]
 
-require("util")
+require("prototypes.prototype")
 require("script.const")
 require("script.events")
-require("script.proto")
 require("script.lib.compat-data")
 require("script.lib.pair-data")
+require("util")
+
+-- stores event IDs
+local _event_uid = {}
+
+-- generates event IDs and stores in table
+local function generate_event_ids(_events)
+	for k, v in pairs(_events) do
+		if not(_event_uid[v]) then
+			_event_uid[v] = script.generate_event_name()
+		end
+	end
+end
+
 
 -- Create shorthand references to constants and prototype data
 local rl_above, rl_below = const.surface.rel_loc.above, const.surface.rel_loc.below
@@ -27,6 +40,9 @@ local pc_energy_trans = pairclass.get("energy-transport")
 local pc_fluid_trans = pairclass.get("fluid-transport")
 local pc_item_trans = pairclass.get("item-transport")
 local pc_rail_trans = pairclass.get("rail-transport")
+
+-- generate event IDs
+generate_event_ids({"post_chunk_generated"})
 
 --[[
 see <code>pairdata.insert(_entity_name, _paired_entity_name, _relative_location, _pair_class, _placeable_on_nauvis, _custom_data, _clear_tile_radius, _placeable_surface_type)</code> for more information.
@@ -60,11 +76,13 @@ skytiles.insert_array(whitelist_sky_tiles)
 -- initialise global variables
 local init_globals = function()
 	global.task_queue = global.task_queue or {}
-	global.mod_surfaces = global.mod_surfaces or {}
 	global.item_transport = global.item_transport or {}
 	global.fluid_transport = global.fluid_transport or {}
 	global.energy_transport = global.energy_transport or {}
-	global.surfaces_to_migrate = global.surfaces_to_migrate or {}
+	global.frozen_surfaces = global.frozen_surfaces or {}
+	global.migrate_surfaces = global.migrate_surfaces or {}
+	global.raise_events = global.raise_events or {}
+	global.event_uid = _event_uid
 end
 
 -- mod addon data, will be loaded only if the index of the entry is present in active mods
@@ -128,46 +146,18 @@ script.on_init(function() on_init() end)
 script.on_load(function() on_load() end)
 script.on_configuration_changed(function(_config_data) on_configuration_changed(_config_data) end)
 
--- When an entity is built by a player
-script.on_event(defines.events.on_built_entity, function(event) events.on_built_entity(event) end)
--- When a construction robot builds an entity
-script.on_event(defines.events.on_robot_built_entity, function(event) events.on_robot_built_entity(event) end)
--- When a chunk is generated
-script.on_event(defines.events.on_chunk_generated, function(event) events.on_chunk_generated(event) end)
--- Prior to when a player harvests an entity (contains variables: entity, player_index)
-script.on_event(defines.events.on_preplayer_mined_item, function(event) events.on_preplayer_mined_item(event) end)
--- Prior to when a robot harvests an entity (contains variables: entity)
-script.on_event(defines.events.on_robot_pre_mined, function(event) events.on_robot_pre_mined(event) end)
--- After a player successfully harvests an entity (contains variables: item_stack, player_index)
-script.on_event(defines.events.on_player_mined_item, function(event) events.on_player_mined_item(event) end)
--- After a robot successfully harvests an entity (contains variables: item_stack)
-script.on_event(defines.events.on_robot_mined, function(event) events.on_robot_mined(event) end)
--- When an object has been marked for deconstruction
-script.on_event(defines.events.on_marked_for_deconstruction, function(event) events.on_marked_for_deconstruction(event) end)
--- When an object is removed from deconstruction queue
-script.on_event(defines.events.on_canceled_deconstruction, function(event) events.on_canceled_deconstruction(event) end)
--- When the player enters or exits a vehicle
-script.on_event(defines.events.on_player_driving_changed_state, function(event) events.on_player_driving_changed_state(event) end)
--- When the Player attempts to place/use something
-script.on_event(defines.events.on_put_item, function(event) events.on_put_item(event) end)
--- When the player rotates an entity
-script.on_event(defines.events.on_player_rotated_entity, function(event) events.on_player_rotated_entity(event) end)
--- When an entity is created
-script.on_event(defines.events.on_trigger_created_entity, function(event) events.on_trigger_created_entity(event) end)
--- When a player picks up an item
-script.on_event(defines.events.on_picked_up_item, function(event) events.on_picked_up_item(event) end)
--- When the radar scans a sector
-script.on_event(defines.events.on_sector_scanned, function(event) events.on_sector_scanned(event) end)
--- When an entity dies
-script.on_event(defines.events.on_entity_died, function(event) events.on_entity_died(event) end)
--- After a robot mines a tile
-script.on_event(defines.events.on_robot_mined_tile, function(event) events.on_robot_mined_tile(event) end)
--- After a player mines a tile
-script.on_event(defines.events.on_player_mined_tile, function(event) events.on_player_mined_tile(event) end)
--- When a train changes state, see http://lua-api.factorio.com/latest/defines.html#trainstate for states
-script.on_event(defines.events.on_train_changed_state, function(event) events.on_train_changed_state(event) end)
--- Every tick
-script.on_event(defines.events.on_tick, function(event) events.on_tick(event) end)
+-- iterate over every event uid in defines.events and map it to it's function in events module
+for k, v in pairs(defines.events) do
+	if type(events[k]) == "function" then
+		script.on_event(v, function(event) events[k](event) end)
+	end
+end
+-- iterate over every event uid in _events_uid and map it to it's function in events module
+for k, v in pairs(_event_uid) do
+	if type(events[k]) == "function" then
+		script.on_event(v, function(event) events[k](event) end)
+	end
+end
 
 remote.add_interface("Surfaces", {
 	["migrate"] = function(_separator)
