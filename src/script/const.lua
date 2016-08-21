@@ -48,9 +48,9 @@ local _const = {
 			-- Used to update transport chest contents, moves items from transport chests to receiver chests
 			item_transport_update = {id = 1, tick = 5, func = "transport_item_process"},
 			-- Used to update intersurface fluid tank contents
-			fluid_transport_update = {id = 2, tick = 10, func = "transport_fluid_process"},
+			fluid_transport_update = {id = 2, tick = 2, func = "transport_fluid_process"},
 			-- Used to update intersurface accumulator contents
-			energy_transport_update = {id = 3, tick = 10, func = "transport_energy_process"},
+			energy_transport_update = {id = 3, tick = 2, func = "transport_energy_process"},
 			-- Raises events using on_tick timer, this way events may be called after a specific number of ticks have passed
 			raise_event_timer = {id = 4, tick = 5, func = "raise_events"},
 			-- Used to execute the first task in the Task Manager queue
