@@ -133,7 +133,6 @@ end
 
 -- Execute the first task in the process queue, taskmgr is used to avoid annoying desync errors in multiplayer.
 function func.taskmgr_execute(_event)
-	util.broadcast("taskmgr exec")
 	taskmgr.exec()
 end
 
